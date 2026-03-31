@@ -1,13 +1,18 @@
-
 {
   "short_name": "Tech Pay",
   "name": "Tech Pay Premium",
   "icons": [
     {
-      "src": "logo_tp.png",
+      "src": "icon.png",
       "sizes": "1024x1024",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "start_url": "index.html",
