@@ -156,7 +156,13 @@
             <b style="color: var(--primary); font-size: 14px; display: block; margin-bottom: 4px;">tech pay</b>
             <h1 class="doc-title">Ordem de Cobrança</h1>
         </div>
-
+      
+<div style="padding: 0 20px 15px 20px;">
+    <p style="color: #111827; font-size: 14px; margin: 0; line-height: 1.5;">
+        Sr(a). <b id="render-frase-nome">Leonardo</b>, constatamos uma pendência do Senhor(a).
+    </p>
+</div>
+      
         <div class="doc-body">
             <span class="doc-label">Valor da Cobrança</span>
             <div class="doc-amount" id="render-valor">R$ 0,00</div>
@@ -289,6 +295,9 @@ function gerarCobranca() {
     document.getElementById('render-cliente').innerText = nome;
     
     document.getElementById('modalCobranca').style.display = 'flex';
+  
+document.getElementById('render-frase-nome').innerText = nome;
+  
 }
   
 function fecharModal() { document.getElementById('modalCobranca').style.display = 'none'; }
