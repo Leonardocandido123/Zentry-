@@ -158,34 +158,29 @@
         }
       }, 800);
     }
+function processarPagamento(valor, tipo) {
+    let saldo = parseFloat(localStorage.getItem("saldo")) || 1250;
 
-    function processarPagamento(valor, tipo) {
-        let saldo = parseFloat(localStorage.getItem("saldo")) || 1250;
+    if (saldo >= valor) {
+        // 1. ATUALIZA O SALDO
+        saldo -= valor;
+        localStorage.setItem("saldo", saldo);
 
-        if (saldo >= valor) {
-            saldo -= valor;
-            localStorage.setItem("saldo", saldo);
+        // 2. PREPARA O COMPROVANTE ÚNICO
+        localStorage.setItem("tipoTransacao", "qrcode");
+        localStorage.setItem("ultimoValor", "R$ " + valor.toFixed(2).replace('.', ','));
+        localStorage.setItem("destinoNome", tipo); // QR Code Pix ou Boleto
+        localStorage.setItem("detalhesExtras", "Autenticação via Scanner");
+        localStorage.setItem("instDestino", "TechPay S.A.");
 
-            // Salva no extrato
-            let hist = JSON.parse(localStorage.getItem("historico")) || [];
-            hist.push({ 
-                tipo: 'enviado', 
-                valor: valor, 
-                descricao: `Pagto: ${tipo}` 
-            });
-            localStorage.setItem("historico", JSON.stringify(hist));
-
-            alert("Pagamento aprovado! ✨");
-            window.location.href = 'home.html';
-        } else {
-            alert("Saldo insuficiente na sua conta UP Tech.");
-        }
+        // 3. VAI PARA O COMPROVANTE
+        alert("Pagamento aprovado! ✨");
+        window.location.href = 'comprovante.html';
+    } else {
+        alert("Saldo insuficiente na sua conta TechPay.");
     }
-
-    function digitarCodigo() {
-        const cod = prompt("Digite os números do boleto:");
-        if(cod) simularLeitura("Boleto Digitado");
-    }
+}
+    
   </script>
 </body>
 </html>
