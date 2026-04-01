@@ -8,18 +8,18 @@
   <style>
     :root { --primary: #22C55E; --bg: #000000; --card: #121826; --border: #2A3441; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-    .header { padding: 20px; display: flex; align-items: center; gap: 15px; }
-    .back-btn { background: none; border: none; color: white; cursor: pointer; padding: 5px; }
+    .header { padding: 20px; display: flex; align-items: center; gap: 15px; z-index: 10; }
+    .back-btn { background: var(--card); border: 1px solid var(--border); color: white; cursor: pointer; padding: 10px; border-radius: 50%; display: flex; }
     .header h2 { font-size: 20px; font-weight: 600; margin: 0; }
 
-    .content { flex: 1; padding: 20px; overflow-y: auto; }
+    .content { flex: 1; padding: 20px; display: flex; flex-direction: column; }
 
-    /* ÁREA DO SCANNER MELHORADA */
+    /* SCANNER REALISTA */
     .scanner-container {
       width: 100%;
-      height: 280px;
+      height: 300px;
       background: #050505;
       border-radius: 28px;
       border: 1px solid var(--border);
@@ -31,37 +31,39 @@
       margin-bottom: 25px;
     }
 
-    /* Cantos do Scanner (Style nativo) */
-    .corner { position: absolute; width: 30px; height: 30px; border: 3px solid var(--primary); }
-    .top-left { top: 40px; left: 40px; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
-    .top-right { top: 40px; right: 40px; border-left: 0; border-bottom: 0; border-radius: 0 8px 0 0; }
-    .bottom-left { bottom: 40px; left: 40px; border-right: 0; border-top: 0; border-radius: 0 0 0 8px; }
-    .bottom-right { bottom: 40px; right: 40px; border-left: 0; border-top: 0; border-radius: 0 0 8px 0; }
+    .corner { position: absolute; width: 40px; height: 40px; border: 4px solid var(--primary); z-index: 5; }
+    .top-left { top: 20px; left: 20px; border-right: 0; border-bottom: 0; border-radius: 12px 0 0 0; }
+    .top-right { top: 20px; right: 20px; border-left: 0; border-bottom: 0; border-radius: 0 12px 0 0; }
+    .bottom-left { bottom: 20px; left: 20px; border-right: 0; border-top: 0; border-radius: 0 0 0 12px; }
+    .bottom-right { bottom: 20px; right: 20px; border-left: 0; border-top: 0; border-radius: 0 0 12px 0; }
 
     .scanner-line {
       position: absolute;
-      width: 70%;
-      height: 2px;
+      width: 85%;
+      height: 3px;
       background: var(--primary);
-      box-shadow: 0 0 20px var(--primary);
-      top: 50px;
-      animation: scan 2.5s infinite ease-in-out;
-      z-index: 2;
+      box-shadow: 0 0 25px var(--primary);
+      top: 20px;
+      animation: scan 2s infinite ease-in-out;
+      z-index: 4;
     }
 
     @keyframes scan {
-      0%, 100% { top: 60px; opacity: 0.8; }
-      50% { top: 220px; opacity: 1; }
+      0%, 100% { top: 30px; opacity: 0.5; }
+      50% { top: 260px; opacity: 1; }
     }
 
-    .qr-placeholder { opacity: 0.1; width: 120px; height: 120px; }
+    /* MENSAGEM DE STATUS */
+    #status-msg { text-align: center; color: var(--primary); font-size: 13px; font-weight: 600; margin-bottom: 20px; letter-spacing: 1px; }
 
-    /* BOTÕES DE OPÇÃO */
+    /* OPÇÕES */
+    .options-label { font-size: 11px; color: #4B5563; text-transform: uppercase; font-weight: 700; margin-bottom: 10px; display: block; }
+
     .pay-option {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 18px;
+      border-radius: 22px;
+      padding: 20px;
       display: flex;
       align-items: center;
       gap: 15px;
@@ -70,34 +72,51 @@
       transition: 0.2s;
     }
 
-    .pay-option:active { transform: scale(0.96); background: #1a2233; }
+    .pay-option:active { transform: scale(0.97); background: #1a2233; }
 
     .icon-box {
-      width: 48px; height: 48px;
-      background: #1F2937;
+      width: 44px; height: 44px;
+      background: rgba(34, 197, 94, 0.1);
       border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--primary);
-      flex-shrink: 0;
     }
 
-    .info b { display: block; font-size: 15px; color: #FFF; margin-bottom: 2px; }
-    .info span { font-size: 12px; color: #9CA3AF; line-height: 1.2; }
+    .info b { display: block; font-size: 15px; color: #FFF; }
+    .info span { font-size: 12px; color: #9CA3AF; }
 
-    svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
+    /* OVERLAY DE SUCESSO (SIMULAÇÃO) */
+    #loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9); display: none;
+      flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+    }
+
+    .loader {
+      width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: var(--primary);
+      border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.5; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-  <button class="back-btn btn-touch" onclick="location.href='pix.html'">
-    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-  </button>
-  <h2>Pagar</h2>
-</div>
+  <div id="loading-overlay">
+    <span class="loader"></span>
+    <p id="loader-text" style="margin-top: 20px; font-weight: 600;">Processando Leitura...</p>
+  </div>
 
+  <div class="header">
+    <button class="back-btn" onclick="location.href='pix.html'">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h2>Pagar</h2>
+  </div>
 
   <div class="content">
     <div class="scanner-container">
@@ -105,82 +124,86 @@
       <div class="corner top-right"></div>
       <div class="corner bottom-left"></div>
       <div class="corner bottom-right"></div>
-      
       <div class="scanner-line"></div>
-      
-      <svg class="qr-placeholder" viewBox="0 0 24 24"><path d="M3 11V3h8v8H3zm0 10v-8h8v8H3zM13 3h8v8h-8V3zm0 10h8v8h-8v-8zm2 2h4v4h-4v-4z"/></svg>
-      
-      <p style="position: absolute; bottom: 15px; font-size: 11px; color: #4B5563; font-weight: 500;">Aponte para um QR Code ou Boleto</p>
+      <svg style="opacity: 0.1; width: 100px;" viewBox="0 0 24 24"><path d="M3 11V3h8v8H3zm0 10v-8h8v8H3zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>
     </div>
 
-    <div class="pay-option" onclick="simularLeitura('QR Code Pix')">
-      <div class="icon-box" style="color: #6366F1;">
-        <svg viewBox="0 0 24 24"><path d="M12 3l3.8 3.8L12 10.6 8.2 6.8 12 3zM21 12l-3.8 3.8L13.4 12l3.8-3.8L21 12zM12 21l-3.8-3.8L12 13.4l3.8 3.8L12 21zM3 12l3.8-3.8L10.6 12l-3.8 3.8L3 12z"/></svg>
-      </div>
-      <div class="info">
-        <b>Ler QR Code</b>
-        <span>Pagar contas ou compras via Pix</span>
-      </div>
+    <div id="status-msg">AGUARDANDO CÓDIGO...</div>
+
+    <span class="options-label">Opções de Pagamento</span>
+
+    <div class="pay-option" onclick="iniciarLeitura('QR Code Pix', 'R$ 85,90', 'Supermercado Tech')">
+      <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M12 3l3.8 3.8L12 10.6 8.2 6.8 12 3zM21 12l-3.8 3.8L13.4 12l3.8-3.8L21 12zM12 21l-3.8-3.8L12 13.4l3.8 3.8L12 21zM3 12l3.8-3.8L10.6 12l-3.8 3.8L3 12z"/></svg></div>
+      <div class="info"><b>Escanear QR Code</b><span>Pagar via Pix Instantâneo</span></div>
     </div>
 
-    <div class="pay-option" onclick="simularLeitura('Boleto Bancário')">
-      <div class="icon-box">
-        <svg viewBox="0 0 24 24"><path d="M4 7V4a2 2 0 0 1 2-2h2m10 0h2a2 2 0 0 1 2 2v3m0 10v3a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-3M7 7h10v10H7z"/></svg>
-      </div>
-      <div class="info">
-        <b>Código de barras</b>
-        <span>Escaneie a linha digitável do boleto</span>
-      </div>
-    </div>
-
-    <div class="pay-option" onclick="digitarCodigo()">
-      <div class="icon-box" style="color: #9CA3AF;">
-        <svg viewBox="0 0 24 24"><path d="M17 3H7a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h10a4 4 0 0 0 4-4V7a4 4 0 0 0-4-4z"/><path d="M9 7v10m6-10v10"/></svg>
-      </div>
-      <div class="info">
-        <b>Inserir manualmente</b>
-        <span>Se não conseguir ler o código</span>
-      </div>
+    <div class="pay-option" onclick="iniciarLeitura('Boleto Bancário', 'R$ 240,00', 'Energia Elétrica S.A.')">
+      <div class="icon-box" style="color: #6366F1;"><svg viewBox="0 0 24 24"><path d="M4 7V4a2 2 0 0 1 2-2h2m10 0h2a2 2 0 0 1 2 2v3m0 10v3a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-3M7 7h10v10H7z"/></svg></div>
+      <div class="info"><b>Boleto Bancário</b><span>Água, Luz, Telefone e outros</span></div>
     </div>
   </div>
 
   <script>
-    function simularLeitura(tipo) {
-      alert(`Buscando ${tipo}...`);
+    function iniciarLeitura(tipo, valor, recebedor) {
+      const overlay = document.getElementById('loading-overlay');
+      const loaderText = document.getElementById('loader-text');
       
+      overlay.style.display = 'flex';
+      loaderText.innerText = "Lendo " + tipo + "...";
+
       setTimeout(() => {
-        const valorStr = prompt(`Leitura realizada!\n\n${tipo} identificado.\nQual o valor para pagamento?`, "0,00");
-        if (valorStr) {
-            const valor = parseFloat(valorStr.replace(',', '.'));
-            if(isNaN(valor)) return alert("Valor inválido!");
-            
-            processarPagamento(valor, tipo);
-        }
-      }, 800);
+        loaderText.innerText = "Validando dados...";
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          confirmarPagamento(tipo, valor, recebedor);
+        }, 1200);
+      }, 1500);
     }
-function processarPagamento(valor, tipo) {
-    let saldo = parseFloat(localStorage.getItem("saldo")) || 1250;
 
-    if (saldo >= valor) {
-        // 1. ATUALIZA O SALDO
-        saldo -= valor;
-        localStorage.setItem("saldo", saldo);
+    function confirmarPagamento(tipo, valor, recebedor) {
+      const confirmacao = confirm(`Deseja pagar este ${tipo}?\n\nRecebedor: ${recebedor}\nValor: ${valor}`);
+      
+      if (confirmacao) {
+        processarFim(tipo, valor, recebedor);
+      }
+    }
 
-        // 2. PREPARA O COMPROVANTE ÚNICO
+    function processarFim(tipo, valorStr, recebedor) {
+      // 1. Pega o saldo atual
+      let saldo = parseFloat(localStorage.getItem("saldo")) || 1250.00;
+      
+      // 2. Limpa o valor para conta (tira R$ e troca vírgula por ponto)
+      let valorNum = parseFloat(valorStr.replace('R$ ', '').replace('.', '').replace(',', '.'));
+
+      if (saldo >= valorNum) {
+        // Desconta saldo
+        saldo -= valorNum;
+        localStorage.setItem("saldo", saldo.toFixed(2));
+
+        // 3. PREPARA DADOS PARA O COMPROVANTE ÚNICO
         localStorage.setItem("tipoTransacao", "qrcode");
-        localStorage.setItem("ultimoValor", "R$ " + valor.toFixed(2).replace('.', ','));
-        localStorage.setItem("destinoNome", tipo); // QR Code Pix ou Boleto
-        localStorage.setItem("detalhesExtras", "Autenticação via Scanner");
-        localStorage.setItem("instDestino", "TechPay S.A.");
+        localStorage.setItem("ultimoValor", valorStr);
+        localStorage.setItem("destinoNome", recebedor);
+        localStorage.setItem("detalhesExtras", tipo + " - Autenticado");
+        localStorage.setItem("instDestino", "Liquidado via TechPay");
 
-        // 3. VAI PARA O COMPROVANTE
-        alert("Pagamento aprovado! ✨");
-        window.location.href = 'comprovante.html';
-    } else {
-        alert("Saldo insuficiente na sua conta TechPay.");
+        // 4. SALVA NO HISTÓRICO (Para aparecer no extrato)
+        let extrato = JSON.parse(localStorage.getItem("transacoes")) || [];
+        extrato.unshift({
+            nome: recebedor,
+            tipo: "saida",
+            categoria: "pagamento",
+            valor: valorStr,
+            data: new Date().toLocaleDateString('pt-BR')
+        });
+        localStorage.setItem("transacoes", JSON.stringify(extrato));
+
+        // 5. REDIRECIONA PARA O COMPROVANTE
+        location.href = 'comprovante.html';
+      } else {
+        alert("Saldo Insuficiente!");
+      }
     }
-}
-    
   </script>
 </body>
 </html>
