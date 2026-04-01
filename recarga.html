@@ -113,25 +113,43 @@
             i.value = "R$ " + v;
             finalValue = i.value;
         }
-
         function processar() {
-            const phone = document.getElementById('phone').value;
-            if(!phone || phone.length < 14) return alert("Digite o telefone!");
-            if(!selectedOperator) return alert("Escolha a operadora!");
+    const phone = document.getElementById('phone').value;
+    if(!phone || phone.length < 14) return alert("Digite o telefone!");
+    if(!selectedOperator) return alert("Escolha a operadora!");
 
-            const dadosRecarga = {
-                telefone: phone,
-                valor: finalValue,
-                operadora: selectedOperator,
-                data: new Date().toLocaleDateString(),
-                hora: new Date().toLocaleTimeString()
-            };
-            localStorage.setItem('ultimaRecarga', JSON.stringify(dadosRecarga));
-            
-            const btn = document.querySelector('.btn-confirm');
-            btn.innerText = "Validando saldo...";
-            setTimeout(() => { location.href = 'comprovante_recarga.html'; }, 1500);
+    // 1. Salva os dados para o cupom (o que você já tinha)
+    const dadosRecarga = {
+        telefone: phone,
+        valor: finalValue,
+        operadora: selectedOperator,
+        data: new Date().toLocaleDateString(),
+        hora: new Date().toLocaleTimeString()
+    };
+    localStorage.setItem('ultimaRecarga', JSON.stringify(dadosRecarga));
+
+    // 2. Salva no Extrato (Padronizado para aparecer junto com o Pix)
+    let extrato = JSON.parse(localStorage.getItem("transacoes")) || [];
+    extrato.unshift({
+        nome: `Recarga ${selectedOperator}`, // Ex: Recarga Vivo
+        tipo: "saida",
+        categoria: "recarga",
+        valor: finalValue,
+        data: new Date().toLocaleDateString('pt-BR')
+    });
+    localStorage.setItem("transacoes", JSON.stringify(extrato));
+
+    // 3. Atualiza o saldo global (importante!)
+    let saldoAtual = parseFloat(localStorage.getItem("saldo")) || 1250.00;
+    let valorRecarga = parseFloat(finalValue.replace("R$ ", "").replace(".", "").replace(",", "."));
+    localStorage.setItem("saldo", (saldoAtual - valorRecarga));
+
+    const btn = document.querySelector('.btn-confirm');
+    btn.innerText = "Validando saldo...";
+    setTimeout(() => { location.href = 'comprovante_recarga.html'; }, 1500);
         }
+        
+
     </script>
 </body>
 </html>
