@@ -112,48 +112,40 @@
             v = (v/100).toFixed(2).replace(".", ",");
             i.value = "R$ " + v;
             finalValue = i.value;
-function processar() {
+
+        function processar() {
     const phone = document.getElementById('phone').value;
-    if(!phone || phone.length < 14) return alert("Digite o telefone!");
+    
+    // Validações básicas
+    if(!phone || phone.length < 14) return alert("Digite o telefone completo!");
     if(!selectedOperator) return alert("Escolha a operadora!");
 
-    // 1. CONFIGURA O COMPROVANTE DINÂMICO
-    localStorage.setItem("tipoTransacao", "recarga");
-    localStorage.setItem("ultimoValor", finalValue);
-    localStorage.setItem("destinoNome", selectedOperator); // Nome da Operadora
-    localStorage.setItem("detalhesExtras", phone);         // Número do Celular
-    localStorage.setItem("instDestino", selectedOperator + " S.A.");
+    // 1. SALVA OS DADOS PADRONIZADOS (Para Revisão e Comprovante lerem)
+    localStorage.setItem("tipoOperacao", "Recarga"); // Define que é Recarga
+    localStorage.setItem("ultimoValor", finalValue);  // Ex: "R$ 20,00"
+    localStorage.setItem("operadora", selectedOperator); // Ex: "VIVO"
+    localStorage.setItem("telefone", phone); // Ex: "(18) 99769-6284"
 
-    // 2. LOGICA DE SALDO (OPCIONAL SE JÁ TIVER)
+    // 2. LÓGICA DE SALDO (Subtrai o valor do saldo do app)
     let saldoAtual = parseFloat(localStorage.getItem("saldo")) || 1250.00;
-    let valorNum = parseFloat(finalValue.replace("R$ ", "").replace(".", "").replace(",", "."));
-    localStorage.setItem("saldo", (saldoAtual - valorNum));
+    let valorLimpo = finalValue.replace("R$ ", "").replace(".", "").replace(",", ".");
+    let valorNum = parseFloat(valorLimpo);
+    
+    if (valorNum > saldoAtual) return alert("Saldo insuficiente!");
+    
+    localStorage.setItem("saldo", (saldoAtual - valorNum).toFixed(2));
 
-    // 3. VAI PARA O COMPROVANTE ÚNICO
+    // 3. EFEITO DE CARREGAMENTO E INDO PARA A REVISÃO
     const btn = document.querySelector('.btn-confirm');
     btn.innerText = "Validando saldo...";
+    btn.disabled = true;
+
     setTimeout(() => { 
-        window.location.href = 'comprovante.html'; // Certifique-se que o nome é este
-    }, 1200);
+        // Manda primeiro para a REVISÃO (como o Santander faz)
+        window.location.href = 'revisao.html'; 
+    }, 1000);
         }
             
-                // Cole isso no final da sua tela de preenchimento de recarga
-function finalizarRecarga() {
-    // Pega os valores dos inputs (exemplo: id="valor", id="tel")
-    const valorDigitado = document.getElementById('main-amount').value;
-    const telefoneDigitado = document.getElementById('input-telefone').value;
-    const operadoraSelecionada = document.getElementById('select-operadora').value;
-
-    // Salva na memória para o comprovante ler depois
-    localStorage.setItem("tipoOperacao", "Recarga");
-    localStorage.setItem("ultimoValor", valorDigitado);
-    localStorage.setItem("telefone", telefoneDigitado);
-    localStorage.setItem("operadora", operadoraSelecionada);
-    
-    // Manda o usuário para a tela do comprovante
-    window.location.href = "comprovante.html";
-        }
-        
 
     </script>
 </body>
