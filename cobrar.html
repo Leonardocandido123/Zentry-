@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  
   <title>Tech Pay - Cobrar e Clientes</title>
   <style>
     :root { 
@@ -149,6 +151,7 @@
 </div>
 
 <div id="modalCobranca" class="overlay-cobranca">
+   <div class="card-profissional" id="area-documento"> 
     <div class="card-profissional">
         <div onclick="fecharModal()" style="position:absolute; right:15px; top:15px; cursor:pointer; color:#9CA3AF; font-size: 18px; z-index: 10;">✕</div>
         
@@ -290,24 +293,47 @@ function fecharModal() {
 }
 
 // 5. FUNÇÃO DE COMPARTILHAR (ESCOLHA DE APPS)
-async function compartilharCobranca() {
-    const chavePix = document.getElementById('render-chave').innerText;
-    const mensagemCompleta = `${window.textoParaCompartilhar}\n\nChave Pix: ${chavePix}`;
 
-    if (navigator.share) {
-        try {
+async function compartilharCobranca() {
+    const elemento = document.getElementById('area-documento');
+    const botaoOriginal = document.querySelector('.btn-doc-share');
+    const fecharX = elemento.querySelector('div[onclick="fecharModal()"]');
+
+    // 1. Esconde o botão e o "X" rapidinho para não saírem na foto
+    botaoOriginal.style.display = 'none';
+    fecharX.style.display = 'none';
+
+    try {
+        // 2. Tira a "foto" da div branca
+        const canvas = await html2canvas(elemento, {
+            backgroundColor: "#FFFFFF",
+            scale: 2 // Melhora a qualidade da imagem
+        });
+
+        // 3. Transforma em um arquivo real
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const fotoArquivo = new File([blob], 'cobranca-techpay.png', { type: 'image/png' });
+
+        // 4. Compartilha o arquivo (Abre a bandeja de apps: Gmail, Zap, etc)
+        if (navigator.canShare && navigator.canShare({ files: [fotoArquivo] })) {
             await navigator.share({
-                text: mensagemCompleta
+                files: [fotoArquivo],
+                title: 'Ordem de Cobrança - Tech Pay',
+                text: 'Segue documento de cobrança referente à pendência constatada.'
             });
             fecharModal();
-        } catch (err) {
-            console.log("Compartilhamento fechado");
+        } else {
+            alert("Seu navegador não suporta envio de arquivos. Tente tirar um print.");
         }
-    } else {
-        alert("Seu celular não suporta o compartilhamento nativo. Copie o texto manualmente.");
+    } catch (err) {
+        console.error("Erro ao gerar imagem:", err);
+    } finally {
+        // 5. Mostra o botão e o "X" de volta
+        botaoOriginal.style.display = 'block';
+        fecharX.style.display = 'block';
     }
 }
-
+  
 // 6. LÓGICA DE BUSCA
 document.querySelector('.search-box input').addEventListener('input', function(e) {
     let busca = e.target.value.toLowerCase();
