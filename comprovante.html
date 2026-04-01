@@ -1,193 +1,236 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Comprovante - TechPay Official</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-/* 1. RESET E BODY FIXO */
-:root { 
-    --accent: #22c55e; 
-    --text-main: #000000;
-    --text-muted: #666666;
-    --border: #e5e7eb;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<title>Comprovante Pix - Techpay</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:'Inter', sans-serif;
+  background:#F3F4F6;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px;
 }
 
-* { box-sizing: border-box; }
-
-body { 
-    margin: 0; 
-    font-family: 'Inter', -apple-system, sans-serif; 
-    background: #000; /* Fundo sólido para evitar bugs de gradient */
-    color: #FFF; 
-    height: 100vh; /* Trava a altura na tela do celular */
-    display: flex; 
-    flex-direction: column; 
-    overflow: hidden; /* Não deixa a tela toda rolar, apenas o miolo */
+/* CARD */
+.receipt-container{
+  width:100%;
+  max-width:400px;
+  background:#FFFFFF;
+  border-radius:20px;
+  padding:28px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.08);
 }
 
-/* 2. ÁREA DE ROLAGEM (O comprovante fica aqui) */
-.scroll-container {
-    flex: 1; /* Ocupa todo o espaço que sobrar acima do rodapé */
-    overflow-y: auto; /* Permite rolar apenas o comprovante */
-    -webkit-overflow-scrolling: touch; /* Rolagem suave no iPhone */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* STATUS */
+.status-icon{
+  width:60px;
+  height:60px;
+  background:#22C55E;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 20px;
+}
+.status-icon svg{
+  width:30px;
+  stroke:#fff;
+  fill:none;
+  stroke-width:3;
 }
 
-/* 3. O COMPROVANTE (PAPEL) */
-.document-paper { 
-    width: 100%; 
-    max-width: 350px; 
-    background: #FFFFFF; 
-    padding: 25px; 
-    border-radius: 4px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    color: var(--text-main);
-    margin-bottom: 20px; /* Espaço para não grudar no rodapé ao rolar */
+.title{
+  text-align:center;
+  font-size:20px;
+  font-weight:700;
+  margin-bottom:6px;
+  color:#111;
 }
 
-/* Detalhes internos do comprovante */
-.doc-header { text-align: center; margin-bottom: 25px; }
-.brand { font-size: 18px; font-weight: 800; text-transform: uppercase; color: #000; }
-.brand span { color: var(--accent); }
-.doc-type { font-size: 14px; font-weight: 600; margin-top: 4px; display: block; }
-.doc-timestamp { font-size: 11px; color: var(--text-muted); }
-
-.line { border: 0; border-top: 1px solid var(--border); margin: 15px 0; }
-.section-title { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 8px; display: block; }
-.data-row { margin-bottom: 12px; }
-.data-label { font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px; }
-.data-value { font-size: 13px; font-weight: 600; color: var(--text-main); }
-
-.amount-box { margin: 20px 0; }
-.amount-value { font-size: 28px; font-weight: 800; color: #000; }
-
-.auth-footer { margin-top: 25px; font-family: monospace; font-size: 9px; color: var(--text-muted); line-height: 1.4; }
-
-/* 4. RODAPÉ FIXO (ESTILO SANTANDER/NUBANK) */
-.fixed-actions {
-    background: #000; 
-    padding: 15px 20px 25px 20px; /* Mais espaço embaixo para não bater na barra do celular */
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* Espaço entre os dois botões */
-    width: 100%;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    z-index: 100; /* Garante que fique na frente de tudo */
+.subtitle{
+  text-align:center;
+  font-size:14px;
+  color:#6B7280;
+  margin-bottom:30px;
 }
 
-.btn-style {
-    width: 100%;
-    height: 52px; /* Altura fixa para ser fácil de clicar */
-    background: #FFFFFF;
-    color: #000000;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: transform 0.1s;
+/* INFO */
+.info-group{ margin-bottom:20px; }
+
+.label{
+  font-size:12px;
+  color:#6B7280;
+  margin-bottom:3px;
+  display:block;
 }
 
-.btn-style:active { 
-    transform: scale(0.98); /* Efeito de clique */
-    background: #f3f4f6; 
+.value{
+  font-size:15px;
+  font-weight:600;
+  color:#111;
 }
 
-/* Ajuste específico para o ícone da seta no botão */
-.btn-style svg {
-    flex-shrink: 0;
-        }
-        
-    </style>
+.sub-value{
+  font-size:13px;
+  color:#6B7280;
+}
+
+.divider{
+  height:1px;
+  background:#E5E7EB;
+  margin:18px 0;
+}
+
+/* BOTÕES */
+.btn-share{
+  width:100%;
+  max-width:400px;
+  padding:16px;
+  border-radius:12px;
+  border:none;
+  background:#111;
+  color:#fff;
+  font-weight:600;
+  font-size:15px;
+  margin-top:20px;
+}
+
+.btn-close{
+  background:transparent;
+  border:none;
+  color:#6B7280;
+  margin-top:15px;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="scroll-container">
-        <div class="document-paper" id="printable">
-            <div class="doc-header">
-                <div class="brand">Tech<span>Pay</span></div>
-                <span id="doc-title" class="doc-type">Comprovante</span>
-                <span class="doc-timestamp" id="res-time">--/--/----</span>
-            </div>
-            <hr class="line">
-            <div class="amount-box">
-                <span class="amount-label" id="label-valor" style="font-size: 11px; color: #666;">Valor</span>
-                <div class="amount-value" id="res-val">R$ 0,00</div>
-            </div>
-            <div id="dados-dinamicos"></div>
-            <hr class="line">
-            <span class="section-title">Pagador</span>
-            <div class="data-row">
-                <span class="data-value" id="res-user-name">...</span>
-                <span class="data-label">TechPay Pagamentos S.A.</span>
-            </div>
-            <div class="auth-footer">
-                ID: <span id="res-id">...</span><br>
-                Autenticação: <span id="res-auth">...</span>
-            </div>
-        </div>
-    </div>
+<div class="receipt-container" id="comprovanteConteudo">
 
-    <div class="fixed-actions">
-        <button class="btn-style" onclick="sendToWhatsApp()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-11-8l5-5 5 5m-5-5v11"/></svg>
-            Enviar Comprovante
-        </button>
-        <button class="btn-style" onclick="concluirOperacao()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-            Concluir
-        </button>
-    </div>
+<div class="status-icon">
+<svg viewBox="0 0 24 24">
+<path d="M20 6L9 17l-5-5"/>
+</svg>
+</div>
 
-    <script>
-        function concluirOperacao() {
-            // Limpa dados sensíveis antes de sair
-            localStorage.removeItem("ultimoValor");
-            localStorage.removeItem("tipoOperacao");
-            window.location.href = 'home.html';
-        }
+<h1 class="title">Pix enviado</h1>
+<p class="subtitle">Transferência realizada com sucesso</p>
 
-        window.onload = function() {
-            // Força a rolagem para o topo ao carregar
-            window.scrollTo(0,0);
-            
-            const tipo = localStorage.getItem("tipoOperacao") || "Pix";
-            const valor = localStorage.getItem("ultimoValor") || "R$ 0,00";
-            
-            document.getElementById('res-val').innerText = valor;
-            document.getElementById('res-user-name').innerText = localStorage.getItem("usuarioNome") || "Cliente TechPay";
-            document.getElementById('res-time').innerText = new Date().toLocaleString('pt-BR');
-            document.getElementById('res-id').innerText = "TP" + Math.random().toString(36).substr(2, 15).toUpperCase();
-            document.getElementById('res-auth').innerText = Math.random().toString(16).substr(2, 18).toUpperCase();
+<div class="info-group">
+<span class="label">Valor</span>
+<span class="value" id="valorFinal" style="font-size:26px;color:#22C55E;">R$ 0,00</span>
+</div>
 
-            const areaDinamica = document.getElementById('dados-dinamicos');
-            if (tipo === "Recarga") {
-                document.getElementById('doc-title').innerText = "Comprovante de Recarga";
-                areaDinamica.innerHTML = `<span class="section-title">Destino</span><div class="data-row"><span class="data-label">Operadora</span><span class="data-value">${localStorage.getItem("operadora") || 'VIVO'}</span></div><div class="data-row"><span class="data-label">Número</span><span class="data-value">${localStorage.getItem("telefone") || '(00) 00000-0000'}</span></div>`;
-            } else {
-                document.getElementById('doc-title').innerText = "Comprovante de Pix";
-                areaDinamica.innerHTML = `<span class="section-title">Recebedor</span><div class="data-row"><span class="data-label">Nome</span><span class="data-value">Leonardo Candido</span></div><div class="data-row"><span class="data-label">Instituição</span><span class="data-value">Nu Pagamentos S.A.</span></div>`;
-            }
-        };
+<div class="divider"></div>
 
-        async function sendToWhatsApp() {
-            const el = document.getElementById("printable");
-            const canvas = await html2canvas(el, { scale: 3, backgroundColor: "#ffffff" });
-            const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-            const file = new File([blob], 'Comprovante.png', { type: 'image/png' });
-            if (navigator.share) {
-                await navigator.share({ files: [file], title: 'Comprovante' });
-            }
-        }
-    </script>
+<div class="info-group">
+<span class="label">Para</span>
+<span class="value" id="destinoNome">---</span>
+<span class="sub-value" id="destinoBanco">---</span>
+</div>
+
+<div class="info-group">
+<span class="label">Origem</span>
+<span class="value" id="nomeOrigem">---</span>
+<span class="sub-value">Techpay</span>
+</div>
+
+<div class="divider"></div>
+
+<div class="info-group">
+<span class="label">Tipo</span>
+<span class="value">Pix</span>
+</div>
+
+<div class="info-group">
+<span class="label">Data e hora</span>
+<span class="value" id="dataHora"></span>
+</div>
+
+<div class="info-group">
+<span class="label">ID da transação</span>
+<span class="value" id="idTransacao" style="font-family:monospace;font-size:12px;"></span>
+</div>
+
+</div>
+
+<button class="btn-share" onclick="compartilharNativo()">
+Compartilhar comprovante
+</button>
+
+<button class="btn-close" onclick="location.href='home.html'">
+Concluir
+</button>
+
+<script>
+
+// DADOS
+const valor = localStorage.getItem("ultimoValor") || "R$ 0,00";
+const nomeUsuario = localStorage.getItem("usuarioNome") || "Você";
+const destino = localStorage.getItem("destinoNome") || "Destinatário";
+const banco = localStorage.getItem("destinoBanco") || "Banco desconhecido";
+
+// DATA BONITA
+const agora = new Date();
+const dataFormatada = agora.toLocaleDateString('pt-BR', {
+  day:'2-digit', month:'long', year:'numeric'
+}) + " às " + agora.toLocaleTimeString('pt-BR', {
+  hour:'2-digit', minute:'2-digit'
+});
+
+// ID BONITO
+const idTrans = "E" + Date.now() + Math.random().toString(36).substring(2,8).toUpperCase();
+
+// MOSTRAR
+document.getElementById("valorFinal").innerText = valor;
+document.getElementById("nomeOrigem").innerText = nomeUsuario;
+document.getElementById("destinoNome").innerText = destino;
+document.getElementById("destinoBanco").innerText = banco;
+document.getElementById("dataHora").innerText = dataFormatada;
+document.getElementById("idTransacao").innerText = idTrans;
+
+// SALVAR TRANSAÇÃO (CORRETO)
+const transacao = {
+  id: idTrans,
+  tipo: "enviado",
+  valor: valor,
+  nome: destino,
+  banco: banco,
+  data: dataFormatada
+};
+
+let historico = JSON.parse(localStorage.getItem("transacoes")) || [];
+historico.unshift(transacao);
+localStorage.setItem("transacoes", JSON.stringify(historico));
+
+// COMPARTILHAR
+async function compartilharNativo(){
+
+  const canvas = await html2canvas(document.getElementById("comprovanteConteudo"), {
+    backgroundColor:"#FFFFFF",
+    scale:3
+  });
+
+  const blob = await (await fetch(canvas.toDataURL())).blob();
+  const file = new File([blob], "comprovante.png", {type:"image/png"});
+
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file]});
+  }
+}
+
+</script>
+
 </body>
 </html>
