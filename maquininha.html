@@ -1,1 +1,230 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { --primary: #22c55e; --bg: #000; --card: #111; --border: rgba(255,255,255,0.08); --text-muted: #888; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
+
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; padding: 25px; animation: fadeIn 0.3s ease; }
+        .active-screen { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* TECLADO E DISPLAY */
+        .display-val { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .val-main { font-size: 60px; font-weight: 800; letter-spacing: -2px; color: #333; }
+        .val-main.has-content { color: #fff; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 10px; }
+        .key { height: 65px; background: var(--card); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); }
+        .key:active { background: #222; transform: scale(0.95); }
+
+        /* CARDS DE MODO */
+        .mode-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
+        .mode-icon { width: 45px; height: 45px; background: rgba(34, 197, 94, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); }
+
+        /* PARCELAMENTO */
+        .parcela-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .parcela-item { padding: 18px; background: var(--card); border: 1px solid var(--border); border-radius: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* PIX QR CODE */
+        .qr-container { background: #fff; padding: 15px; border-radius: 20px; margin: 20px auto; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .qr-img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* RECEIPT */
+        .receipt-card { background: #111; border-radius: 24px; padding: 25px; border: 1px solid var(--border); margin-top: 10px; }
+        .receipt-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .receipt-row:last-child { border: none; }
+        .label { color: var(--text-muted); font-size: 13px; }
+        .value { font-weight: 600; font-size: 14px; text-align: right; }
+
+        /* NFC WAVE */
+        .nfc-anim { position: relative; width: 100px; height: 100px; margin: 30px auto; color: var(--primary); cursor: pointer; }
+        .wave { position: absolute; border: 2px solid var(--primary); border-radius: 50%; inset: 0; animation: ripple 1.5s infinite; }
+        @keyframes ripple { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+        .btn-full { width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: #000; }
+        .btn-secondary { background: #222; color: #fff; }
+        
+        .loader { width: 30px; height: 30px; border: 3px solid #222; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 10px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+       <div id="step-1" class="screen active-screen">
+        <div style="text-align: center; margin-top: 5px; margin-bottom: 15px;">
+            <span style="font-size: 26px; font-weight: 800; letter-spacing: -1.5px;">
+                TECH<span style="color: var(--primary);">TAP</span>
+            </span>
+        </div>
+
+        <div style="text-align: center; color: var(--text-muted); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Informe o valor para cobrar</div>
+        
+        <div class="display-val">
+            <div class="val-main" id="val-display">R$ 0,00</div>
+        </div>
+
+        <div class="keypad">
+            <div class="key" onclick="typeNum('1')">1</div><div class="key" onclick="typeNum('2')">2</div><div class="key" onclick="typeNum('3')">3</div>
+            <div class="key" onclick="typeNum('4')">4</div><div class="key" onclick="typeNum('5')">5</div><div class="key" onclick="typeNum('6')">6</div>
+            <div class="key" onclick="typeNum('7')">7</div><div class="key" onclick="typeNum('8')">8</div><div class="key" onclick="typeNum('9')">9</div>
+            <div class="key" onclick="typeNum('00')">00</div><div class="key" onclick="typeNum('0')">0</div>
+            <div class="key" onclick="backspace()"><i data-lucide="delete"></i></div>
+        </div>
+
+        <button id="btn-next-1" class="btn-full" style="background:#111; color:#444; pointer-events:none" onclick="goStep('step-2')">CONTINUAR</button>
+    </div>
+
+    <div id="step-2" class="screen">
+        <h2>Meio de pagamento</h2>
+        <div class="mode-card" onclick="goStep('step-pix-qr')">
+            <div class="mode-icon"><i data-lucide="zap"></i></div>
+            <div><b>Pix</b><br><small style="color:var(--text-muted)">QR Code dinâmico</small></div>
+        </div>
+        <div class="mode-card" onclick="iniciarNFC('Débito')">
+            <div class="mode-icon"><i data-lucide="banknote"></i></div>
+            <div><b>Débito</b><br><small style="color:var(--text-muted)">Tap to Pay</small></div>
+        </div>
+        <div class="mode-card" onclick="goStep('step-parcelas')">
+            <div class="mode-icon"><i data-lucide="credit-card"></i></div>
+            <div><b>Crédito</b><br><small style="color:var(--text-muted)">À vista ou parcelado</small></div>
+        </div>
+        <button class="btn-full btn-secondary" onclick="goStep('step-1')">Voltar</button>
+    </div>
+
+    <div id="step-parcelas" class="screen">
+        <h2>Parcelamento</h2>
+        <div class="parcela-list" id="lista-parcelas"></div>
+        <button class="btn-full btn-secondary" onclick="goStep('step-2')">Voltar</button>
+    </div>
+
+    <div id="step-pix-qr" class="screen" style="text-align: center;">
+        <h2>Escaneie o QR Code</h2>
+        <div class="qr-container" onclick="simularPagamento('Pix')">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TechPay" class="qr-img" alt="QR Code">
+        </div>
+        <p style="color:var(--text-muted)">Toque no QR Code para simular o pagamento</p>
+        <div class="loader"></div>
+        <button class="btn-full btn-secondary" style="margin-top:auto" onclick="goStep('step-2')">Voltar</button>
+    </div>
+
+    <div id="step-nfc" class="screen" style="text-align: center; justify-content: center;">
+        <div class="nfc-anim" onclick="simularPagamento(metodoGlobal)">
+            <div class="wave"></div>
+            <i data-lucide="contactless" style="width:100%; height:100%;"></i>
+        </div>
+        <h2 id="txt-metodo-nfc">Aproxime o cartão</h2>
+        <p id="txt-total-nfc" style="font-size:24px; font-weight:800; color:var(--primary);"></p>
+        <p style="color:var(--text-muted)">Toque no ícone acima para simular a leitura</p>
+        <button class="btn-full btn-secondary" style="margin-top:auto" onclick="goStep('step-2')">Voltar</button>
+    </div>
+
+    <div id="step-wait" class="screen" style="justify-content: center; align-items: center; text-align: center;">
+        <div class="loader" style="width:60px; height:60px"></div>
+        <h2>Processando...</h2>
+    </div>
+
+    <div id="step-success" class="screen">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="width:60px; height:60px; background:var(--primary); border-radius:50%; color:#000; display:flex; align-items:center; justify-content:center; margin: 0 auto 15px;"><i data-lucide="check" style="width:35px; height:35px"></i></div>
+            <h2 style="margin:0">Pagamento Aprovado</h2>
+        </div>
+        <div class="receipt-card">
+            <div class="receipt-row"><span class="label">Valor</span><span class="value" id="res-valor"></span></div>
+            <div class="receipt-row"><span class="label">Método</span><span class="value" id="res-metodo"></span></div>
+            <div class="receipt-row"><span class="label">Data</span><span class="value" id="res-data"></span></div>
+            <div class="receipt-row" style="border:none"><span class="label">ID</span><span class="value">#77002026PDV</span></div>
+        </div>
+        <div style="margin-top: auto;">
+            <button class="btn-full btn-primary" onclick="compartilhar()">COMPARTILHAR</button>
+            <button class="btn-full btn-secondary" onclick="location.reload()">CONCLUIR</button>
+        </div>
+    </div>
+
+    <script>
+        let valorRaw = "";
+        let metodoGlobal = "";
+
+        function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+        function typeNum(n) { if(valorRaw.length < 9) valorRaw += n; vibrate(15); updateDisplay(); }
+        function backspace() { valorRaw = valorRaw.slice(0, -1); vibrate(10); updateDisplay(); }
+
+        function updateDisplay() {
+            let v = valorRaw.padStart(3, '0');
+            let num = (parseInt(v)/100).toFixed(2);
+            let formatado = "R$ " + num.replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
+            document.getElementById('val-display').innerText = formatado;
+            
+            const btn = document.getElementById('btn-next-1');
+            if(parseInt(valorRaw) > 0) {
+                document.getElementById('val-display').classList.add('has-content');
+                btn.style.background = "var(--primary)"; btn.style.color = "#000"; btn.style.pointerEvents = "all";
+            } else {
+                document.getElementById('val-display').classList.remove('has-content');
+                btn.style.background = "#111"; btn.style.color = "#444"; btn.style.pointerEvents = "none";
+            }
+        }
+
+        function goStep(stepId) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active-screen'));
+            document.getElementById(stepId).classList.add('active-screen');
+            if(stepId === 'step-parcelas') gerarParcelas();
+            lucide.createIcons();
+        }
+
+        function gerarParcelas() {
+            const container = document.getElementById('lista-parcelas');
+            container.innerHTML = "";
+            let valorNum = parseInt(valorRaw) / 100;
+            for(let i=1; i<=12; i++) {
+                let pVal = (valorNum / i).toFixed(2).replace(".",",");
+                container.innerHTML += `
+                    <div class="parcela-item" onclick="iniciarNFC('Crédito ${i}x')">
+                        <span>${i}x de <b>R$ ${pVal}</b></span>
+                        <i data-lucide="chevron-right"></i>
+                    </div>`;
+            }
+            lucide.createIcons();
+        }
+
+        function iniciarNFC(metodo) {
+            metodoGlobal = metodo;
+            document.getElementById('txt-metodo-nfc').innerText = "Aproxime para " + metodo;
+            document.getElementById('txt-total-nfc').innerText = document.getElementById('val-display').innerText;
+            goStep('step-nfc');
+        }
+
+        function simularPagamento(metodo) {
+            metodoGlobal = metodo;
+            goStep('step-wait');
+            setTimeout(() => {
+                vibrate([100, 50, 100]);
+                document.getElementById('res-valor').innerText = document.getElementById('val-display').innerText;
+                document.getElementById('res-metodo').innerText = metodoGlobal;
+                document.getElementById('res-data').innerText = new Date().toLocaleString('pt-BR');
+                goStep('step-success');
+            }, 2000);
+        }
+
+        async function compartilhar() {
+            const dados = {
+                title: 'Comprovante TechPay',
+                text: `Pagamento Aprovado\nValor: ${document.getElementById('res-valor').innerText}\nMetodo: ${metodoGlobal}`,
+                url: window.location.href
+            };
+            if (navigator.share) await navigator.share(dados);
+            else alert("Copiado!");
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+  </html>
+  
