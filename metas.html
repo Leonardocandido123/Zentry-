@@ -1,1 +1,131 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Tech Pay - Minhas Metas</title>
+  <style>
+    :root { 
+        --primary: #22c55e; 
+        --bg: #000;
+        --card: #111827;
+        --border: rgba(255, 255, 255, 0.1);
+        --text-secondary: #9CA3AF;
+    }
+    
+    body { margin:0; font-family:'Inter',sans-serif; background: var(--bg); color: #fff; padding: 20px; padding-bottom: 100px; }
+    
+    .header { margin-bottom: 30px; display: flex; align-items: center; gap: 15px; }
+    .back-btn { background: var(--card); border: 1px solid var(--border); color: #fff; border-radius: 12px; padding: 10px; cursor: pointer; display: flex; }
+
+    /* CARD DA META */
+    .meta-container { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 25px; text-align: center; }
+    .meta-valor { font-size: 32px; font-weight: 800; margin: 10px 0; color: var(--primary); }
+    
+    /* BARRA DE PROGRESSO */
+    .progress-wrapper { background: rgba(255,255,255,0.05); height: 20px; border-radius: 10px; margin: 20px 0; overflow: hidden; border: 1px solid var(--border); }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); width: 0%; transition: 1s ease-in-out; }
+
+    .meta-stats { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); }
+
+    /* CONFIGURAR META */
+    .config-meta { margin-top: 30px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+    .config-meta input { 
+        width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); 
+        border-radius: 12px; padding: 12px; color: #fff; margin-top: 10px; box-sizing: border-box;
+    }
+    .btn-save { width: 100%; background: #fff; color: #000; border: none; border-radius: 12px; padding: 12px; font-weight: 700; margin-top: 15px; cursor: pointer; }
+
+    /* RODAPÉ (Igual ao seu print) */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #0a0a0a; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 15px 0 30px; }
+    .nav-item { text-decoration: none; color: #555; display: flex; flex-direction: column; align-items: center; font-size: 10px; gap: 5px; }
+    .nav-item.active { color: #fff; }
+    .nav-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+    <button class="back-btn" onclick="location.href='home.html'"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h2 style="margin:0; font-size: 18px;">Minhas Metas</h2>
+</div>
+
+<div class="meta-container">
+    <span style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Progresso Mensal</span>
+    <div class="meta-valor" id="display-atual">R$ 0,00</div>
+    
+    <div class="progress-wrapper">
+        <div class="progress-bar" id="barra-progresso"></div>
+    </div>
+
+    <div class="meta-stats">
+        <span>Faltam <b id="display-falta" style="color:#fff">R$ 0,00</b></span>
+        <span id="display-porcentagem">0%</span>
+    </div>
+</div>
+
+<div class="config-meta">
+    <label style="font-size: 13px; font-weight: 600;">Ajustar Objetivo do Mês</label>
+    <input type="text" id="input-meta" placeholder="Ex: R$ 5.000,00" oninput="mascaraMoeda(this)">
+    <button class="btn-save" onclick="salvarMeta()">Definir Nova Meta</button>
+</div>
+
+<nav class="bottom-nav">
+    <a href="home.html" class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+        <span>Início</span>
+    </a>
+    <a href="metas.html" class="nav-item active">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+        <span>Metas</span>
+    </a>
+    <a href="ajustes.html" class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>Ajustes</span>
+    </a>
+</nav>
+
+<script>
+function mascaraMoeda(i) {
+    let v = i.value.replace(/\D/g,'');
+    v = (v/100).toFixed(2) + '';
+    v = v.replace(".", ",");
+    v = v.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+    v = v.replace(/(\d)(\d{3}),/g, "$1.$2,");
+    i.value = "R$ " + v;
+}
+
+function salvarMeta() {
+    const valorStr = document.getElementById('input-meta').value;
+    if(!valorStr) return alert("Digite um valor!");
+    localStorage.setItem("meta_mensal", valorStr);
+    atualizarTela();
+}
+
+function atualizarTela() {
+    // 1. Pega a Meta Salva (ou padrão 5000)
+    const metaSalvaStr = localStorage.getItem("meta_mensal") || "R$ 5.000,00";
+    const metaNum = parseFloat(metaSalvaStr.replace(/[^\d]/g, '')) / 100;
+
+    // 2. Simula o Saldo Atual (Poderia vir dos links pagos)
+    const saldoAtualStr = "R$ 3.250,00"; // Aqui vamos conectar com o saldo real depois
+    const saldoNum = 3250.00; 
+
+    // 3. Cálculos
+    const porcentagem = Math.min((saldoNum / metaNum) * 100, 100);
+    const faltaNum = Math.max(metaNum - saldoNum, 0);
+
+    // 4. Atualiza o HTML
+    document.getElementById('display-atual').innerText = saldoAtualStr;
+    document.getElementById('barra-progresso').style.width = porcentagem + "%";
+    document.getElementById('display-porcentagem').innerText = Math.round(porcentagem) + "%";
+    document.getElementById('display-falta').innerText = "R$ " + faltaNum.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+}
+
+window.onload = atualizarTela;
+</script>
+
+</body>
+</html>
