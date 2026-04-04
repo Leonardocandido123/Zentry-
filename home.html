@@ -7,18 +7,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <title>Tech Pay - Home Premium</title>
   <style>
-    :root { 
+    
+   :root { 
     --primary: #22c55e; 
-    --bg-card: #0f172a;
-    --border: rgba(255, 255, 255, 0.08); 
-    --text-secondary: #94a3b8; 
-    }
-    body { 
+    --bg-card: #111827;
+    --border: rgba(255, 255, 255, 0.15); 
+    --text-secondary: #9CA3AF; 
+}
+
+body { 
     margin:0; 
     font-family:'Inter',sans-serif; 
-    background: linear-gradient(180deg, #020617 0%, #000 100%);
-    color:#fff;
-    }
+    background: radial-gradient(circle at 20% 0%, #0f172a, #000 60%); 
+    -webkit-tap-highlight-color: transparent; 
+    overflow-x: hidden; 
+    color: #fff; 
+}
     .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-top: 10px; }
     .user-info h2 { font-size: 20px; margin: 2px 0 0 0; color: #FFF; font-weight: 700; }
     .avatar { width:42px; height:42px; background: var(--bg-card); border-radius:50%; display:flex; align-items:center; justify-content:center; border: 1px solid var(--border); }
