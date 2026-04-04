@@ -3,151 +3,225 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <title>Tech Pay - Gerar Link</title>
-<style>
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Tech Pay - Professional Link</title>
 <style>
     :root { 
         --primary: #22c55e; 
-        --bg-card: rgba(255, 255, 255, 0.05); /* Card mais sutil para o fundo aparecer */
-        --border: rgba(255, 255, 255, 0.1); 
-        --text-secondary: #9CA3AF; 
+        --primary-glow: rgba(34, 197, 94, 0.2);
+        --bg-dark: #000000;
+        --card-bg: rgba(255, 255, 255, 0.04);
+        --border-white: rgba(255, 255, 255, 0.08);
+        --text-secondary: #94a3b8; 
     }
-    
-    /* O SEGREDO ESTÁ AQUI: APLICAR NO HTML E BODY JUNTOS */
-    html, body { 
-        margin: 0;
-        padding: 0;
-        min-height: 100%;
-        width: 100%;
-    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
     body { 
         font-family: 'Inter', sans-serif; 
-        /* Gradiente ÚNICO e FIXO: ele não se move nem divide */
-        background: radial-gradient(circle at top center, #1a1c20 0%, #000000 80%) no-repeat fixed;
-        background-size: cover;
+        /* O fundo que você pediu com ajuste de profundidade */
+        background: radial-gradient(circle at 20% 0%, #0f172a, #000 70%) no-repeat fixed;
         color: #fff; 
-        padding: 20px; 
-        padding-bottom: 50px; 
-        box-sizing: border-box;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 24px 16px;
+    }
+
+    .container { width: 100%; max-width: 420px; }
+
+    /* HEADER ESTILO APP BANCÁRIO */
+    .header { 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between;
+        width: 100%; 
+        margin-bottom: 32px; 
     }
     
-    /* HEADER */
-    .header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; position: relative; z-index: 10; }
-    
-    /* AJUSTE DO CARD PARA NÃO CRIAR SOMBRAS QUE PARECEM DIVISÃO */
+    .back-btn {
+        background: var(--card-bg);
+        border: 1px solid var(--border-white);
+        border-radius: 12px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        cursor: pointer;
+    }
+
+    .header h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; }
+
+    /* CARD PRINCIPAL */
     .card-gerador { 
-        background: rgba(255, 255, 255, 0.03); 
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid var(--border); 
-        border-radius: 24px; 
-        padding: 25px; 
-        margin-bottom: 20px;
+        background: var(--card-bg); 
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-white); 
+        border-radius: 28px; 
+        padding: 32px 24px; 
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        margin-bottom: 24px;
     }
+
+    .input-group { margin-bottom: 20px; }
     
-    /* ... o restante do seu CSS (inputs, botões, etc) pode continuar igual ... */
-  
-    .input-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .input-group label { 
+        display: block; 
+        font-size: 12px; 
+        font-weight: 600; 
+        color: var(--text-secondary); 
+        margin-bottom: 8px; 
+        margin-left: 4px;
+    }
     
     .input-group input { 
         width: 100%; 
-        background: rgba(255,255,255,0.03); 
-        border: 1px solid var(--border); 
-        border-radius: 14px; 
+        background: rgba(0, 0, 0, 0.2); 
+        border: 1px solid var(--border-white); 
+        border-radius: 16px; 
         padding: 16px; 
         color: #fff; 
-        font-size: 16px; 
-        box-sizing: border-box;
-        transition: 0.3s;
+        font-size: 18px; 
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .input-group input:focus { border-color: var(--primary); outline: none; background: rgba(255,255,255,0.07); }
+
+    .input-group input:focus { 
+        border-color: var(--primary); 
+        background: rgba(0, 0, 0, 0.4);
+        outline: none;
+        box-shadow: 0 0 0 4px var(--primary-glow);
+    }
 
     .btn-gerar { 
         width: 100%; 
         background: var(--primary); 
-        color: #000; 
+        color: #052e16; 
         border: none; 
-        border-radius: 16px; 
+        border-radius: 18px; 
         padding: 18px; 
-        font-weight: 800; 
+        font-weight: 700; 
         font-size: 16px; 
         cursor: pointer;
-        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
-    }
-    
-    /* RESULTADO */
-    #resultado { display: none; margin-top: 25px; animation: fadeIn 0.4s ease; }
-    .link-box { 
-        background: rgba(6, 78, 59, 0.4); 
-        border: 1px dashed var(--primary); 
-        border-radius: 16px; 
-        padding: 18px; 
-        text-align: center; 
-        margin-bottom: 15px; 
+        transition: transform 0.2s;
     }
 
+    .btn-gerar:active { transform: scale(0.98); }
+
+    /* RESULTADO DO LINK */
+    #resultado { display: none; margin-top: 24px; animation: slideUp 0.5s ease; }
+    
+    .link-box { 
+        background: rgba(34, 197, 94, 0.1); 
+        border: 1px solid rgba(34, 197, 94, 0.2); 
+        border-radius: 20px; 
+        padding: 20px; 
+        text-align: center; 
+        margin-bottom: 16px; 
+    }
+
+    .actions-share { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    
+    .btn-share {
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border-white);
+        background: var(--card-bg);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .btn-whatsapp { background: #25D366; color: #fff; border: none; }
+
     /* HISTÓRICO */
+    .historico-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 32px 4px 16px;
+    }
+
+    .historico-header span { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+
     .item-link { 
-        background: var(--bg-card); 
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--border); 
-        padding: 18px; 
+        background: var(--card-bg); 
+        border: 1px solid var(--border-white); 
+        padding: 16px; 
         border-radius: 20px; 
         display: flex; 
         justify-content: space-between; 
         align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
     }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .item-info b { display: block; font-size: 16px; margin-bottom: 4px; }
+    .item-info span { font-size: 12px; color: var(--text-secondary); }
+
+    .status-badge {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--primary);
+        font-size: 10px;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.5px;
+    }
+
+    @keyframes slideUp { 
+        from { opacity: 0; transform: translateY(20px); } 
+        to { opacity: 1; transform: translateY(0); } 
+    }
 </style>
-  
 </head>
 <body>
 
-<div class="header">
-    <button class="back-btn" onclick="location.href='home.html'">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <h2 style="margin:0; font-size: 18px;">Gerar Link de Venda</h2>
-</div>
+<div class="container">
+    <div class="header">
+        <button class="back-btn" onclick="location.href='home.html'">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <h2>Gerar Link</h2>
+        <div style="width:40px"></div> </div>
 
-<div class="card-gerador">
-    <div class="input-group">
-        <label>Valor da venda</label>
-        <input type="text" id="valor" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
+    <div class="card-gerador">
+        <div class="input-group">
+            <label>VALOR DA COBRANÇA</label>
+            <input type="text" id="valor" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
+        </div>
+        <div class="input-group">
+            <label>DESCRIÇÃO</label>
+            <input type="text" id="descricao" placeholder="Ex: Consultoria Técnica">
+        </div>
+        <button class="btn-gerar" onclick="gerarLink()">Criar Link de Pagamento</button>
+        
+        <div id="resultado">
+            <div class="link-box">
+                <span style="display:block; font-size: 10px; color: var(--primary); margin-bottom: 8px; font-weight: 800; letter-spacing: 1px;">LINK DISPONÍVEL</span>
+                <div id="link-gerado" style="font-size: 14px; font-weight: 500; color: #fff; opacity: 0.9;"></div>
+            </div>
+            <div class="actions-share">
+                <button class="btn-share" onclick="copiar()">Copiar Link</button>
+                <button class="btn-share btn-whatsapp" onclick="compartilharZap()">WhatsApp</button>
+            </div>
+        </div>
     </div>
-    <div class="input-group">
-        <label>Descrição (opcional)</label>
-        <input type="text" id="descricao" placeholder="Ex: Venda de Camiseta">
-    </div>
-    <button class="btn-gerar" onclick="gerarLink()">Gerar e Salvar</button>
-</div>
 
-<div id="resultado">
-    <div class="link-box">
-        <span style="display:block; font-size: 10px; color: var(--primary); margin-bottom: 5px; font-weight: 800;">LINK GERADO</span>
-        <div id="link-gerado" style="font-size: 12px; word-break: break-all;"></div>
+    <div class="historico-header">
+        <span>ATIVIDADE RECENTE</span>
+        <span onclick="limparHistorico()" style="color: #f87171; font-size: 12px; font-weight: 500; cursor:pointer;">Limpar</span>
     </div>
-    <div class="actions-share">
-        <button class="btn-share btn-copy" onclick="copiar()">Copiar</button>
-        <button class="btn-share btn-whatsapp" onclick="compartilharZap()">WhatsApp</button>
-    </div>
-</div>
 
-<div class="historico-titulo">
-    <span>Histórico de Cobranças</span>
-    <span onclick="limparHistorico()" style="color: #ef4444; font-size: 11px; cursor:pointer;">Limpar tudo</span>
+    <div id="lista-links">
+        </div>
 </div>
-
-<div class="lista-links" id="lista-links">
-    </div>
 
 <script>
-// O SEU NOVO JS VAI AQUI
 function mascaraMoeda(i) {
     let v = i.value.replace(/\D/g,'');
     v = (v/100).toFixed(2) + '';
@@ -159,22 +233,22 @@ function mascaraMoeda(i) {
 
 function gerarLink() {
     const valor = document.getElementById('valor').value;
-    const desc = document.getElementById('descricao').value || "Venda sem descrição";
+    const desc = document.getElementById('descricao').value || "Cobrança Digital";
     
     if(valor === "" || valor === "R$ 0,00") {
-        alert("Digite um valor válido");
+        alert("Defina um valor para a cobrança");
         return;
     }
     
-    const hash = Math.random().toString(36).substring(7);
-    const novoLink = `techpay.me/venda/${hash}`;
+    const hash = Math.random().toString(36).substring(7).toUpperCase();
+    const novoLink = `techpay.me/pay/${hash}`;
     
     const linkObj = {
         id: Date.now(),
         valor: valor,
         descricao: desc,
         url: novoLink,
-        data: new Date().toLocaleDateString('pt-BR')
+        data: new Date().toLocaleDateString('pt-BR', {day: '2-digit', month: 'short'})
     };
     
     let historico = JSON.parse(localStorage.getItem("links_gerados") || "[]");
@@ -192,7 +266,7 @@ function renderizarLinks() {
     const historico = JSON.parse(localStorage.getItem("links_gerados") || "[]");
     
     if(historico.length === 0) {
-        lista.innerHTML = '<p style="text-align:center; font-size:12px; color:gray; margin-top:20px;">Nenhum link gerado ainda.</p>';
+        lista.innerHTML = '<p style="text-align:center; font-size:13px; color:#475569; margin-top:40px;">Nenhuma transação recente.</p>';
         return;
     }
 
@@ -202,13 +276,13 @@ function renderizarLinks() {
                 <b>${link.valor}</b>
                 <span>${link.descricao} • ${link.data}</span>
             </div>
-            <div class="status-badge">ENVIADO</div>
+            <div class="status-badge">ATIVO</div>
         </div>
     `).join('');
 }
 
 function limparHistorico() {
-    if(confirm("Deseja limpar seu histórico de cobranças?")) {
+    if(confirm("Deseja apagar o histórico?")) {
         localStorage.setItem("links_gerados", "[]");
         renderizarLinks();
     }
@@ -217,7 +291,15 @@ function limparHistorico() {
 function copiar() {
     const link = document.getElementById('link-gerado').innerText;
     navigator.clipboard.writeText(link);
-    alert("Copiado com sucesso!");
+    // Feedback visual moderno no lugar do alert
+    const btn = document.querySelector('.btn-share');
+    const originalText = btn.innerText;
+    btn.innerText = "Copiado!";
+    btn.style.color = "#22c55e";
+    setTimeout(() => {
+        btn.innerText = originalText;
+        btn.style.color = "white";
+    }, 2000);
 }
 
 function compartilharZap() {
