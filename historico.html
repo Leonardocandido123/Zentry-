@@ -1,1 +1,162 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Pay - Histórico</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #22C55E;
+  --bg: radial-gradient(circle at 20% 0%, #0f172a, #000 70%);
+  --card: rgba(18,24,38,0.95);
+  --border: rgba(255,255,255,0.05);
+  --text-sec: #9CA3AF;
+}
+
+body {
+  margin:0;
+  font-family:'Inter',sans-serif;
+  background: var(--bg);
+  color:white;
+  padding:20px;
+}
+
+/* HEADER */
+.header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+h2 {
+  margin:0;
+}
+
+/* CARD */
+.card {
+  background: var(--card);
+  border-radius:20px;
+  padding:15px;
+  margin-bottom:10px;
+  border:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* INFO */
+.info {
+  display:flex;
+  flex-direction:column;
+}
+
+.nome {
+  font-weight:600;
+  font-size:14px;
+}
+
+.data {
+  font-size:11px;
+  color: var(--text-sec);
+}
+
+/* VALOR */
+.valor {
+  font-weight:700;
+  font-size:14px;
+}
+
+/* STATUS */
+.status {
+  font-size:10px;
+  padding:3px 8px;
+  border-radius:8px;
+  margin-top:5px;
+  width:fit-content;
+  font-weight:600;
+}
+
+.pago {
+  background: rgba(34,197,94,0.1);
+  color: var(--primary);
+}
+
+.pendente {
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+}
+
+/* VAZIO */
+.vazio {
+  text-align:center;
+  margin-top:60px;
+  color: var(--text-sec);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>Histórico</h2>
+</div>
+
+<div id="lista"></div>
+
+<div class="vazio" id="vazio" style="display:none;">
+  Nenhuma transação ainda
+</div>
+
+<script>
+
+function carregarHistorico(){
+  const lista = JSON.parse(localStorage.getItem("cobrancas") || "[]");
+  const container = document.getElementById("lista");
+  const vazio = document.getElementById("vazio");
+
+  container.innerHTML = "";
+
+  if(lista.length === 0){
+    vazio.style.display = "block";
+    return;
+  }
+
+  vazio.style.display = "none";
+
+  lista.forEach(item => {
+
+    const corValor = item.status === "pago" ? "#22C55E" : "#ef4444";
+
+    const el = document.createElement("div");
+    el.className = "card";
+
+    el.innerHTML = `
+      <div class="info">
+        <div class="nome">${item.desc}</div>
+        <div class="data">${item.data}</div>
+        <div class="status ${item.status === "pago" ? "pago" : "pendente"}">
+          ${item.status.toUpperCase()}
+        </div>
+      </div>
+
+      <div class="valor" style="color:${corValor}">
+        ${item.status === "pago" ? "+" : "-"} ${item.valor}
+      </div>
+    `;
+
+    container.appendChild(el);
+  });
+}
+
+carregarHistorico();
+
+</script>
+
+</body>
+</html>
