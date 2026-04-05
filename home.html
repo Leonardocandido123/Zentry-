@@ -139,53 +139,61 @@ body {
 
 /* BANNER 
 /* BANNER - VERSÃO CORRIGIDA */
+.
+    /* Container Principal (A cura para o vazamento e sumiço) */
 .banner-wrapper {
-  width: 100%;
-  margin-bottom: 25px;
-  position: relative;
-  overflow: hidden; /* Esconde o que vaza da tela */
-}
-
-.banner-container {
-  display: flex;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
-  width: 100%;
-}
-
-.smart-banner {
-  min-width: 100%; /* Cada slide ocupa a tela toda para o cálculo de 100% bater */
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: 18px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 140px;
-  position: relative;
-}
-
-/* PADRONIZAÇÃO DOS BOTÕES DENTRO DO BANNER */
-.smart-banner button {
-  width: 100%;
-  border: none;
-  border-radius: 12px;
-  font-size: 13px;
-  padding: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: 0.2s;
-}
-
-/* Cor específica para o Aluguel/Contas seguir o padrão verde piscina */
-.btn-pagar {
-  background: #22c55e !important;
-  color: #000 !important;
-}
+    width: 100%;
+    margin-bottom: 25px;
+    position: relative;
     
+    /* REMOVA paddings laterais grandes daqui se houver */
+    padding: 10px 0; /* Apenas respiro superior/inferior */
+    
+    /* ISSO AQUI PREVINE O VAZAMENTO PARA FORA DA TELA */
+    overflow-x: auto; 
+    scroll-snap-type: x mandatory;
+    box-sizing: border-box; 
+    
+    /* Esconde a barra de rolagem (opcional para estética premium) */
+    -ms-overflow-style: none; /* IE e Edge */
+    scrollbar-width: none; /* Firefox */
+}
 
+/* Tira a barra de rolagem no Chrome/Safari */
+.banner-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+/* Container Interno (Garanta que ele seja um flexbox) */
+.banner-container {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    width: 100%;
+}
+
+/* O Estilo Pastilha individual de cada slide (Cartão, Link, etc.) */
+.smart-banner {
+    /* Define quanto do slide anterior/seguinte aparece */
+    min-width: 85%; 
+    scroll-snap-align: center; /* Centraliza o slide ao rolar */
+    
+    /* USE margens laterais pequenas para criar respiro entre os slides */
+    margin: 0 10px;
+    
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 125px;
+    position: relative;
+    
+    /* Garante que o conteúdo interno não quebre */
+    flex-shrink: 0;
+}
     
 /* CARD PADRÃO */
 .smart-card {
