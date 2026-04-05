@@ -477,7 +477,8 @@ function carregarBanners() {
     </div>`);
 
     // CARD 3: COBRANÇA
-    const cobrancas = transacoes.filter(t => t.tipo === "entrada" && t.status === "pendente");
+    const cobrancas = JSON.parse(localStorage.getItem("cobrancas") || "[]")
+    .filter(c => c.status === "pendente");
     if (cobrancas.length > 0) {
         cobrancas.forEach(c => {
             listaSlides.push(`<div class="smart-banner" style="border-left: 5px solid #ef4444;">
