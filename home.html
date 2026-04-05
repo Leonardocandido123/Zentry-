@@ -447,13 +447,28 @@ let saldoOculto = false;
 let currentSlide = 0;
 let slideInterval;
   
-function atualizarHome() {  
-    const saldoSalvo = parseFloat(localStorage.getItem("saldo") || "1250.00");  
+  function atualizarHome() {  
+    // Busca o saldo ou define 0 se estiver vazio
+    const saldoSalvo = parseFloat(localStorage.getItem("saldo") || "0");  
     const el = document.getElementById("saldo-home");  
+    
     if(el) {
-        // Se saldoOculto for true, mostra asteriscos, senão mostra o valor formatado
-        el.innerText = saldoOculto ? "••••••••" : saldoSalvo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });  
+        if(saldoOculto) {
+            el.innerText = "••••••••";
+        } else {
+            el.innerText = saldoSalvo.toLocaleString('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL' 
+            });
+        }
     }
+}
+
+// Garanta que o TECHTAP abra a tela
+function abrirPDV() {
+    window.location.href = 'pdv.html';
+}
+  
                                   
   function atualizarResumo() {
     const historico = JSON.parse(localStorage.getItem("transacoes") || "[]");
