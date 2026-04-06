@@ -113,6 +113,32 @@ async function compartilhar(){
   document.body.classList.remove("export-mode");
   
   // ... resto do seu código de envio ...
+          // --- O QUE ESTAVA FALTANDO (DENTRO DA ÁREA VERMELHA) ---
+        
+        // 1. Transforma o desenho (canvas) em um endereço de imagem (Data URL)
+        const dataUrl = canvas.toDataURL("image/png");
+        
+        // 2. Converte esse endereço em um arquivo real (Blob)
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], "comprovante.png", { type: "image/png" });
+
+        // 3. Verifica se o celular suporta o compartilhamento de arquivos
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Comprovante Tech Pay',
+                text: 'Segue meu comprovante de pagamento.'
+            });
+        } else {
+            // Se o navegador for antigo e não suportar, ele apenas baixa a imagem
+            const link = document.createElement("a");
+            link.download = "comprovante.png";
+            link.href = dataUrl;
+            link.click();
+        }
+        
+        // --- FIM DO CÓDIGO QUE FALTA ---
+  
 }
   
 
