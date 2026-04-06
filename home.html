@@ -137,18 +137,116 @@ body {
   transform: scale(0.95);
 }
 
-/* BANNER */
- .banner-wrapper { width: 100%; margin-bottom: 25px; position: relative; overflow: hidden; }
-.banner-container { display: flex; transition: transform 0.5s ease-in-out; width: 100%; }
-.smart-banner {
-    min-width: 100%; background: var(--bg-card); border: 1px solid var(--border); 
-    border-radius: 22px; padding: 18px; box-sizing: border-box; 
-    display: flex; flex-direction: column; justify-content: center; min-height: 125px; position: relative;
-    cursor: pointer;
+    /* ========================= */
+/* BANNER ROTATIVO PREMIUM */
+/* ========================= */
+
+.banner-wrapper { 
+  width: 100%; 
+  margin: 20px 0 30px 0;
+  position: relative; 
+  overflow: hidden; 
 }
-.banner-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
-.dot { width: 6px; height: 6px; background: #374151; border-radius: 50%; transition: 0.3s; }
-.dot.active { background: var(--primary); width: 16px; border-radius: 10px; }
+
+.banner-container { 
+  display: flex; 
+  transition: transform 0.5s ease-in-out; 
+  width: 100%; 
+}
+
+/* CARD DO BANNER */
+.smart-banner {
+  min-width: 100%;
+  background: linear-gradient(145deg, #111827, #0a0f1f);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  padding: 20px;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+
+  min-height: 130px;
+  cursor: pointer;
+
+  box-shadow: 
+    0 10px 25px rgba(0,0,0,0.4),
+    inset 0 0 0.5px rgba(255,255,255,0.05);
+
+  transition: all 0.25s ease;
+}
+
+/* EFEITO AO TOCAR */
+.smart-banner:active {
+  transform: scale(0.98);
+}
+
+/* TÍTULO */
+.smart-banner b {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* TEXTO */
+.smart-banner p {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin: 0;
+}
+
+/* BOTÃO */
+.smart-banner button {
+  align-self: flex-start;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+/* DOTS */
+.banner-dots { 
+  display: flex; 
+  justify-content: center; 
+  gap: 6px; 
+  margin-top: 12px; 
+}
+
+.dot { 
+  width: 6px; 
+  height: 6px; 
+  background: #374151; 
+  border-radius: 50%; 
+  transition: all 0.3s ease; 
+}
+
+.dot.active { 
+  background: var(--primary); 
+  width: 18px; 
+  border-radius: 10px; 
+}
+
+/* CORES DIFERENTES POR TIPO */
+.banner-green {
+  border-left: 4px solid #22c55e;
+}
+
+.banner-red {
+  border-left: 4px solid #ef4444;
+}
+
+.banner-yellow {
+  border-left: 4px solid #f59e0b;
+}
+
+.banner-blue {
+  border-left: 4px solid #3b82f6;
+}
 /* CARD PADRÃO */
 .smart-card {
   background: var(--bg-card);
@@ -542,10 +640,6 @@ function iniciarRotacao(total) {
     }, 4000); // troca a cada 4s
 }
 
-// Iniciar ao carregar a página
-window.onload = () => { 
-    carregarBanners(); 
-};
 
 // =======================
 // LOGOUT
