@@ -2,96 +2,152 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 :root { 
-    --primary: #22c55e; 
-    --bg-card: #111827;
-    --border: rgba(255,255,255,0.1);
-    --text-secondary: #9CA3AF;
+    --primary: #22c55e; /* Verde Tech Pay */
+    --bg-card: rgba(255, 255, 255, 0.05); /* Efeito de vidro */
+    --border: rgba(255, 255, 255, 0.08); /* Borda ultra suave */
+    --text-secondary: #94a3b8;
+    --danger: #ef4444;
 }
 
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
 body {
-    margin:0;
-    font-family:'Inter',sans-serif;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    /* Fundo limpo sem linhas horizontais no rodapé */
     background: radial-gradient(circle at 20% 0%, #0f172a, #000 60%);
-    color:#fff;
+    color: #fff;
+    min-height: 100vh;
 }
 
 .container {
-    padding:20px;
-    max-width:450px;
-    margin:auto;
+    padding: 25px;
+    max-width: 450px;
+    margin: auto;
 }
 
-/* VOLTAR */
+/* SETA DE VOLTAR (PADRÃO BANCO) */
 .back-nav {
-    display:flex;
-    gap:10px;
-    margin-bottom:20px;
-    text-decoration:none;
-    color:#fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    background: var(--bg-card);
+    border-radius: 50%;
+    color: #fff;
+    text-decoration: none;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
 }
 
-/* HEADER */
+/* HEADER DO PERFIL */
 .profile-header {
-    text-align:center;
-    margin-bottom:30px;
+    text-align: center;
+    margin-bottom: 35px;
 }
 
+/* 1. CONTAINER DA FOTO CLICÁVEL */
+.avatar-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 15px;
+    cursor: pointer; /* Indica que é clicável */
+}
+
+/* A FOTO EM SI (Borda e Sombra) */
 .avatar {
-    width:100px;
-    height:100px;
-    border-radius:50%;
-    background:var(--bg-card);
-    border:2px solid var(--primary);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    margin:auto;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%; /* Bem redonda */
+    background: #1e293b; /* Fundo escuro sutil */
+    border: 3px solid var(--primary); /* Borda verde Tech Pay */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    overflow: hidden; /* Garante que a foto não vaze */
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); /* Brilho suave */
+    transition: 0.2s ease;
 }
 
-/* MENU */
-.section {
-    background:var(--bg-card);
-    border-radius:20px;
-    border:1px solid var(--border);
-    overflow:hidden;
-    margin-bottom:20px;
+/* Imagem de perfil (quando carregada) */
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Preenche sem distorcer */
 }
 
-.item {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:16px;
-    border-bottom:1px solid var(--border);
-    text-decoration:none;
-    color:#fff;
+/* Efeito ao tocar na foto */
+.avatar-wrapper:active .avatar {
+    transform: scale(0.95);
+    border-color: rgba(34, 197, 94, 0.5);
 }
 
-.item:last-child { border:none; }
-
-.item:active {
-    transform:scale(0.97);
-    background:rgba(255,255,255,0.05);
+/* Título e Nome */
+.profile-header h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -1px;
 }
 
-.text b { font-size:14px; }
-.text span { font-size:11px; color:var(--text-secondary); }
-
-/* BOTÃO */
-.logout {
-    width:100%;
-    padding:16px;
-    border-radius:15px;
-    border:1px solid #ef4444;
-    background:transparent;
-    color:#ef4444;
-    font-weight:700;
+/* CAMPOS INDIVIDUAIS (CARDS SOLTOS) */
+.menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Espaço entre os cartões */
+    margin-bottom: 30px;
 }
+
+/* Estilo do Card Individual */
+.menu-item {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px); /* Efeito de vidro opcional */
+    border-radius: 20px; /* Bordas arredondadas premium */
+    border: 1px solid var(--border);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-decoration: none;
+    color: #fff;
+    transition: 0.2s ease;
+}
+
+/* Efeito de toque nos cards */
+.menu-item:active {
+    transform: scale(0.97);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Ícone dentro do Card */
+.icon-box {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+/* Informações do Item */
+.item-info { flex: 1; }
+.item-info b { display: block; font-size: 15px; margin-bottom: 2px; }
+.item-info span { font-size: 12px; color: var(--text-secondary); }
+
+/* Seta na direita */
+.chevron { color: var(--border); }
+
 </style>
 </head>
 
@@ -99,64 +155,123 @@ body {
 
 <div class="container">
 
-<a href="home.html" class="back-nav">← Voltar</a>
-
-<div class="profile-header">
-    <div class="avatar">👤</div>
-    <h2 id="nomeUser">Carregando...</h2>
-</div>
-
-<!-- DADOS -->
-<div class="section">
-    <div class="item">
-        <div class="text">
-            <b>Meus Dados</b>
-            <span>Nome e informações</span>
-        </div>
-    </div>
-
-    <div class="item">
-        <div class="text">
-            <b>Chaves Pix</b>
-            <span>Gerenciar recebimentos</span>
-        </div>
-    </div>
-</div>
-
-<!-- ACESSO -->
-<div class="section">
-    <a href="config.html" class="item">
-        <div class="text">
-            <b>Ajustes</b>
-            <span>Configurações do app</span>
-        </div>
-        ➜
+    <a href="home.html" class="back-nav">
+        <i data-lucide="chevron-left"></i>
     </a>
 
-    <div class="item">
-        <div class="text">
-            <b>Ajuda</b>
-            <span>Suporte TechPay</span>
+    <div class="profile-header">
+        <input type="file" id="photo-input" style="display: none;" accept="image/*" onchange="previewFoto(this)">
+        
+        <div class="avatar-wrapper" onclick="document.getElementById('photo-input').click()">
+            <div class="avatar" id="avatar-image">
+                <i data-lucide="user" style="width: 45px; height: 45px;"></i>
+            </div>
         </div>
+        
+        <h2 id="nomeUser">Leonardo</h2>
     </div>
-</div>
 
-<button class="logout" onclick="logout()">Sair da conta</button>
+    <div class="menu-group">
+        <a href="meus-dados.html" class="menu-item">
+            <div class="icon-box"><i data-lucide="info"></i></div>
+            <div class="item-info">
+                <b>Meus Dados</b>
+                <span>Nome, CPF e telefone</span>
+            </div>
+            <i data-lucide="chevron-right" class="chevron"></i>
+        </a>
+
+        <a href="chaves-pix.html" class="menu-item">
+            <div class="icon-box"><i data-lucide="qr-code"></i></div>
+            <div class="item-info">
+                <b>Chaves Pix</b>
+                <span>Gerenciar recebimentos</span>
+            </div>
+            <i data-lucide="chevron-right" class="chevron"></i>
+        </a>
+
+        <a href="ajustes.html" class="menu-item">
+            <div class="icon-box"><i data-lucide="settings"></i></div>
+            <div class="item-info">
+                <b>Ajustes</b>
+                <span>Configurações do app</span>
+            </div>
+            <i data-lucide="chevron-right" class="chevron"></i>
+        </a>
+
+        <a href="ajuda.html" class="menu-item">
+            <div class="icon-box"><i data-lucide="help-circle"></i></div>
+            <div class="item-info">
+                <b>Ajuda</b>
+                <span>Suporte e chat</span>
+            </div>
+            <i data-lucide="chevron-right" class="chevron"></i>
+        </a>
+
+        <div class="menu-item" onclick="logout()" style="margin-top: 10px; border-color: rgba(239, 68, 68, 0.2);">
+            <div class="icon-box" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);"><i data-lucide="log-out"></i></div>
+            <div class="item-info">
+                <b style="color: #ef4444;">Sair da conta</b>
+                <span>Encerrar sessão no aparelho</span>
+            </div>
+        </div>
+
+        <a href="encerrar.html" class="menu-item" style="opacity: 0.6; background: transparent; border: none;">
+            <div class="icon-box"><i data-lucide="alert-triangle"></i></div>
+            <div class="item-info">
+                <b>Encerrar conta</b>
+                <span>Solicitar cancelamento</span>
+            </div>
+            <i data-lucide="chevron-right" class="chevron"></i>
+        </a>
+    </div>
 
 </div>
 
 <script>
-function carregar(){
-    const nome = localStorage.getItem("nome") || "Leonardo";
-    document.getElementById("nomeUser").innerText = nome;
-}
+    // Inicializa ícones do Lucide
+    lucide.createIcons();
 
-function logout(){
-    localStorage.setItem("techpay_user","false");
-    window.location.href="login.html";
-}
+    // 4. LÓGICA PARA CARREGAR E MOSTRAR A FOTO
+    function previewFoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const avatar = document.getElementById('avatar-image');
+                // Substitui o ícone por uma tag <img>
+                avatar.innerHTML = `<img src="${e.target.result}" alt="Foto de Perfil">`;
+                // Salva a foto no localStorage para não sumir ao dar F5
+                localStorage.setItem('perfil_foto', e.target.result);
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
-carregar();
+    // 5. CARREGA A FOTO SALVA (SE HOUVER) AO ABRIR A TELA
+    function carregarDados() {
+        // Carrega o nome (exemplo padrão)
+        const nome = localStorage.getItem("nome") || "Leonardo";
+        document.getElementById("nomeUser").innerText = nome;
+        
+        // Carrega a foto do localStorage
+        const fotoSalva = localStorage.getItem('perfil_foto');
+        if (fotoSalva) {
+            const avatar = document.getElementById('avatar-image');
+            avatar.innerHTML = `<img src="${fotoSalva}" alt="Foto de Perfil">`;
+        }
+    }
+
+    function logout() {
+        if(confirm("Deseja realmente sair da conta?")) {
+            localStorage.setItem("techpay_user","false");
+            window.location.href="login.html";
+        }
+    }
+
+    // Executa ao carregar a página
+    carregarDados();
 </script>
 
 </body>
