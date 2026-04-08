@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zentry - Chaves Pix</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #22c55e; 
+            --bg-dark: #000000;
+            --card-bg: rgba(255, 255, 255, 0.05); 
+            --border: rgba(255, 255, 255, 0.08); 
+            --text-sec: #94a3b8;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 20% 0%, #0f172a, #000 60%);
+            background-attachment: fixed;
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container { padding: 25px; max-width: 450px; margin: auto; }
+
+        .back-nav {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 45px; height: 45px; background: var(--card-bg);
+            border-radius: 50%; color: #fff; text-decoration: none;
+            margin-bottom: 20px; border: 1px solid var(--border);
+        }
+
+        h1 { font-size: 28px; font-weight: 800; margin-bottom: 30px; letter-spacing: -1px; color: var(--primary); }
+
+        /* LISTA DE CHAVES */
+        .pix-box {
+            background: var(--card-bg); backdrop-filter: blur(10px);
+            border-radius: 24px; padding: 20px; border: 1px solid var(--border);
+            margin-bottom: 25px;
+        }
+
+        .key-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 0; border-bottom: 1px solid var(--border);
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .key-item:last-child { border: none; }
+        .key-info label { display: block; font-size: 10px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .key-info b { font-size: 15px; font-weight: 600; word-break: break-all; }
+
+        .delete-btn {
+            color: #ef4444; background: rgba(239, 68, 68, 0.1);
+            width: 38px; height: 38px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; border: none;
+        }
+
+        /* BOTÃO CADASTRAR */
+        .btn-add {
+            width: 100%; background: var(--primary); color: #000; border: none;
+            padding: 20px; border-radius: 20px; font-size: 16px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2);
+        }
+
+        /* MODAL DE CADASTRO */
+        #modal-pix {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px); z-index: 100;
+            display: none; align-items: flex-end;
+        }
+
+        .modal-content {
+            background: #111; width: 100%; border-radius: 30px 30px 0 0;
+            padding: 30px; border-top: 1px solid var(--border);
+            transform: translateY(100%); transition: transform 0.3s ease;
+        }
+
+        .modal-active .modal-content { transform: translateY(0); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h2 { margin: 0; font-size: 20px; color: var(--primary); }
+
+        select, input {
+            width: 100%; background: #222; border: 1px solid var(--border);
+            padding: 18px; border-radius: 15px; color: #fff; font-size: 16px; margin-bottom: 15px;
+            outline: none;
+        }
+
+        select:focus, input:focus { border-color: var(--primary); }
+
+        .btn-confirm {
+            width: 100%; background: var(--primary); color: #000; border: none;
+            padding: 18px; border-radius: 15px; font-weight: 800; font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="perfil.html" class="back-nav">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </a>
+
+    <h1>Chaves Pix</h1>
+
+    <div class="pix-box" id="lista-chaves">
+        <div class="key-item">
+            <div class="key-info">
+                <label>CPF (Padrão)</label>
+                <b>***.458.963-**</b>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-add" onclick="toggleModal(true)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Cadastrar nova chave
+    </button>
+</div>
+
+<div id="modal-pix" onclick="toggleModal(false)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2>Nova Chave</h2>
+            <button onclick="toggleModal(false)" style="background:none; border:none; color:#fff; font-size:20px;">&times;</button>
+        </div>
+        
+        <select id="tipo-chave">
+            <option value="Celular">Celular</option>
+            <option value="CPF">CPF</option>
+            <option value="E-mail">E-mail</option>
+            <option value="CNPJ">CNPJ</option>
+        </select>
+
+        <input type="text" id="valor-chave" placeholder="Digite a chave aqui...">
+
+        <button class="btn-confirm" onclick="adicionarChave()">Concluir Cadastro</button>
+    </div>
+</div>
+
+<script>
+    function toggleModal(show) {
+        const modal = document.getElementById('modal-pix');
+        if (show) {
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('modal-active'), 10);
+        } else {
+            modal.classList.remove('modal-active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+    }
+
+    // Função para aplicar máscaras automaticamente
+const inputChave = document.getElementById('valor-chave');
+
+inputChave.addEventListener('input', (e) => {
+    const tipo = document.getElementById('tipo-chave').value;
+    
+    // SE FOR E-MAIL, não aplica máscara e permite tudo (letras e números)
+    if (tipo === "E-mail") {
+        return; 
+    }
+
+    // SE NÃO FOR E-MAIL, aplica a lógica de números e máscaras
+    let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não é número
+
+    if (tipo === "CPF") {
+        // Máscara CPF: 000.000.000-00
+        value = value.replace(/(\d{3})(\d)/, "$1.$2");
+        value = value.replace(/(\d{3})(\d)/, "$1.$2");
+        value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    } 
+    else if (tipo === "CNPJ") {
+        // Máscara CNPJ: 00.000.000/0000-00
+        value = value.replace(/^(\d{2})(\d)/, "$1.$2");
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+        value = value.replace(/\.(\d{3})(\d)/, ".$1/$2");
+        value = value.replace(/(\d{4})(\d)/, "$1-$2");
+    } 
+    else if (tipo === "Celular") {
+        // Máscara Celular: (00) 00000-0000
+        value = value.replace(/^(\d{2})(\d)/g, "($1) $2");
+        value = value.replace(/(\d{5})(\d)/, "$1-$2");
+    }
+
+    e.target.value = value;
+});
+
+// Ajusta o tipo de teclado e limpa o campo ao trocar a opção
+document.getElementById('tipo-chave').addEventListener('change', () => {
+    inputChave.value = "";
+    const tipo = document.getElementById('tipo-chave').value;
+    
+    if (tipo === "E-mail") {
+        inputChave.type = "text"; // Muda para texto para aceitar letras
+        inputChave.inputMode = "email"; // Otimiza teclado para e-mail
+    } else {
+        inputChave.type = "tel"; // Abre teclado numérico para os outros
+        inputChave.inputMode = "numeric";
+    }
+    
+    inputChave.placeholder = "Digite o " + tipo + "...";
+});
+
+
+
+function toggleModal(show) {
+    const modal = document.getElementById('modal-pix');
+    if (show) {
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('modal-active'), 10);
+    } else {
+        modal.classList.remove('modal-active');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+}
+
+function adicionarChave() {
+    const tipo = document.getElementById('tipo-chave').value;
+    const valor = document.getElementById('valor-chave').value;
+
+    if (valor.length < 5) {
+        alert("Por favor, preencha a chave corretamente.");
+        return;
+    }
+
+    const lista = document.getElementById('lista-chaves');
+    const novaChave = document.createElement('div');
+    novaChave.className = 'key-item';
+    novaChave.innerHTML = `
+        <div class="key-info">
+            <label>${tipo}</label>
+            <b>${valor}</b>
+        </div>
+        <button class="delete-btn" onclick="this.parentElement.remove()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+    `;
+
+    lista.appendChild(novaChave);
+    inputChave.value = "";
+    toggleModal(false);
+}
+
+</script>
+
+</body>
+</html>
+
