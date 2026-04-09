@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            margin: 0; padding: 20px; font-family: sans-serif;
+            background: #f4f4f4; display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* O PAPEL DO COMPROVANTE */
+        #area-impressao {
+            background: #fff; width: 100%; max-width: 320px;
+            padding: 25px; box-sizing: border-box; border: 1px solid #ddd;
+            color: #000;
+        }
+
+        .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; }
+        .logo { font-size: 26px; font-weight: 800; }
+        .valor { font-size: 38px; font-weight: 800; text-align: center; margin: 25px 0; }
+        .linha { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+        
+        /* BOTÕES (Não aparecem na foto) */
+        .acoes { width: 100%; max-width: 320px; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        button { 
+            padding: 16px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer;
+        }
+        .btn-share { background: #22c55e; color: #fff; }
+        .btn-home { background: #000; color: #fff; }
+
+        /* Estilo da linha pontilhada final */
+        .footer { border-top: 1px dashed #000; margin-top: 15px; padding-top: 15px; text-align: center; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div id="area-impressao">
+        <div class="header">
+            <div class="logo">ZEN<span style="color: #22c55e;">TRY</span></div>
+            <p>Comprovante de Pagamento</p>
+        </div>
+
+        <div class="valor" id="p-valor">R$ 0,00</div>
+
+        <div id="p-detalhes">
+            </div>
+
+        <div class="footer">
+            <p>Autenticação: <br> <span id="p-id">#000000</span></p>
+            <p>Zentry Pay © 2024</p>
+        </div>
+    </div>
+
+    <div class="acoes">
+        <button class="btn-share" onclick="compartilhar()">COMPARTILHAR (Apps)</button>
+        <button class="btn-home" onclick="irHome()">CONCLUIR / VOLTAR</button>
+    </div>
+
+    <script>
+        // 1. Carrega os dados salvos pelo PDV
+        const dados = JSON.parse(localStorage.getItem("comprovante")) || {};
+        document.getElementById("p-valor").innerText = dados.valor || "R$ 0,00";
+        document.getElementById("p-id").innerText = dados.id || "TP" + Date.now();
+
+        let detalhesHtml = `
+            <div class="linha"><span>Método</span><span>${dados.metodo || 'Crédito'}</span></div>
+            <div class="linha"><span>Data</span><span>${dados.data || new Date().toLocaleString()}</span></div>
+            <div class="linha"><span>Status</span><span style="font-weight:bold">APROVADO</span></div>
+        `;
+        document.getElementById("p-detalhes").innerHTML = detalhesHtml;
+
+        // 2. FUNÇÃO PARA COMPARTILHAR (Abre a galeria de apps do celular)
+        async function compartilhar() {
+            const area = document.getElementById("area-impressao");
+            
+            // Tira a "print" da área branca
+            const canvas = await html2canvas(area, { backgroundColor: "#ffffff", scale: 2 });
+            const dataUrl = canvas.toDataURL("image/png");
+            
+            // Converte em arquivo para o celular entender
+            const blob = await (await fetch(dataUrl)).blob();
+            const file = new File([blob], "comprovante_zentry.png", { type: "image/png" });
+
+            // Abre a galeria de apps do celular
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Comprovante Zentry',
+                        text: 'Segue o comprovante do pagamento.'
+                    });
+                } catch (err) {
+                    console.log("Usuário cancelou ou erro: ", err);
+                }
+            } else {
+                alert("Seu celular não suporta compartilhamento direto. A imagem será baixada.");
+                const link = document.createElement('a');
+                link.download = 'comprovante.png';
+                link.href = dataUrl;
+                link.click();
+            }
+        }
+
+        // 3. FUNÇÃO PARA VOLTAR
+        function irHome() {
+            // Opcional: limpa o comprovante do cache pra não ocupar espaço
+            localStorage.removeItem("comprovante");
+            // Volta para a sua home (ajuste o nome do arquivo se for diferente)
+            window.location.href = "home.html"; 
+        }
+    </script>
+</body>
+</html>
