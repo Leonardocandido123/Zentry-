@@ -144,20 +144,18 @@
   <div class="password-field">
     <input type="password" id="senha" placeholder="Sua senha" autocomplete="off">
 
-    <svg class="eye" id="eyeIcon" onclick="window.toggleSenha()"" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-      <path d="M1 12s4-6 11-6 11 6 11 6-4 6-11 6S1 12 1 12z"/>
-      <circle cx="12" cy="12" r="3"/>
-      <line id="eyeSlash" x1="3" y1="3" x2="21" y2="21" stroke="white" stroke-width="2" style="opacity:1; transition: 0.2s;"/>
-    </svg>
+<svg class="eye" id="eyeIcon" onclick="window.toggleSenha()" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+  <path d="M1 12s4-6 11-6 11 6 11 6-4 6-11 6S1 12 1 12z"/>
+  <circle cx="12" cy="12" r="3"/>
+  <line id="eyeSlash" x1="3" y1="3" x2="21" y2="21" stroke="white" stroke-width="2" style="opacity:1; transition: 0.2s;"/>
+</svg>
 
-    <div class="enter-btn" id="btnEntrar" onclick="window.entrar()"">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-        <polyline points="12 5 19 12 12 19"></polyline>
-      </svg>
-    </div>
-  </div>
-
+<div class="enter-btn" id="btnEntrar" onclick="window.entrar()">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3">
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+    <polyline points="12 5 19 12 12 19"></polyline>
+  </svg>
+</div>
   <div class="links">
     <a href="reset.html">Esqueci a senha</a>
     <a href="cadastro_nome.html" style="color: var(--accent); font-weight: 600;">Criar conta </a>
@@ -178,61 +176,64 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// ELEMENTOS
-const input = document.getElementById("senha");
-const btn = document.getElementById("btnEntrar");
-const eye = document.getElementById("eyeIcon");
+window.addEventListener("DOMContentLoaded", () => {
 
-// MOSTRAR BOTÃO
-input.addEventListener("input", () => {
-  if(input.value.length >= 6){
-    btn.classList.add("active");
-  } else {
-    btn.classList.remove("active");
-  }
+  const input = document.getElementById("senha");
+  const btn = document.getElementById("btnEntrar");
+  const eye = document.getElementById("eyeIcon");
+
+  // MOSTRAR BOTÃO
+  input.addEventListener("input", () => {
+    if(input.value.length >= 6){
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
+  // 👁️ TOGGLE SENHA
+  window.toggleSenha = function(){
+    const slash = document.getElementById("eyeSlash");
+    if(input.type === "password"){
+      input.type = "text";
+      slash.style.opacity = "0";
+      eye.classList.add("active");
+    } else {
+      input.type = "password";
+      slash.style.opacity = "1";
+      eye.classList.remove("active");
+    }
+  };
+
+  // 🔐 LOGIN
+  window.entrar = function(){
+    if(input.value.length < 6) return;
+
+    const email = localStorage.getItem("usuarioEmail");
+
+    if(!email){
+      alert("Email não encontrado. Faça login novamente.");
+      return;
+    }
+
+    signInWithEmailAndPassword(auth, email, input.value)
+      .then(() => {
+        document.body.style.opacity = "0";
+        setTimeout(() => {
+          window.location.href = "home.html";
+        }, 400);
+      })
+      .catch(() => {
+        alert("Senha incorreta ou usuário não existe");
+      });
+  };
+
+  // ENTER
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") window.entrar();
+  });
+
 });
-
-// 👁️ TOGGLE SENHA
-function toggleSenha(){
-  const slash = document.getElementById("eyeSlash");
-  if(input.type === "password"){
-    input.type = "text";
-    slash.style.opacity = "0";
-    eye.classList.add("active");
-  } else {
-    input.type = "password";
-    slash.style.opacity = "1";
-    eye.classList.remove("active");
-  }
-}
-
-// 🔐 LOGIN REAL
-function entrar(){
-  if(input.value.length < 6) return;
-
-  const email = localStorage.getItem("usuarioEmail");
-
-  signInWithEmailAndPassword(auth, email, input.value)
-    .then(() => {
-      document.body.style.opacity = "0";
-      setTimeout(() => {
-        window.location.href = "home.html";
-      }, 400);
-    })
-    .catch(() => {
-      alert("Senha incorreta ou usuário não existe");
-    });
-}
-
-// ENTER DO TECLADO
-input.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") entrar();
-});
-
-// 🔥 TORNAR GLOBAL (ESSA É A CORREÇÃO)
-window.toggleSenha = toggleSenha;
-window.entrar = entrar;
-
 </script>
 </body>
 </html>
