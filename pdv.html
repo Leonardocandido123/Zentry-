@@ -110,27 +110,38 @@ h2 {
     </div>
 
     <div id="step-2" class="screen">
-        <h2>Meio de pagamento</h2>
-        <div class="mode-card" onclick="goStep('step-pix-qr')">
-            <div class="mode-icon"><i data-lucide="zap"></i></div>
-            <div><b>Pix</b><br><small style="color:var(--text-muted)">QR Code dinâmico</small></div>
+    <h2>Meio de pagamento</h2>
+    
+    <div class="mode-card" onclick="goStep('step-pix-qr')">
+        <div class="mode-icon"><i data-lucide="zap"></i></div>
+        <div style="flex: 1;">
+            <b>Pix</b>
+            <small>Pagamento instantâneo</small>
         </div>
-        <div class="mode-card" onclick="iniciarNFC('Débito')">
-            <div class="mode-icon"><i data-lucide="banknote"></i></div>
-            <div><b>Débito</b><br><small style="color:var(--text-muted)">Tap to Pay</small></div>
-        </div>
-        <div class="mode-card" onclick="goStep('step-parcelas')">
-            <div class="mode-icon"><i data-lucide="credit-card"></i></div>
-            <div><b>Crédito</b><br><small style="color:var(--text-muted)">À vista ou parcelado</small></div>
-        </div>
-        <button class="btn-full btn-secondary" onclick="goStep('step-1')">Voltar</button>
+        <i data-lucide="chevron-right" style="color: #444; width: 18px;"></i>
     </div>
 
-    <div id="step-parcelas" class="screen">
-        <h2>Parcelamento</h2>
-        <div class="parcela-list" id="lista-parcelas"></div>
-        <button class="btn-full btn-secondary" onclick="goStep('step-2')">Voltar</button>
+    <div class="mode-card" onclick="iniciarNFC('Débito')">
+        <div class="mode-icon"><i data-lucide="banknote"></i></div>
+        <div style="flex: 1;">
+            <b>Débito</b>
+            <small>Aproximação (NFC)</small>
+        </div>
+        <i data-lucide="chevron-right" style="color: #444; width: 18px;"></i>
     </div>
+
+    <div class="mode-card" onclick="goStep('step-parcelas')">
+        <div class="mode-icon"><i data-lucide="credit-card"></i></div>
+        <div style="flex: 1;">
+            <b>Crédito</b>
+            <small>À vista ou parcelado</small>
+        </div>
+        <i data-lucide="chevron-right" style="color: #444; width: 18px;"></i>
+    </div>
+
+    <button class="btn-full btn-secondary" style="margin-top: auto" onclick="goStep('step-1')">Voltar</button>
+    </div>
+    
 
     <div id="step-pix-qr" class="screen" style="text-align: center;">
         <h2>Escaneie o QR Code</h2>
