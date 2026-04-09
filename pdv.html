@@ -251,20 +251,14 @@ body {
                 btn.style.background = "#111"; btn.style.color = "#444"; btn.style.pointerEvents = "none";
             }
         }
-function goStep(stepId) {
-    // Esconde todas as telas e mostra a nova
-    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active-screen'));
-    document.getElementById(stepId).classList.add('active-screen');
-
-    // Se for a tela de parcelas, gera a lista universal
-    if(stepId === 'step-parcelas') {
-        gerarParcelas();
-    }
-
-    // ESSA LINHA FAZ OS ÍCONES (SVG) APARECEREM NAS TELAS NOVAS
-    lucide.createIcons();
-}
-
+// Dentro da função simularPagamento, quando der sucesso:
+const dadosParaSalvar = {
+    valor: document.getElementById('val-display').innerText,
+    metodo: metodoGlobal
+};
+localStorage.setItem("comprovante", JSON.stringify(dadosParaSalvar));
+window.location.href = "comprovante_tap.html"; // Pula direto pra tela branca
+        
 function gerarParcelas() {
     const container = document.getElementById('lista-parcelas');
     if (!container) return;
