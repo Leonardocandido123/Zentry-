@@ -144,13 +144,13 @@
   <div class="password-field">
     <input type="password" id="senha" placeholder="Sua senha" autocomplete="off">
 
-    <svg class="eye" id="eyeIcon" onclick="toggleSenha()" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+    <svg class="eye" id="eyeIcon" onclick="window.toggleSenha()"" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
       <path d="M1 12s4-6 11-6 11 6 11 6-4 6-11 6S1 12 1 12z"/>
       <circle cx="12" cy="12" r="3"/>
       <line id="eyeSlash" x1="3" y1="3" x2="21" y2="21" stroke="white" stroke-width="2" style="opacity:1; transition: 0.2s;"/>
     </svg>
 
-    <div class="enter-btn" id="btnEntrar" onclick="entrar()">
+    <div class="enter-btn" id="btnEntrar" onclick="window.entrar()"">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
         <line x1="5" y1="12" x2="19" y2="12"></line>
         <polyline points="12 5 19 12 12 19"></polyline>
@@ -167,7 +167,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU"
+  apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
   authDomain: "zentry-app-74275.firebaseapp.com",
   projectId: "zentry-app-74275",
   storageBucket: "zentry-app-74275.appspot.com",
