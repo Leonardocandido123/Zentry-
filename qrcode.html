@@ -142,68 +142,106 @@
       <div class="info"><b>Boleto Bancário</b><span>Água, Luz, Telefone e outros</span></div>
     </div>
   </div>
+<script type="module">
+    // 1. IMPORTAÇÕES FIREBASE
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <script>
-    function iniciarLeitura(tipo, valor, recebedor) {
-      const overlay = document.getElementById('loading-overlay');
-      const loaderText = document.getElementById('loader-text');
-      
-      overlay.style.display = 'flex';
-      loaderText.innerText = "Lendo " + tipo + "...";
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
+        authDomain: "zentry-app-74275.firebaseapp.com",
+        projectId: "zentry-app-74275",
+        storageBucket: "zentry-app-74275.appspot.com",
+        messagingSenderId: "571422826071",
+        appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
+    };
 
-      setTimeout(() => {
-        loaderText.innerText = "Validando dados...";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let userLogado = null;
+
+    // Monitora login
+    onAuthStateChanged(auth, (user) => {
+        if (user) userLogado = user;
+        else window.location.href = 'login.html';
+    });
+
+    // 2. FUNÇÃO DE LEITURA (SIMULADA MAS COM DADOS REAIS)
+    window.iniciarLeitura = (tipo, valorStr, recebedor) => {
+        const overlay = document.getElementById('loading-overlay');
+        const loaderText = document.getElementById('loader-text');
+        
+        overlay.style.display = 'flex';
+        loaderText.innerText = "Escaneando " + tipo + "...";
+
+        // Simula o tempo da câmera focando
         setTimeout(() => {
-          overlay.style.display = 'none';
-          confirmarPagamento(tipo, valor, recebedor);
-        }, 1200);
-      }, 1500);
+            loaderText.innerText = "Consultando Banco Central...";
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                confirmarPagamento(tipo, valorStr, recebedor);
+            }, 1200);
+        }, 1500);
     }
 
-    function confirmarPagamento(tipo, valor, recebedor) {
-      const confirmacao = confirm(`Deseja pagar este ${tipo}?\n\nRecebedor: ${recebedor}\nValor: ${valor}`);
-      
-      if (confirmacao) {
-        processarFim(tipo, valor, recebedor);
-      }
+    async function confirmarPagamento(tipo, valorStr, recebedor) {
+        const valorNum = parseFloat(valorStr.replace('R$ ', '').replace('.', '').replace(',', '.'));
+        
+        const confirmacao = confirm(`PAGAMENTO IDENTIFICADO\n\nDestino: ${recebedor}\nValor: ${valorStr}\n\nDeseja confirmar o débito?`);
+        
+        if (confirmacao) {
+            processarPagamentoReal(valorNum, valorStr, recebedor, tipo);
+        }
     }
 
-    function processarFim(tipo, valorStr, recebedor) {
-      // 1. Pega o saldo atual
-      let saldo = parseFloat(localStorage.getItem("saldo")) || 1250.00;
-      
-      // 2. Limpa o valor para conta (tira R$ e troca vírgula por ponto)
-      let valorNum = parseFloat(valorStr.replace('R$ ', '').replace('.', '').replace(',', '.'));
+    async function processarPagamentoReal(valorNum, valorStr, recebedor, tipo) {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.style.display = 'flex';
+        document.getElementById('loader-text').innerText = "Finalizando Débito...";
 
-      if (saldo >= valorNum) {
-        // Desconta saldo
-        saldo -= valorNum;
-        localStorage.setItem("saldo", saldo.toFixed(2));
+        try {
+            const userRef = doc(db, "usuarios", userLogado.uid);
+            const snap = await getDoc(userRef);
+            const saldoAtual = snap.data().saldo || 0;
 
-        // 3. PREPARA DADOS PARA O COMPROVANTE ÚNICO
-        localStorage.setItem("tipoTransacao", "qrcode");
-        localStorage.setItem("ultimoValor", valorStr);
-        localStorage.setItem("destinoNome", recebedor);
-        localStorage.setItem("detalhesExtras", tipo + " - Autenticado");
-        localStorage.setItem("instDestino", "Liquidado via TechPay");
+            if (saldoAtual < valorNum) {
+                alert("Saldo Insuficiente no Firestore!");
+                overlay.style.display = 'none';
+                return;
+            }
 
-        // 4. SALVA NO HISTÓRICO (Para aparecer no extrato)
-        let extrato = JSON.parse(localStorage.getItem("transacoes")) || [];
-        extrato.unshift({
-            nome: recebedor,
-            tipo: "saida",
-            categoria: "pagamento",
-            valor: valorStr,
-            data: new Date().toLocaleDateString('pt-BR')
-        });
-        localStorage.setItem("transacoes", JSON.stringify(extrato));
+            // 3. ATUALIZAÇÃO NO FIREBASE (SAÍDA REAL)
+            await updateDoc(userRef, {
+                saldo: increment(-valorNum),
+                saida: increment(valorNum)
+            });
 
-        // 5. REDIRECIONA PARA O COMPROVANTE
-        location.href = 'comprovante.html';
-      } else {
-        alert("Saldo Insuficiente!");
-      }
+            // 4. PREPARA DADOS PARA O COMPROVANTE
+            const transacaoPendente = {
+                nomeDestino: recebedor,
+                valor: valorStr,
+                valorNumerico: valorNum,
+                chavePix: "QR Code / Boleto",
+                bancoDestino: "Liquidado via Zentry",
+                uidDestino: "externo_qrcode",
+                data: new Date().toLocaleString('pt-BR')
+            };
+
+            localStorage.setItem("transacao_pendente", JSON.stringify(transacaoPendente));
+            
+            // Redireciona
+            window.location.href = "comprovante.html";
+
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao processar pagamento no servidor.");
+            overlay.style.display = 'none';
+        }
     }
-  </script>
+</script>
+  
 </body>
 </html>
