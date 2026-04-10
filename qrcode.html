@@ -145,9 +145,32 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ... sua config do firebase aqui ...
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
+        authDomain: "zentry-app-74275.firebaseapp.com",
+        projectId: "zentry-app-74275",
+        storageBucket: "zentry-app-74275.appspot.com",
+        messagingSenderId: "571422826071",
+        appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
+    };
 
-    // --- FUNÇÕES QUE SUBSTITUEM OS CAMPOS DO NAVEGADOR ---
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let userLogado = null;
+    let html5QrCode = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            userLogado = user;
+            iniciarScanner(); 
+        } else {
+            window.location.href = 'login.html';
+        }
+    });
+
+    // --- FUNÇÕES DO MODAL PROFISSIONAL (ZENTRY MODAL) ---
     window.zAlert = (titulo, msg, icon = "⚠️") => {
         return new Promise(res => {
             document.getElementById('zIcon').innerText = icon;
@@ -175,7 +198,21 @@
         });
     };
 
-    // --- LÓGICA DE PAGAMENTO ATUALIZADA ---
+    // --- MOTOR DA CÂMERA ---
+    function iniciarScanner() {
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+
+        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+            if (navigator.vibrate) navigator.vibrate(100);
+            html5QrCode.stop();
+            processarDadosLidos(decodedText);
+        }).catch(err => {
+            document.getElementById('status-msg').innerText = "ERRO: CÂMERA NÃO DETECTADA";
+        });
+    }
+
+    // --- LÓGICA DE PROCESSAMENTO ---
     async function processarDadosLidos(texto) {
         let valor = 0;
         let nome = "Recebedor Externo";
@@ -189,28 +226,80 @@
             if(texto.includes("5405")) valor = parseFloat(texto.split('5405')[1].substring(0, 5));
         } catch(e) {}
 
-        // Se valor for 0, chama o NOSSO PROMPT e não o do Chrome
+        // Se valor não for identificado no QR, usa o NOSSO PROMPT
         if (valor <= 0) {
-            const digitado = await zPrompt("Valor não identificado", `Digite o valor para pagar a ${nome}:`);
+            const digitado = await zPrompt("Valor pendente", `Digite o valor para pagar ${nome}:`);
             if (digitado) valor = parseFloat(digitado.replace(',', '.'));
             else { location.reload(); return; }
         }
 
-        const valorFormatado = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const valorStr = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         
-        // Abre o modal de confirmação (que você já tinha feito, mas agora integrado)
-        abrirModal(nome, valorFormatado, valor);
+        // Abre o modal de confirmação final
+        abrirModalConfirmacao(nome, valorStr, valor);
     }
 
-    // Use o zAlert para erros de saldo
-    async function executarDebitoReal(valorNum, valorStr, recebedor) {
-        // ... (resto do seu código de débito)
-        if (snap.data().saldo < valorNum) {
-            await zAlert("Saldo Insuficiente", "Você não tem saldo para completar essa transação.", "❌");
+    function abrirModalConfirmacao(nome, valorStr, valorNum) {
+        // Reutilizamos o Modal Global para confirmar o pagamento
+        document.getElementById('zIcon').innerText = "✅";
+        document.getElementById('zTitle').innerText = "Confirmar Pagamento";
+        document.getElementById('zText').innerHTML = `Destino: <b>${nome}</b><br>Valor: <b>${valorStr}</b>`;
+        document.getElementById('zInput').style.display = 'none';
+        document.getElementById('zBtnCancel').style.display = 'block';
+        document.getElementById('zentryModalGlobal').style.display = 'flex';
+
+        document.getElementById('zBtnOk').onclick = () => {
+            document.getElementById('zentryModalGlobal').style.display = 'none';
+            executarDebitoReal(valorNum, valorStr, nome);
+        };
+        document.getElementById('zBtnCancel').onclick = () => {
             location.reload();
-            return;
+        };
+    }
+
+    // Botão de Escanear Manualmente
+    window.iniciarLeitura = (tipo, valorStr, recebedor) => {
+        const valorNum = parseFloat(valorStr.replace('R$ ', '').replace('.', '').replace(',', '.'));
+        abrirModalConfirmacao(recebedor, valorStr, valorNum);
+    };
+
+    // --- DÉBITO FINAL NO FIREBASE ---
+    async function executarDebitoReal(valorNum, valorStr, recebedor) {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.style.display = 'flex';
+
+        try {
+            const userRef = doc(db, "usuarios", userLogado.uid);
+            const snap = await getDoc(userRef);
+            const saldoAtual = snap.data().saldo || 0;
+
+            if (saldoAtual < valorNum) {
+                overlay.style.display = 'none';
+                await zAlert("Saldo Insuficiente", "Você não tem saldo para realizar este pagamento.", "❌");
+                location.reload();
+                return;
+            }
+
+            await updateDoc(userRef, {
+                saldo: increment(-valorNum),
+                saida: increment(valorNum)
+            });
+
+            localStorage.setItem("transacao_pendente", JSON.stringify({
+                nomeDestino: recebedor,
+                valor: valorStr,
+                valorNumerico: valorNum,
+                data: new Date().toLocaleString('pt-BR'),
+                bancoDestino: "Zentry Payments",
+                chavePix: "Leitura de Scanner",
+                id: "SCAN" + Math.floor(100000 + Math.random() * 900000)
+            }));
+
+            window.location.href = "comprovante.html";
+        } catch (error) {
+            overlay.style.display = 'none';
+            await zAlert("Erro no Sistema", "Ocorreu uma falha ao processar o débito.", "❌");
         }
-        // ...
     }
   </script>
   
