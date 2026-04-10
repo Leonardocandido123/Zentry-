@@ -53,9 +53,8 @@
             font-size: 13px; color: #9CA3AF; margin-bottom: 20px;
         }
 
-        /* CORREÇÃO DO FOOTER */
         .footer { 
-            position: fixed; /* Mudamos para fixed para ele ignorar o slider */
+            position: fixed; 
             bottom: 50px; 
             right: 25px; 
             display: flex; 
@@ -78,7 +77,6 @@
             color: black; border: none; border-radius: 12px; font-weight: 600;
         }
 
-        /* Ajuste para telas muito curtas */
         @media (max-height: 650px) {
             .footer { bottom: 30px; }
             .header-area h2 { font-size: 20px; }
@@ -133,7 +131,7 @@
 
         <div class="step-page">
             <div class="header-area"><h2>Termos e Condições</h2></div>
-            <div class="terms-box">Ao clicar em finalizar, você concorda com nossos termos de segurança bancária e proteção de dados LGPD...</div>
+            <div class="terms-box">Ao clicar em finalizar, você concorda com nossos termos de segurança bancária e proteção de dados LGPD.</div>
             <label style="display: flex; gap: 10px; color: #9CA3AF;"><input type="checkbox" id="checkTermo"> Aceito os termos</label>
         </div>
     </div>
@@ -163,6 +161,26 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // --- MÁSCARAS DE ENTRADA ---
+        const inputCPF = document.getElementById('cad_cpf');
+        const inputTel = document.getElementById('cad_tel');
+
+        inputCPF.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, "");
+            v = v.replace(/(\d{3})(\d)/, "$1.$2");
+            v = v.replace(/(\d{3})(\d)/, "$1.$2");
+            v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            e.target.value = v;
+        });
+
+        inputTel.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, "");
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+            v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+            e.target.value = v;
+        });
+
+        // --- LÓGICA DO SLIDER E NAVEGAÇÃO ---
         let currentStep = 0;
         const totalSteps = 7;
         const slider = document.getElementById('main-slider');
@@ -208,6 +226,7 @@
 
         nextBtn.onclick = avancar;
 
+        // --- TOKEN PULO AUTOMÁTICO ---
         const tokenInputs = document.querySelectorAll('.token-input');
         tokenInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
@@ -220,6 +239,7 @@
             });
         });
 
+        // --- FINALIZAR FIREBASE ---
         window.finalizar = async () => {
             const email = document.getElementById('cad_email').value;
             const senha = document.getElementById('cad_senha').value;
@@ -243,6 +263,7 @@
 
         finishBtn.onclick = finalizar;
 
+        // Ativação do botão ao digitar
         document.querySelectorAll('.input-line').forEach(input => {
             input.addEventListener('input', () => {
                 if(input.value.length >= 3) nextBtn.classList.add('active');
