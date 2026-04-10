@@ -14,125 +14,128 @@
     --border: #2A3441;
   }
 
-  /* RESET E FUNDO */
-  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+/* RESET E FUNDO */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
-  body { 
-    height: 100vh; 
-    background: radial-gradient(circle at top, #0f172a, #000); 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    padding: 30px; 
-    color: #fff;
-    overflow: hidden;
-    transition: opacity 0.4s;
-  }
+body { 
+  min-height: 100vh; /* 🔥 corrigido */
+  background: radial-gradient(circle at top, #0f172a, #000); 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  padding: 30px; 
+  color: #fff;
+  overflow: hidden;
+  transition: opacity 0.4s;
+}
 
-  /* TEXTOS */
-  .title {
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    background: linear-gradient(to right, #fff, #9CA3AF);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  
-  .subtitle {
-    font-size: 15px;
-    color: #9CA3AF;
-    margin-bottom: 40px;
-    line-height: 1.4;
-  }
+/* TEXTOS */
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(to right, #fff, #9CA3AF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-  /* CAMPO DE SENHA */
-    /* CAMPO DE SENHA: ESTILO SÓ O TRAÇO */
-  .password-field {
-    position: relative;
-    background: none; /* Remove o fundo cinza */
-    border: none; /* Remove as bordas laterais e topo */
-    border-bottom: 1.5px solid var(--border); /* Mantém apenas o traço de baixo */
-    border-radius: 0; /* Remove o arredondamento das quinas */
-    padding: 10px 0;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    transition: 0.3s;
-  }
+.subtitle {
+  font-size: 15px;
+  color: #9CA3AF;
+  margin-bottom: 30px; /* 🔥 ajuste fino */
+  line-height: 1.4;
+}
 
-  /* Quando clica no campo, o traço fica verde */
-  .password-field:focus-within {
-    border-bottom-color: var(--accent);
-    background: none; /* Garante que não apareça fundo ao clicar */
-    box-shadow: none; /* Remove o brilho ao redor para focar só na linha */
-  }
+/* CAMPO DE SENHA */
+.password-field {
+  position: relative;
+  background: none;
+  border: none;
+  border-bottom: 1.5px solid var(--border);
+  padding: 10px 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  transition: 0.3s;
+  margin-bottom: 20px; /* 🔥 ESSENCIAL PRA NÃO QUEBRAR */
+}
 
-  .password-field input {
-    flex: 1;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 20px;
-    outline: none;
-    letter-spacing: 4px; /* Senha com pontos mais afastados */
-    width: 100%;
-    padding-right: 85px; /* Espaço para o olho e a seta */
-  }
+/* Quando clica */
+.password-field:focus-within {
+  border-bottom-color: var(--accent);
+}
 
+/* INPUT */
+.password-field input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  outline: none;
+  letter-spacing: 4px;
+  width: 100%;
+  padding-right: 85px;
+}
 
-  /* BOTÃO ENTRAR */
-  .enter-btn {
-    position: absolute;
-    right: 8px;
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    background: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transform: scale(0.7);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
-  }
+/* BOTÃO ENTRAR */
+.enter-btn {
+  position: absolute;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+}
 
-  .enter-btn.active {
-    opacity: 1;
-    transform: scale(1);
-  }
+.enter-btn.active {
+  opacity: 1;
+  transform: scale(1);
+}
 
-  /* ÍCONE OLHO */
-  .eye {
-    position: absolute;
-    right: 60px;
-    width: 24px;
-    height: 24px;
-    opacity: 0.4;
-    cursor: pointer;
-    transition: 0.2s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  .eye.active { opacity: 1; }
+/* OLHO */
+.eye {
+  position: absolute;
+  right: 60px;
+  width: 24px;
+  height: 24px;
+  opacity: 0.4;
+  cursor: pointer;
+  transition: 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
 
-  /* LINKS ABAIXO */
-  .links {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
-    font-size: 14px;
-  }
+.eye.active { opacity: 1; }
 
-  .links a {
-    color: #9CA3AF;
-    text-decoration: none;
-    transition: 0.2s;
-  }
+/* LINKS (CORREÇÃO FINAL) */
+.links {
+  display: flex;
+  justify-content: space-between;
+  width: 100%; /* 🔥 garante alinhamento */
+  margin-top: 10px; /* 🔥 evita subir */
+  font-size: 14px;
+}
 
-  .links a:active { opacity: 0.5; }
+.links a {
+  color: #9CA3AF;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.links a:last-child {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.links a:active { opacity: 0.5; }
 </style>
 </head>
 
