@@ -53,30 +53,35 @@
             font-size: 13px; color: #9CA3AF; margin-bottom: 20px;
         }
 
-     .footer { 
-    position: absolute; 
-    bottom: 80px; /* Aumentamos de 40px para 80px para fugir da barra do sistema */
-    right: 25px; 
-    display: flex; 
-    align-items: center; 
-    gap: 15px; 
-    z-index: 1000; /* Garante que ele fique na frente de tudo */
-     }
-        @media (max-height: 700px) {
-    .footer {
-        bottom: 60px;
-    }
+        /* CORREÇÃO DO FOOTER */
+        .footer { 
+            position: fixed; /* Mudamos para fixed para ele ignorar o slider */
+            bottom: 50px; 
+            right: 25px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            z-index: 9999; 
+        }
+
         .next-btn {
-            width: 60px; height: 60px; background: #1F2937; border-radius: 50%;
+            width: 65px; height: 65px; background: #1F2937; border-radius: 50%;
             display: flex; align-items: center; justify-content: center; border: none; transition: 0.3s;
         }
-        .next-btn svg { width: 28px; height: 28px; stroke: #4B5563; stroke-width: 2.5; fill: none; }
-        .next-btn.active { background: var(--primary); box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+        
+        .next-btn svg { width: 30px; height: 30px; stroke: #4B5563; stroke-width: 2.5; fill: none; }
+        .next-btn.active { background: var(--primary); box-shadow: 0 0 25px rgba(34, 197, 94, 0.4); }
         .next-btn.active svg { stroke: #000; }
 
         .finish-btn {
             display: none; padding: 18px 40px; background: var(--primary); 
             color: black; border: none; border-radius: 12px; font-weight: 600;
+        }
+
+        /* Ajuste para telas muito curtas */
+        @media (max-height: 650px) {
+            .footer { bottom: 30px; }
+            .header-area h2 { font-size: 20px; }
         }
     </style>
 </head>
@@ -128,7 +133,7 @@
 
         <div class="step-page">
             <div class="header-area"><h2>Termos e Condições</h2></div>
-            <div class="terms-box">Ao clicar em finalizar, você concorda com nossos termos de segurança bancária e proteção de dados LGPD. O saldo inicial será de R$ 0,00 até a primeira movimentação.</div>
+            <div class="terms-box">Ao clicar em finalizar, você concorda com nossos termos de segurança bancária e proteção de dados LGPD...</div>
             <label style="display: flex; gap: 10px; color: #9CA3AF;"><input type="checkbox" id="checkTermo"> Aceito os termos</label>
         </div>
     </div>
@@ -165,9 +170,8 @@
         const nextBtn = document.getElementById('nextBtn');
         const finishBtn = document.getElementById('finishBtn');
         
-        let tokenGerado = ""; // Armazena o código de segurança
+        let tokenGerado = "";
 
-        // Função para gerar código aleatório
         function gerarToken() {
             tokenGerado = Math.floor(100000 + Math.random() * 900000).toString();
             setTimeout(() => {
@@ -175,21 +179,15 @@
             }, 800);
         }
 
-        // Controle de navegação
         window.avancar = () => {
-            // Se estiver na tela do Celular e for avançar para o Token
-            if (currentStep === 2) {
-                gerarToken();
-            }
+            if (currentStep === 2) gerarToken();
 
-            // Se estiver na tela do Token, validar antes de avançar
             if (currentStep === 3) {
                 const inputs = document.querySelectorAll('.token-input');
                 let digitado = "";
                 inputs.forEach(i => digitado += i.value);
-
                 if (digitado !== tokenGerado) {
-                    alert("Código incorreto. Verifique o SMS recebido.");
+                    alert("Código incorreto.");
                     return;
                 }
             }
@@ -210,27 +208,18 @@
 
         nextBtn.onclick = avancar;
 
-        // Pulo automático dos campos do Token
         const tokenInputs = document.querySelectorAll('.token-input');
         tokenInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
-                if (e.target.value.length === 1 && index < tokenInputs.length - 1) {
-                    tokenInputs[index + 1].focus();
-                }
-                
-                // Ativa botão se todos estiverem preenchidos
+                if (e.target.value.length === 1 && index < tokenInputs.length - 1) tokenInputs[index + 1].focus();
                 let preenchido = Array.from(tokenInputs).every(i => i.value.length === 1);
                 if(preenchido) nextBtn.classList.add('active');
             });
-
             input.addEventListener('keydown', (e) => {
-                if (e.key === "Backspace" && input.value === "" && index > 0) {
-                    tokenInputs[index - 1].focus();
-                }
+                if (e.key === "Backspace" && input.value === "" && index > 0) tokenInputs[index - 1].focus();
             });
         });
 
-        // Gravação final no banco e Auth
         window.finalizar = async () => {
             const email = document.getElementById('cad_email').value;
             const senha = document.getElementById('cad_senha').value;
@@ -239,46 +228,25 @@
             const tel = document.getElementById('cad_tel').value;
             const termo = document.getElementById('checkTermo').checked;
 
-            if(!termo) {
-                alert("Aceite os termos para continuar.");
-                return;
-            }
+            if(!termo) { alert("Aceite os termos."); return; }
 
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
                 const user = userCredential.user;
-
-                // Salva no Firestore (Toda a ficha do usuário)
                 await setDoc(doc(db, "usuarios", user.uid), {
-                    nome: nome,
-                    cpf: cpf,
-                    telefone: tel,
-                    email: email,
-                    saldo: 0.00,
-                    dataCriacao: new Date().toISOString()
+                    nome: nome, cpf: cpf, telefone: tel, email: email, saldo: 0.00, dataCriacao: new Date().toISOString()
                 });
-                
-                localStorage.setItem("usuarioEmail", email);
-                localStorage.setItem("usuarioNome", nome);
-
-                alert("Conta ZENTRY criada com sucesso!");
+                alert("Conta ZENTRY criada!");
                 window.location.href = "login.html";
-
-            } catch (error) {
-                alert("Erro ao finalizar: " + error.message);
-            }
+            } catch (error) { alert("Erro: " + error.message); }
         };
 
         finishBtn.onclick = finalizar;
 
-        // Ativação visual do botão Next
         document.querySelectorAll('.input-line').forEach(input => {
             input.addEventListener('input', () => {
-                if(input.value.length >= 3) {
-                    nextBtn.classList.add('active');
-                } else {
-                    nextBtn.classList.remove('active');
-                }
+                if(input.value.length >= 3) nextBtn.classList.add('active');
+                else nextBtn.classList.remove('active');
             });
         });
     </script>
