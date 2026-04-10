@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZENTRY - Cadastro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #22C55E; --bg: #000000; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body { background-color: var(--bg); height: 100vh; color: white; overflow: hidden; position: fixed; width: 100%; }
+
+        /* BARRA DE PROGRESSO FIXA NO TOPO */
+        .top-nav { position: fixed; top: 0; width: 100%; padding: 20px 25px; background: var(--bg); z-index: 100; }
+        .progress-container { width: 100%; height: 4px; background: #1F2937; border-radius: 10px; }
+        .progress-bar { width: 14%; height: 100%; background: var(--primary); border-radius: 10px; transition: 0.5s ease; }
+
+        /* CONTAINER DO SLIDER */
+        #main-slider {
+            display: flex;
+            width: 700%; /* 7 Telas: Nome, CPF, Contato, Token, E-mail, Senha, Termos */
+            height: 100vh;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .step-page {
+            width: 14.28%; /* 100 / 7 */
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 25px;
+        }
+
+        .header-area { margin-bottom: 40px; }
+        .header-area h2 { font-size: 24px; font-weight: 500; line-height: 1.3; }
+        .header-area p { color: #9CA3AF; font-size: 14px; margin-top: 10px; }
+
+        /* INPUTS PADRONIZADOS */
+        .input-wrapper { border-bottom: 1px solid #2A3441; margin-bottom: 10px; }
+        .input-line {
+            width: 100%; background: transparent; border: none;
+            padding: 15px 0; color: white; font-size: 26px; outline: none;
+        }
+
+        /* TOKEN INPUTS */
+        .token-group { display: flex; justify-content: space-between; gap: 8px; margin-top: 20px; }
+        .token-input {
+            width: 45px; height: 55px; background: #121212; border: 1px solid #2A3441;
+            border-radius: 12px; text-align: center; font-size: 24px; color: white; outline: none;
+        }
+
+        /* TERMOS */
+        .terms-box {
+            background: #121212; border-radius: 16px; padding: 20px;
+            overflow-y: auto; height: 200px; border: 1px solid #2A3441;
+            font-size: 13px; color: #9CA3AF; margin-bottom: 20px;
+        }
+
+        /* BOTÕES */
+        .footer { position: absolute; bottom: 40px; right: 25px; display: flex; align-items: center; gap: 15px; }
+        .next-btn {
+            width: 60px; height: 60px; background: #1F2937; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; border: none; transition: 0.3s;
+        }
+        .next-btn svg { width: 28px; height: 28px; stroke: #4B5563; stroke-width: 2.5; fill: none; }
+        .next-btn.active { background: var(--primary); box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+        .next-btn.active svg { stroke: #000; }
+
+        .finish-btn {
+            display: none; padding: 18px 40px; background: var(--primary); 
+            color: black; border: none; border-radius: 12px; font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <div class="progress-container">
+            <div id="p-bar" class="progress-bar"></div>
+        </div>
+    </div>
+
+    <div id="main-slider">
+        
+        <div class="step-page">
+            <div class="header-area"><h2>Como podemos te chamar?</h2></div>
+            <div class="input-wrapper"><input type="text" id="cad_nome" class="input-line" placeholder="Nome Completo"></div>
+        </div>
+
+        <div class="step-page">
+            <div class="header-area"><h2>Informe o seu CPF</h2></div>
+            <div class="input-wrapper"><input type="tel" id="cad_cpf" class="input-line" placeholder="000.000.000-00" maxlength="14"></div>
+        </div>
+
+        <div class="step-page">
+            <div class="header-area"><h2>Qual o seu celular?</h2></div>
+            <div class="input-wrapper"><input type="tel" id="cad_tel" class="input-line" placeholder="(00) 00000-0000" maxlength="15"></div>
+        </div>
+
+        <div class="step-page">
+            <div class="header-area"><h2>Verifique seu celular</h2><p>Digite o código enviado.</p></div>
+            <div class="token-group">
+                <input type="tel" class="token-input" maxlength="1">
+                <input type="tel" class="token-input" maxlength="1">
+                <input type="tel" class="token-input" maxlength="1">
+                <input type="tel" class="token-input" maxlength="1">
+                <input type="tel" class="token-input" maxlength="1">
+                <input type="tel" class="token-input" maxlength="1">
+            </div>
+        </div>
+
+        <div class="step-page">
+            <div class="header-area"><h2>Qual o seu melhor e-mail?</h2></div>
+            <div class="input-wrapper"><input type="email" id="cad_email" class="input-line" placeholder="exemplo@email.com"></div>
+        </div>
+
+        <div class="step-page">
+            <div class="header-area"><h2>Crie sua senha de 6 dígitos</h2></div>
+            <div class="input-wrapper"><input type="password" id="cad_senha" class="input-line" style="letter-spacing: 15px;" maxlength="6" placeholder="••••••"></div>
+        </div>
+
+        <div class="step-page">
+            <div class="header-area"><h2>Termos e Condições</h2></div>
+            <div class="terms-box">Ao clicar em finalizar, você concorda com nossos termos de segurança bancária e proteção de dados LGPD...</div>
+            <label style="display: flex; gap: 10px; color: #9CA3AF;"><input type="checkbox" id="checkTermo"> Aceito os termos</label>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <button class="next-btn" id="nextBtn">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </button>
+        <button id="finishBtn" class="finish-btn">FINALIZAR</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        // SUA CONFIGURAÇÃO DO FIREBASE AQUI
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
+            authDomain: "zentry-app-74275.firebaseapp.com",
+            projectId: "zentry-app-74275",
+            storageBucket: "zentry-app-74275.appspot.com",
+            messagingSenderId: "571422826071",
+            appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        let currentStep = 0;
+        const totalSteps = 7;
+        const slider = document.getElementById('main-slider');
+        const pBar = document.getElementById('p-bar');
+        const nextBtn = document.getElementById('nextBtn');
+        const finishBtn = document.getElementById('finishBtn');
+
+        // MÁSCARAS E VALIDAÇÕES
+        document.getElementById('cad_cpf').addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g,"");
+            v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/g, "$1.$2.$3-$4");
+            e.target.value = v;
+            checkValid();
+        });
+
+        document.getElementById('cad_tel').addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g,"");
+            v = v.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+            e.target.value = v;
+            checkValid();
+        });
+
+        // LÓGICA DE NAVEGAÇÃO
+        nextBtn.addEventListener('click', () => {
+            if(nextBtn.classList.contains('active')) {
+                currentStep++;
+                updateUI();
+            }
+        });
+
+        function updateUI() {
+            slider.style.transform = `translateX(-${currentStep * (100 / totalSteps)}%)`;
+            pBar.style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
+            nextBtn.classList.remove('active');
+            
+            if(currentStep === 6) {
+                nextBtn.style.display = 'none';
+                finishBtn.style.display = 'block';
+            }
+        }
+
+        function checkValid() {
+            // Aqui você adiciona a lógica: se o input atual estiver preenchido corretamente, nextBtn.classList.add('active')
+            nextBtn.classList.add('active'); // Simplificado para teste
+        }
+
+        // FIREBASE FINALIZAR
+        window.finalizar = async () => {
+            const email = document.getElementById('cad_email').value;
+            const senha = document.getElementById('cad_senha').value;
+            
+            try {
+                await createUserWithEmailAndPassword(auth, email, senha);
+                alert("Conta criada!");
+                window.location.href = "login.html";
+            } catch (error) {
+                alert("Erro: " + error.message);
+            }
+        }
+        finishBtn.onclick = finalizar;
+
+        // Ativação genérica para teste
+        document.querySelectorAll('input').forEach(i => i.addEventListener('input', checkValid));
+    </script>
+</body>
+      </html>
+      
