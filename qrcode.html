@@ -70,46 +70,18 @@
   </style>
 </head>
 <body>
-
   <div id="zentryModalGlobal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(5px);">
     <div style="background:#121826; border:1px solid #2A3441; border-radius:28px; width:100%; max-width:340px; padding:25px; text-align:center; animation: popIn 0.2s ease-out;">
       <div id="zIcon" style="font-size:40px; margin-bottom:15px;">⚠️</div>
       <h3 id="zTitle" style="margin:0 0 10px; font-size:18px; color:#fff; font-weight:700;">Aviso</h3>
       <p id="zText" style="color:#9CA3AF; font-size:14px; margin-bottom:20px; line-height:1.5;"></p>
-      <input type="text" id="zInput" placeholder="0,00" style="display:none; width:100%; padding:15px; background:#050505; border:1px solid #2A3441; border-radius:12px; color:#22C55E; text-align:center; font-size:20px; font-weight:700; margin-bottom:20px; outline:none;">
+      
+      <input type="text" id="zInput" placeholder="R$ 0,00" inputmode="decimal" style="display:none; width:100%; padding:15px; background:#050505; border:1px solid #2A3441; border-radius:12px; color:#22C55E; text-align:center; font-size:24px; font-weight:700; margin-bottom:20px; outline:none;">
+      
       <div style="display:flex; gap:10px;">
           <button id="zBtnCancel" style="display:none; flex:1; padding:15px; border-radius:14px; background:transparent; border:1px solid #2A3441; color:#fff; font-weight:600;">Voltar</button>
           <button id="zBtnOk" style="flex:1; padding:15px; border-radius:14px; background:#22C55E; border:none; color:#000; font-weight:700;">Confirmar</button>
       </div>
-    </div>
-  </div>
-
-  <div id="loading-overlay">
-    <span class="loader"></span>
-    <p id="loader-text" style="margin-top: 20px; font-weight: 600;">Processando...</p>
-  </div>
-
-  <div class="header">
-    <button class="back-btn" onclick="location.href='pix.html'">
-      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <h2>Pagar</h2>
-  </div>
-
-  <div class="content">
-    <div class="scanner-container">
-      <div id="reader"></div>
-      <div class="corner top-left"></div>
-      <div class="corner top-right"></div>
-      <div class="corner bottom-left"></div>
-      <div class="corner bottom-right"></div>
-      <div class="scanner-line"></div>
-    </div>
-    <div id="status-msg">POSICIONE O CÓDIGO NA MOLDURA</div>
-
-    <div class="pay-option" onclick="iniciarLeituraManual('QR Code Pix', 'R$ 85,90', 'Supermercado Tech')">
-      <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M12 3l3.8 3.8L12 10.6 8.2 6.8 12 3zM21 12l-3.8 3.8L13.4 12l3.8-3.8L21 12zM12 21l-3.8-3.8L12 13.4l3.8 3.8L12 21zM3 12l3.8-3.8L10.6 12l-3.8 3.8L3 12z"/></svg></div>
-      <div class="info"><b>Escanear Manualmente</b><span>Simular leitura agora</span></div>
     </div>
   </div>
 
@@ -143,6 +115,19 @@
         }
     });
 
+    // --- MÁSCARA DE MOEDA EM TEMPO REAL ---
+    const inputMoeda = document.getElementById('zInput');
+    inputMoeda.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '');
+        v = (v / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        e.target.value = v;
+    });
+
+    function limparParaNumero(valorStr) {
+        return parseFloat(valorStr.replace(/[^\d,]/g, '').replace(',', '.'));
+    }
+
+    // --- MODAIS ATUALIZADOS ---
     window.zAlert = (titulo, msg, icon = "⚠️") => {
         return new Promise(res => {
             document.getElementById('zIcon').innerText = icon;
@@ -162,11 +147,19 @@
             document.getElementById('zText').innerText = msg;
             const input = document.getElementById('zInput');
             input.style.display = 'block';
-            input.value = "";
+            input.value = ""; // Começa vazio para a máscara agir
             document.getElementById('zBtnCancel').style.display = 'block';
             document.getElementById('zentryModalGlobal').style.display = 'flex';
-            document.getElementById('zBtnOk').onclick = () => { document.getElementById('zentryModalGlobal').style.display = 'none'; res(input.value); };
-            document.getElementById('zBtnCancel').onclick = () => { document.getElementById('zentryModalGlobal').style.display = 'none'; res(null); };
+            
+            document.getElementById('zBtnOk').onclick = () => { 
+                const valorFinal = input.value;
+                document.getElementById('zentryModalGlobal').style.display = 'none'; 
+                res(valorFinal); 
+            };
+            document.getElementById('zBtnCancel').onclick = () => { 
+                document.getElementById('zentryModalGlobal').style.display = 'none'; 
+                res(null); 
+            };
         });
     };
 
@@ -184,7 +177,7 @@
     }
 
     async function processarDadosLidos(texto) {
-        let valor = 0;
+        let valorNum = 0;
         let nome = "Recebedor Externo";
         try {
             if(texto.includes("59")) {
@@ -192,24 +185,31 @@
                 const tam = parseInt(parteNome.substring(0, 2));
                 nome = parteNome.substring(2, 2 + tam);
             }
-            if(texto.includes("5405")) valor = parseFloat(texto.split('5405')[1].substring(0, 5));
+            if(texto.includes("5405")) valorNum = parseFloat(texto.split('5405')[1].substring(0, 5));
         } catch(e) {}
 
-        if (valor <= 0) {
-            const digitado = await zPrompt("Valor pendente", `Digite o valor para pagar ${nome}:`);
-            if (digitado) valor = parseFloat(digitado.replace(',', '.'));
-            else { location.reload(); return; }
+        if (valorNum <= 0) {
+            const digitado = await zPrompt("Valor do Pagamento", `Informe o valor para ${nome}:`);
+            if (digitado && digitado !== "") {
+                valorNum = limparParaNumero(digitado);
+            } else { 
+                location.reload(); 
+                return; 
+            }
         }
-        abrirModalConfirmacao(nome, valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), valor);
+
+        const valorStr = valorNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        abrirModalConfirmacao(nome, valorStr, valorNum);
     }
 
     function abrirModalConfirmacao(nome, valorStr, valorNum) {
         document.getElementById('zIcon').innerText = "✅";
-        document.getElementById('zTitle').innerText = "Confirmar Pagamento";
-        document.getElementById('zText').innerHTML = `Destino: <b>${nome}</b><br>Valor: <b>${valorStr}</b>`;
+        document.getElementById('zTitle').innerText = "Revisar Pagamento";
+        document.getElementById('zText').innerHTML = `Para: <b>${nome}</b><br>Valor: <b style="color:#22C55E">${valorStr}</b>`;
         document.getElementById('zInput').style.display = 'none';
         document.getElementById('zBtnCancel').style.display = 'block';
         document.getElementById('zentryModalGlobal').style.display = 'flex';
+        
         document.getElementById('zBtnOk').onclick = () => {
             document.getElementById('zentryModalGlobal').style.display = 'none';
             executarDebitoReal(valorNum, valorStr, nome);
@@ -218,7 +218,7 @@
     }
 
     window.iniciarLeituraManual = (tipo, valorStr, recebedor) => {
-        const valorNum = parseFloat(valorStr.replace('R$ ', '').replace('.', '').replace(',', '.'));
+        const valorNum = limparParaNumero(valorStr);
         abrirModalConfirmacao(recebedor, valorStr, valorNum);
     };
 
@@ -228,23 +228,32 @@
         try {
             const userRef = doc(db, "usuarios", userLogado.uid);
             const snap = await getDoc(userRef);
-            if ((snap.data().saldo || 0) < valorNum) {
+            const saldoAtual = snap.data().saldo || 0;
+
+            if (saldoAtual < valorNum) {
                 overlay.style.display = 'none';
-                await zAlert("Saldo Insuficiente", "Você não tem saldo para realizar este pagamento.", "❌");
-                location.reload(); return;
+                await zAlert("Saldo Insuficiente", "Seu saldo é menor que o valor do pagamento.", "❌");
+                location.reload(); 
+                return;
             }
-            await updateDoc(userRef, { saldo: increment(-valorNum), saida: increment(valorNum) });
+
+            await updateDoc(userRef, { 
+                saldo: increment(-valorNum), 
+                saida: increment(valorNum) 
+            });
+
             localStorage.setItem("transacao_pendente", JSON.stringify({
                 nomeDestino: recebedor, valor: valorStr, valorNumerico: valorNum,
-                data: new Date().toLocaleString('pt-BR'), bancoDestino: "Zentry Payments",
+                data: new Date().toLocaleString('pt-BR'), bancoDestino: "Zentry Bank",
                 chavePix: "Leitura de Scanner", id: "SCAN" + Math.floor(100000 + Math.random() * 900000)
             }));
             window.location.href = "comprovante.html";
         } catch (error) {
             overlay.style.display = 'none';
-            await zAlert("Erro no Sistema", "Falha ao processar o débito.", "❌");
+            await zAlert("Erro de Conexão", "Não foi possível processar o débito.", "❌");
         }
     }
-  </script>
+              </script>
+  
 </body>
 </html>
