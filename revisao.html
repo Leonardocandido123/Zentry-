@@ -99,7 +99,8 @@
     <div class="footer">
         <button class="btn-confirm" id="btnFinal" onclick="executarTransferencia()" disabled>Confirmar e Enviar</button>
     </div>
-    <script type="module">
+    
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -124,7 +125,7 @@
         if(!transacao) { window.location.href = 'pix.html'; return; }
         document.getElementById('rev-val').innerText = transacao.valor;
         document.getElementById('rev-name').innerText = transacao.nomeDestino;
-        document.getElementById('rev-bank').innerText = transacao.bancoDestino;
+        document.getElementById('rev-bank').innerText = transacao.bancoDestino || "Zentry Bank";
         focarPin();
     };
 
@@ -158,13 +159,25 @@
             if(!snap.exists()) throw new Error("Usuário não encontrado");
             const dadosUser = snap.data();
 
-            // 1. VALIDAÇÃO DE SENHA
-            const senhaNoBanco = dadosUser.senha || dadosUser.senhaPix || "1234";
-            if(pinDigitado !== senhaNoBanco && pinDigitado !== "1234") {
+            // ==========================================
+            // NOVA LÓGICA DE SENHA INTELIGENTE
+            // ==========================================
+            let senhaNoBanco = dadosUser.senha;
+
+            if (!senhaNoBanco) {
+                // Se não existe senha no Firebase, salva a que o usuário digitou agora
+                console.log("Nenhuma senha encontrada. Cadastrando nova senha...");
+                await updateDoc(remetenteRef, { senha: pinDigitado });
+                senhaNoBanco = pinDigitado;
+            }
+
+            // Agora valida se a digitada bate com a que está (ou acabou de ser salva)
+            if(pinDigitado !== senhaNoBanco) {
                 alert("Senha incorreta!");
                 limparPin();
                 return;
             }
+            // ==========================================
 
             // 2. VALIDAÇÃO DE SALDO
             const saldoAtual = parseFloat(dadosUser.saldo || 0);
@@ -214,7 +227,8 @@
         document.getElementById('btnFinal').innerText = "Confirmar e Enviar";
         focarPin();
     }
-            </script>
+</script>
+    
     
 </body>
 </html>
