@@ -140,7 +140,7 @@
     <button class="confirm-btn" id="btnProsseguir" onclick="irParaRevisao()" disabled>Continuar</button>
 </div>
   
-<script type="module">
+  <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -182,13 +182,13 @@
     }
   });
 
-  // 2. BUSCAR DESTINATÁRIO (Ajustado para qualquer chave)
-  async function buscarDestinatario(chave) {
-    const limpa = chave.replace(/\D/g, "");
-    if (limpa.length < 11) return; // CPF/Celular tem pelo menos 11
+  // 2. BUSCAR DESTINATÁRIO
+  async function buscarDestinatario(chaveLimpa) {
+    if (chaveLimpa.length < 11) return;
 
     try {
-      const q = query(collection(db, "usuarios"), where("chavePix", "==", limpa));
+      // Importante: a chave no banco DEVE estar apenas números para funcionar aqui
+      const q = query(collection(db, "usuarios"), where("chavePix", "==", chaveLimpa));
       const snap = await getDocs(q);
 
       if (!snap.empty) {
@@ -203,31 +203,45 @@
         feedback.style.display = "none";
       }
       validar();
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Erro na busca:", e); }
   }
 
-  // MÁSCARA MULTI-CHAVE (CPF, CNPJ e Celular)
+  // MÁSCARA INTELIGENTE CORRIGIDA
   chaveInput.addEventListener("input", (e) => {
     let v = e.target.value.replace(/\D/g, "");
-    
-    if (v.length <= 11) { // CPF ou Celular
-        if (v.length > 10) { // Celular: (00) 00000-0000
-            v = v.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-        } else { // CPF: 000.000.000-00
-            v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-        }
-    } else { // CNPJ: 00.000.000/0000-00
-        v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+    let mask = "";
+
+    if (v.length <= 11) {
+      // Se começar com DDD alto ou tiver cara de celular, usa máscara de celular
+      // Mas para CPF puro, vamos forçar a máscara de CPF
+      if (v.length === 11) {
+        // Lógica: se o terceiro dígito for diferente de ponto/formato CPF
+        // Aqui vamos testar se você quer CPF ou Celular. 
+        // DICA: Se for 11 dígitos, o ideal é tentar buscar o usuário primeiro.
+        mask = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"); // Padrão CPF
+      } else {
+        mask = v;
+      }
+    } else if (v.length > 11 && v.length <= 14) {
+      mask = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5"); // CNPJ
     }
+
+    // Se o usuário apagar e digitar de novo, vamos permitir celular manualmente
+    if (v.length === 11 && v.startsWith("0") === false && v[2] === "9") {
+       mask = v.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3"); // Celular
+    }
+
+    e.target.value = mask || v;
     
-    e.target.value = v;
-    const limpo = v.replace(/\D/g, "");
-    if (limpo.length === 11 || limpo.length === 14) buscarDestinatario(limpo);
+    if (v.length === 11 || v.length === 14) {
+      buscarDestinatario(v);
+    }
   });
 
   // MÁSCARA VALOR
   valorInput.addEventListener("input", (e) => {
     let v = e.target.value.replace(/\D/g,'');
+    if (!v) v = "0";
     v = (v/100).toFixed(2) + '';
     v = v.replace(".", ",");
     v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -235,39 +249,42 @@
     validar();
   });
 
+  // VALIDAÇÃO DO BOTÃO (O segredo está aqui)
   function validar() {
     const valorLimpo = valorInput.value.replace("R$ ", "").replace(/\./g, "").replace(",", ".");
     const valorNum = parseFloat(valorLimpo) || 0;
     
-    // O botão só ativa se encontrar o dono da chave e você tiver saldo
-    if(destinoEncontrado && valorNum > 0 && valorNum <= saldoDisponivel) {
-      btn.classList.add("active");
+    // DEBUG no console para você ver por que não ativa:
+    console.log("Destino:", destinoEncontrado);
+    console.log("Valor:", valorNum, "Saldo:", saldoDisponivel);
+
+    if (destinoEncontrado && valorNum > 0 && valorNum <= saldoDisponivel) {
+      btn.style.background = "#22C55E";
+      btn.style.color = "#000";
       btn.disabled = false;
+      btn.classList.add("active");
     } else {
-      btn.classList.remove("active");
+      btn.style.background = "#27272a";
+      btn.style.color = "#71717a";
       btn.disabled = true;
+      btn.classList.remove("active");
     }
   }
 
-  // PROSSEGUIR PARA REVISÃO
   window.irParaRevisao = function() {
-    const valorDigitado = valorInput.value;
-    const valorLimpo = valorDigitado.replace("R$ ", "").replace(/\./g, "").replace(",", ".");
-    
+    // Garante que os dados passem corretamente
     const dados = {
-        valor: valorDigitado,
-        valorNumerico: parseFloat(valorLimpo),
+        valor: valorInput.value,
+        valorNumerico: parseFloat(valorInput.value.replace("R$ ", "").replace(/\./g, "").replace(",", ".")),
         nomeDestino: destinoEncontrado.nome,
         uidDestino: destinoEncontrado.id,
         bancoDestino: "Zentry Bank - 001",
         tipo: "pix"
     };
-
     localStorage.setItem("transacao_pendente", JSON.stringify(dados));
     window.location.href = 'revisao.html';
-  }
-</script>
-  
+  };
+  </script>
   
 </body>
 </html>
