@@ -462,7 +462,7 @@ svg {
 
   <div class="balance-circle" onclick="location.href='extrato.html'">
     <div class="circle">
-        <span id="saldo-home">R$...</span>
+        <span id="saldo-home">R$Carregando...</span>
         <small>Saldo disponível</small>
     </div>
   </div>
@@ -649,9 +649,9 @@ svg {
     Sair
   </button>
 </nav>
-  <script type="module">
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -667,83 +667,42 @@ svg {
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let saldoOculto = false;
-    window.currentSaldo = 0;
-
-    // Função de Renderização Melhorada
-    window.renderSaldo = () => {
-        const el = document.getElementById("saldo-home");
-        if (!el) {
-            console.log("Aguardando elemento saldo-home aparecer...");
-            return;
-        }
-        
-        if (saldoOculto) {
-            el.innerText = "••••••••";
-        } else {
-            el.innerText = window.currentSaldo.toLocaleString('pt-BR', { 
-                style: 'currency', 
-                currency: 'BRL' 
-            });
-        }
-        console.log("Saldo desenhado na tela:", window.currentSaldo);
-    };
-
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            console.log("Logado como:", user.email);
+            // Esse log é pra você ver no F12 se o ID bate com o do Firebase
+            console.log("Conectado com o UID:", user.uid);
+
+            const docRef = doc(db, "usuarios", user.uid);
             
-            // OUVINTE EM TEMPO REAL
-            onSnapshot(doc(db, "usuarios", user.uid), (docSnap) => {
+            onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const dados = docSnap.data();
-                    console.log("Dados brutos do Firebase:", dados);
-
-                    // Nome
-                    const nomeH2 = document.querySelector(".user-info h2");
-                    if(nomeH2 && dados.nome) {
-                        nomeH2.innerText = dados.nome.split(' ')[0] + "!";
-                    }
-
-                    // Saldo (Forçando conversão para número)
-                    window.currentSaldo = Number(dados.saldo) || 0;
                     
-                    // Tenta renderizar imediatamente e após um pequeno delay (garantia)
-                    window.renderSaldo();
-                    setTimeout(window.renderSaldo, 500); 
+                    // ATUALIZA O NOME (Forçando a barra)
+                    const elNome = document.getElementById("nome-usuario");
+                    if(elNome) elNome.innerText = (dados.nome.split(' ')[0] || "Usuário") + "!";
+
+                    // ATUALIZA O SALDO (Convertendo qualquer coisa pra número)
+                    let valor = dados.saldo !== undefined ? dados.saldo : 0;
+                    window.currentSaldo = parseFloat(valor);
+                    
+                    const elSaldo = document.getElementById("saldo-home");
+                    if(elSaldo) {
+                        elSaldo.innerText = window.currentSaldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    }
+                } else {
+                    // Se cair aqui, o seu documento no Firestore está com o nome errado!
+                    document.getElementById("nome-usuario").innerText = "Erro: Criar doc com UID";
+                    console.error("ID não encontrado no banco:", user.uid);
                 }
             });
         } else {
             window.location.href = "login.html";
         }
     });
-
-    // Botões e Funções Globais
-    window.toggleSaldoHome = () => {
-        saldoOculto = !saldoOculto;
-        window.renderSaldo();
-    };
-
-    window.logout = () => {
-        signOut(auth).then(() => { window.location.href = 'login.html'; });
-    };
-
-    window.abrirPDV = () => { window.location.href = 'pdv.html'; };
-
-    // Inicializadores de interface
-    window.onload = () => {
-        const hora = new Date().getHours();
-        const greetingEl = document.getElementById("greeting");
-        if (greetingEl) {
-            if (hora < 12) greetingEl.innerText = "Bom dia,";
-            else if (hora < 18) greetingEl.innerText = "Boa tarde,";
-            else greetingEl.innerText = "Boa noite,";
-        }
-        window.renderSaldo();
-    };
-  </script>
-  
-  
+    
+    // Mantenha suas outras funções (banners, etc) abaixo...
+</script>
   
 </body>  
 </html>
