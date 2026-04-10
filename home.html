@@ -668,60 +668,60 @@ svg {
     const db = getFirestore(app);
 
     let saldoOculto = false;
-    window.currentSaldo = 0; // Começa em zero
+    window.currentSaldo = 0;
 
-    // --- CONEXÃO REAL-TIME ---
+    // Função de Renderização Melhorada
+    window.renderSaldo = () => {
+        const el = document.getElementById("saldo-home");
+        if (!el) {
+            console.log("Aguardando elemento saldo-home aparecer...");
+            return;
+        }
+        
+        if (saldoOculto) {
+            el.innerText = "••••••••";
+        } else {
+            el.innerText = window.currentSaldo.toLocaleString('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL' 
+            });
+        }
+        console.log("Saldo desenhado na tela:", window.currentSaldo);
+    };
+
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            console.log("Usuário logado ID:", user.uid);
+            console.log("Logado como:", user.email);
             
-            // Escuta o documento do usuário
+            // OUVINTE EM TEMPO REAL
             onSnapshot(doc(db, "usuarios", user.uid), (docSnap) => {
                 if (docSnap.exists()) {
                     const dados = docSnap.data();
-                    console.log("Dados vindos do Firebase:", dados);
+                    console.log("Dados brutos do Firebase:", dados);
 
-                    // 1. Atualiza Nome
+                    // Nome
                     const nomeH2 = document.querySelector(".user-info h2");
                     if(nomeH2 && dados.nome) {
                         nomeH2.innerText = dados.nome.split(' ')[0] + "!";
                     }
 
-                    // 2. Atualiza Saldo (Garante que vira número)
-                    window.currentSaldo = parseFloat(dados.saldo || 0);
+                    // Saldo (Forçando conversão para número)
+                    window.currentSaldo = Number(dados.saldo) || 0;
                     
-                    // 3. Força o desenho na tela
-                    renderSaldo();
-                } else {
-                    console.error("Documento não existe no Firestore! Verifique o UID.");
+                    // Tenta renderizar imediatamente e após um pequeno delay (garantia)
+                    window.renderSaldo();
+                    setTimeout(window.renderSaldo, 500); 
                 }
-            }, (error) => {
-                console.error("Erro no Snapshot:", error);
             });
         } else {
             window.location.href = "login.html";
         }
     });
 
-    function renderSaldo() {
-        const el = document.getElementById("saldo-home");
-        if(!el) return;
-        
-        if (saldoOculto) {
-            el.innerText = "••••••••";
-        } else {
-            // Formatação brasileira R$
-            el.innerText = window.currentSaldo.toLocaleString('pt-BR', { 
-                style: 'currency', 
-                currency: 'BRL' 
-            });
-        }
-    }
-
-    // --- SEUS BOTÕES (MANTIDOS) ---
+    // Botões e Funções Globais
     window.toggleSaldoHome = () => {
         saldoOculto = !saldoOculto;
-        renderSaldo();
+        window.renderSaldo();
     };
 
     window.logout = () => {
@@ -730,49 +730,19 @@ svg {
 
     window.abrirPDV = () => { window.location.href = 'pdv.html'; };
 
-    function atualizarSaudacao() {
-        const hora = new Date().getHours();
-        let saudacao = "Olá,";
-        if (hora >= 5 && hora < 12) saudacao = "Bom dia,";
-        else if (hora >= 12 && hora < 18) saudacao = "Boa tarde,";
-        else saudacao = "Boa noite,";
-        const el = document.getElementById("greeting");
-        if(el) el.innerText = saudacao;
-    }
-
-    function carregarBanners() {
-        const bannerSlider = document.getElementById('banner-slider');
-        const bannerDots = document.getElementById('banner-dots');
-        if (!bannerSlider || !bannerDots) return;
-
-        const listaSlides = [
-            `<div class="smart-banner" onclick="location.href='cartao.html'" style="border-left: 5px solid var(--primary);">
-                <b>Cartão Virtual TECH</b>
-                <p>Peça já o seu e faça compras online com segurança.</p>
-                <button style="background: var(--primary); color:#000;">Ativar Agora</button>
-            </div>`,
-            `<div class="smart-banner" onclick="location.href='cobrar.html'" style="border-left: 5px solid #ef4444;">
-                <b>Cobrar Clientes</b>
-                <p>Envie cobranças rápidas via Pix.</p>
-                <button style="background:#ef4444; color:#fff;">Cobrar</button>
-            </div>`,
-            `<div class="smart-banner" onclick="location.href='contas.html'" style="border-left: 5px solid #f59e0b;">
-                <b>Contas a pagar</b>
-                <p>Organize suas contas e evite atraso.</p>
-                <button style="background:#f59e0b; color:#000;">Ver contas</button>
-            </div>`
-        ];
-        bannerSlider.innerHTML = listaSlides.join('');
-        bannerDots.innerHTML = listaSlides.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}"></div>`).join('');
-    }
-
-    // Inicialização
+    // Inicializadores de interface
     window.onload = () => {
-        atualizarSaudacao();
-        carregarBanners();
-        renderSaldo(); // Chama uma vez para garantir
+        const hora = new Date().getHours();
+        const greetingEl = document.getElementById("greeting");
+        if (greetingEl) {
+            if (hora < 12) greetingEl.innerText = "Bom dia,";
+            else if (hora < 18) greetingEl.innerText = "Boa tarde,";
+            else greetingEl.innerText = "Boa noite,";
+        }
+        window.renderSaldo();
     };
   </script>
+  
   
   
 </body>  
