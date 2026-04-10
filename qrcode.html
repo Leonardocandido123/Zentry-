@@ -140,7 +140,8 @@
     </div>
   </div>
   </div>
-  <script type="module">
+  
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -163,7 +164,7 @@
     onAuthStateChanged(auth, (user) => {
         if (user) {
             userLogado = user;
-            iniciarScanner();
+            iniciarScanner(); 
         } else {
             window.location.href = 'login.html';
         }
@@ -186,19 +187,34 @@
         let valor = 0;
         let nome = "Recebedor Externo";
 
-        // PARSER INTELIGENTE (Extrai do QR Code)
         try {
-            if(texto.includes("5405")) valor = parseFloat(texto.split('5405')[1].substring(0, 5));
+            // 1. EXTRAIR NOME (ID 59)
             if(texto.includes("59")) {
                 const parteNome = texto.split('59')[1];
                 const tam = parseInt(parteNome.substring(0, 2));
                 nome = parteNome.substring(2, 2 + tam);
             }
-        } catch(e) { console.log("Erro no parse"); }
+
+            // 2. EXTRAIR VALOR (Tenta ID 5405 e 5404 para boletos/contas)
+            if(texto.includes("5405")) {
+                valor = parseFloat(texto.split('5405')[1].substring(0, 5));
+            } else if(texto.includes("5404")) {
+                valor = parseFloat(texto.split('5404')[1].substring(0, 4));
+            }
+        } catch(e) { console.log("Erro no parse do código"); }
+
+        // Se o valor ainda for zero (caso da conta Telefonica), pede para o usuário digitar
+        if (valor <= 0) {
+            const novoValor = prompt(`Não identificamos o valor para: ${nome}\n\nDigite o valor que deseja pagar:`, "0,00");
+            if (novoValor) {
+                valor = parseFloat(novoValor.replace(',', '.'));
+            } else {
+                location.reload(); // Cancela se não digitar nada
+                return;
+            }
+        }
 
         const valorFormatado = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        
-        // MOSTRA O MODAL EM VEZ DO CONFIRM
         abrirModal(nome, valorFormatado, valor);
     }
 
@@ -212,7 +228,6 @@
         };
     }
 
-    // Mantive a simulação mas agora usando o Modal também
     window.simularLeitura = (tipo, valorStr, recebedor) => {
         const valorNum = parseFloat(valorStr.replace('R$ ', '').replace('.', '').replace(',', '.'));
         abrirModal(recebedor, valorStr, valorNum);
@@ -228,16 +243,18 @@
             const snap = await getDoc(userRef);
             
             if (snap.data().saldo < valorNum) {
-                alert("Saldo Insuficiente!");
+                alert("Saldo Insuficiente no Zentry Bank!");
                 location.reload();
                 return;
             }
 
+            // DÉBITO NO FIREBASE
             await updateDoc(userRef, {
                 saldo: increment(-valorNum),
                 saida: increment(valorNum)
             });
 
+            // SALVA PARA O COMPROVANTE
             localStorage.setItem("transacao_pendente", JSON.stringify({
                 nomeDestino: recebedor,
                 valor: valorStr,
@@ -250,11 +267,12 @@
 
             window.location.href = "comprovante.html";
         } catch (error) {
-            alert("Erro na transação.");
+            alert("Erro na rede. Tente novamente.");
             overlay.style.display = 'none';
         }
     }
-  </script>
+      </script>
+  
   
 </body>
 </html>
