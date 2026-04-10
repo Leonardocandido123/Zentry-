@@ -31,7 +31,7 @@
             padding: 0 25px;
         }
 
-        .header-area { margin-bottom: 40px; }
+        .header-area { margin-bottom: 20px; }
         .header-area h2 { font-size: 24px; font-weight: 500; line-height: 1.3; }
         .header-area p { color: #9CA3AF; font-size: 14px; margin-top: 10px; }
 
@@ -62,7 +62,10 @@
     gap: 15px; 
     z-index: 1000; /* Garante que ele fique na frente de tudo */
      }
-        
+        @media (max-height: 700px) {
+    .footer {
+        bottom: 60px;
+    }
         .next-btn {
             width: 60px; height: 60px; background: #1F2937; border-radius: 50%;
             display: flex; align-items: center; justify-content: center; border: none; transition: 0.3s;
