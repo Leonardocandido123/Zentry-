@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <title>ZENTRY- Home Premium</title>
   <style>
-    /* TODO O SEU CSS MANTIDO INTEGRALMENTE */
+    /* TODO O SEU CSS PREMIUM MANTIDO INTEGRALMENTE */
    :root { 
     --primary: #22c55e; 
     --bg-card: #111827;
@@ -50,8 +50,19 @@ body {
     .techtap-info b { font-size: 14px; color: #000; }
     .techtap-btn { background: #fff; color: #000; padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; border: none; }
 
+    /* BANNERS */
+    .banner-wrapper { width: 100%; margin: 20px 0 30px 0; position: relative; overflow: hidden; }
+    .banner-container { display: flex; transition: transform 0.5s ease-in-out; width: 100%; }
+    .smart-banner { min-width: 100%; background: linear-gradient(145deg, #111827, #0a0f1f); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 10px; min-height: 130px; }
+    .smart-banner b { font-size: 15px; color: #fff; }
+    .smart-banner p { font-size: 12px; color: #9CA3AF; margin: 0; }
+    .banner-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+    .dot { width: 6px; height: 6px; background: #374151; border-radius: 50%; }
+    .dot.active { background: var(--primary); width: 18px; border-radius: 10px; }
+
     .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 0 25px; z-index: 1000; }
     .nav-btn { background: none; border: none; color: #9CA3AF; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; }
+    .nav-btn.active { color: var(--primary); }
     
     .container { padding: 20px 20px 100px 20px; }
     .resumo-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 25px; }
@@ -62,10 +73,11 @@ body {
     .status-item small { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
     .status-item strong { font-size: 14px; font-weight: 700; }
 
-    /* EMPRÉSTIMO PREMIUM */
     .premium-icon { position: relative; border: 1px solid rgba(34, 197, 94, 0.4); animation: pulseGlow 2.5s infinite; }
     @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.2); } 50% { box-shadow: 0 0 18px rgba(34, 197, 94, 0.5); } }
     .badge-premium { position: absolute; top: -6px; right: -6px; background: #22c55e; color: #000; font-size: 8px; font-weight: 900; padding: 3px 6px; border-radius: 6px; }
+    
+    .smart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-sizing: border-box; }
   </style>
 </head>
 <body>
@@ -73,15 +85,15 @@ body {
 <div class="container">
   <header class="header">
     <div class="user-info">
-      <div class="greeting" id="greeting">Olá,</div>
+      <div class="greeting" id="greeting">Boa tarde,</div>
       <h2 id="nome-usuario">...</h2>
     </div>
     <div style="display:flex; gap:12px; align-items:center;">
       <div onclick="toggleSaldoHome()" style="cursor:pointer; color: #FFF;">
-        <svg viewBox="0 0 24 24"><path d="M1 12s4-6 11-6 11 6 11 6-4 6-11 6S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-6 11-6 11 6 11 6-4 6-11 6S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
       </div>
       <div class="avatar" onclick="location.href='perfil.html'" style="cursor:pointer;">
-        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
     </div>
   </header>
@@ -99,6 +111,7 @@ body {
       <svg viewBox="0 0 500 100" class="grafico-svg">
         <path d="M0,80 Q125,75 250,78 T500,75" fill="none" stroke="var(--primary)" stroke-width="3" opacity="0.8" />
         <path d="M0,90 L50,40 L100,60 L150,20 L200,45 L250,10 L300,50 L350,15 L400,40 L450,5 L500,30" fill="none" stroke="#3B82F6" stroke-width="2" />
+        <path d="M0,95 L60,85 L120,95 L180,75 L240,90 L300,80 L360,95 L420,85 L500,98" fill="none" stroke="#FBBF24" stroke-width="2" stroke-dasharray="5,5" />
       </svg>
     </div>
     <div class="resumo-footer-compacto">
@@ -124,8 +137,11 @@ body {
 
   <section class="actions-grid">
     <a href="extrato.html" class="action-item"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2"/></svg></div><span>Extrato</span></a>
+    <a href="#" onclick="alert('Disponível em breve')" class="action-item"><div class="action-icon premium-icon"><div class="badge-premium">EM BREVE</div><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><span>Crédito</span></a>
     <a href="cobrar.html" class="action-item"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><span>Cobrar</span></a>
+    <a href="contas.html" class="action-item"><div class="action-icon"><svg viewBox="0 0 24 24"><path d="M20 12V8H4v4M2 4h20v16H2V4zm2 4h16v10H4V8z"/></svg></div><span>Contas</span></a>
     <a href="cartao.html" class="action-item"><div class="action-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><span>Cartão</span></a>
+    <a href="recarga.html" class="action-item"><div class="action-icon"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg></div><span>Recarga</span></a>
   </section>
 
   <div class="techtap-card">
@@ -133,8 +149,32 @@ body {
     <button onclick="window.location.href='pdv.html'" class="techtap-btn">Cobrar</button>
   </div>
 
+  <div class="banner-wrapper">
+    <div class="banner-container" id="banner-slider"></div>
+    <div class="banner-dots" id="banner-dots"></div>
+  </div>
+
+  <div class="smart-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <span style="font-weight: 800; font-size: 11px; color: var(--text-secondary); letter-spacing: 1.2px; text-transform: uppercase;">Atividade Recente</span>
+        <div style="background: rgba(34, 197, 94, 0.1); padding: 4px 10px; border-radius: 8px; cursor: pointer;" onclick="window.location.href='historico.html'">
+            <span style="font-size: 11px; color: var(--primary); font-weight: 700;">Ver tudo</span>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+        <div style="width: 42px; height: 42px; background: rgba(34, 197, 94, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary);"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 14px;">Recebimento Pix</div>
+            <div style="font-size: 11px; color: var(--text-secondary);">Hoje • 10:05</div>
+        </div>
+        <div style="text-align: right;"><div style="font-weight: 800; color: var(--primary); font-size: 14px;">+ R$ 85,90</div></div>
+    </div>
+  </div>
+
   <nav class="nav-bar">
     <button class="nav-btn active" onclick="location.href='home.html'"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Início</button>
+    <button class="nav-btn" onclick="location.href='metas.html'"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Metas</button>
+    <button class="nav-btn" onclick="location.href='notificacoes.html'"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Notificação</button>
     <button class="nav-btn" onclick="logout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sair</button>
   </nav>
 </div>
@@ -175,8 +215,8 @@ body {
                     document.getElementById("resumo-lucro").innerText = format(d.lucro);
                     
                     renderSaldo();
-                } else {
-                    document.getElementById("nome-usuario").innerText = "ID não configurado!";
+                    atualizarSaudacao();
+                    carregarBanners();
                 }
             });
         } else {
@@ -191,6 +231,42 @@ body {
 
     window.toggleSaldoHome = () => { saldoOculto = !saldoOculto; renderSaldo(); };
     window.logout = () => { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
+
+    function atualizarSaudacao() {
+        const hora = new Date().getHours();
+        const el = document.getElementById("greeting");
+        if (hora >= 5 && hora < 12) el.innerText = "Bom dia,";
+        else if (hora >= 12 && hora < 18) el.innerText = "Boa tarde,";
+        else el.innerText = "Boa noite,";
+    }
+
+    function carregarBanners() {
+        const bannerSlider = document.getElementById('banner-slider');
+        const bannerDots = document.getElementById('banner-dots');
+        if (!bannerSlider || bannerSlider.children.length > 0) return;
+
+        const slides = [
+            { t: 'Cartão Virtual TECH', p: 'Compras online com segurança.', b: 'Ativar', c: 'var(--primary)', h: 'cartao.html' },
+            { t: 'Cobrar Clientes', p: 'Envie cobranças via Pix.', b: 'Cobrar', c: '#ef4444', h: 'cobrar.html' },
+            { t: 'Contas a pagar', p: 'Organize suas finanças.', b: 'Ver', c: '#f59e0b', h: 'contas.html' },
+            { t: 'Recarga', p: 'Recarregue em segundos.', b: 'Recarregar', c: '#3b82f6', h: 'recarga.html' }
+        ];
+
+        bannerSlider.innerHTML = slides.map(s => `
+            <div class="smart-banner" onclick="location.href='${s.h}'" style="border-left: 5px solid ${s.c};">
+                <b>${s.t}</b><p>${s.p}</p>
+                <button style="background:${s.c}; color:${s.c==='var(--primary)'?'#000':'#fff'}; border:none; padding:8px; border-radius:8px;">${s.b}</button>
+            </div>`).join('');
+
+        bannerDots.innerHTML = slides.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
+        
+        let cur = 0;
+        setInterval(() => {
+            cur = (cur + 1) % slides.length;
+            bannerSlider.style.transform = `translateX(-${cur * 100}%)`;
+            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+        }, 4000);
+    }
 </script>
 </body>
 </html>
