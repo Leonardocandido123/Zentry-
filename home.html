@@ -228,7 +228,6 @@ body {
     <button class="nav-btn" onclick="logout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sair</button>
   </nav>
 </div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -255,18 +254,36 @@ body {
             onSnapshot(doc(db, "usuarios", user.uid), (docSnap) => {
                 if (docSnap.exists()) {
                     const d = docSnap.data();
-                    const format = (v) => parseFloat(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                     
-                    document.getElementById("nome-usuario").innerText = (d.nome || "Usuário") + "!";
+                    // Função de formatação segura (converte string do banco para número)
+                    const format = (v) => {
+                        const num = parseFloat(v) || 0;
+                        return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    };
+                    
+                    // Atualiza Nome e Saudação
+                    const elNome = document.getElementById("nome-usuario");
+                    if(elNome) elNome.innerText = (d.nome || "Usuário") + "!";
+                    
+                    // Salva e Renderiza o Saldo Principal
                     window.currentSaldo = parseFloat(d.saldo || 0);
-                    
-                    document.getElementById("resumo-entrada").innerText = format(d.entrada);
-                    document.getElementById("resumo-saida").innerText = format(d.saida);
-                    document.getElementById("resumo-lucro").innerText = format(d.lucro);
-                    
                     renderSaldo();
+                    
+                    // ATUALIZAÇÃO DA VISÃO GERAL (Onde estavam os campos vazios)
+                    const elEntrada = document.getElementById("resumo-entrada");
+                    const elSaida = document.getElementById("resumo-saida");
+                    const elLucro = document.getElementById("resumo-lucro");
+
+                    if(elEntrada) elEntrada.innerText = format(d.entrada);
+                    if(elSaida) elSaida.innerText = format(d.saida);
+                    if(elLucro) elLucro.innerText = format(d.lucro);
+                    
+                    // Dispara funções auxiliares
                     atualizarSaudacao();
                     carregarBanners();
+
+                    // Salva o saldo para ser usado em outras páginas (como o Pix)
+                    localStorage.setItem("saldo", window.currentSaldo);
                 }
             });
         } else {
@@ -274,17 +291,29 @@ body {
         }
     });
 
+    // Função que mostra ou esconde o saldo com as bolinhas
     function renderSaldo() {
         const el = document.getElementById("saldo-home");
-        if(el) el.innerText = saldoOculto ? "••••••••" : window.currentSaldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        if(el) {
+            el.innerText = saldoOculto ? "••••••••" : window.currentSaldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
     }
 
-    window.toggleSaldoHome = () => { saldoOculto = !saldoOculto; renderSaldo(); };
-    window.logout = () => { signOut(auth).then(() => { window.location.href = 'login.html'; }); };
+    // Funções Globais
+    window.toggleSaldoHome = () => { 
+        saldoOculto = !saldoOculto; 
+        renderSaldo(); 
+    };
+
+    window.logout = () => { 
+        signOut(auth).then(() => { window.location.href = 'login.html'; }); 
+    };
 
     function atualizarSaudacao() {
         const hora = new Date().getHours();
         const el = document.getElementById("greeting");
+        if (!el) return;
+
         if (hora >= 5 && hora < 12) el.innerText = "Bom dia,";
         else if (hora >= 12 && hora < 18) el.innerText = "Boa tarde,";
         else el.innerText = "Boa noite,";
@@ -308,15 +337,19 @@ body {
                 <button style="background:${s.c}; color:${s.c==='var(--primary)'?'#000':'#fff'}; border:none; padding:8px; border-radius:8px;">${s.b}</button>
             </div>`).join('');
 
-        bannerDots.innerHTML = slides.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
+        if(bannerDots) {
+            bannerDots.innerHTML = slides.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
+        }
         
         let cur = 0;
         setInterval(() => {
             cur = (cur + 1) % slides.length;
-            bannerSlider.style.transform = `translateX(-${cur * 100}%)`;
+            if(bannerSlider) bannerSlider.style.transform = `translateX(-${cur * 100}%)`;
             document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
         }, 4000);
     }
 </script>
+  
+
 </body>
 </html>
