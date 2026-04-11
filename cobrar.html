@@ -269,7 +269,7 @@ Pagamento via link seguro ZENTRY
        <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, collection, query, where, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, collection, query, where, onSnapshot, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
@@ -286,30 +286,39 @@ const db = getFirestore(app);
 
 let usuarioLogadoId = "";
 
-// --- BLINDAGEM DE MODAL ---
-function showZModal(titulo, texto, icon) {
-    const modal = document.getElementById('zModalGlobal');
-    if(modal) {
-        document.getElementById('zTitle').innerText = titulo;
-        document.getElementById('zText').innerText = texto;
-        document.getElementById('zIcon').innerText = icon;
-        modal.style.display = 'flex';
-    } else {
-        alert(texto); // fallback caso o modal não esteja no HTML
+// --- FUNÇÃO PARA TROCAR ABAS (CORRIGIDA) ---
+window.switchTab = (event, tabName) => {
+    // Esconde todos os cards
+    document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+    // Remove active de todos os botões
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Mostra a aba clicada
+    document.getElementById('tab-' + tabName).classList.add('active');
+    // Ativa o botão clicado
+    if(event.currentTarget) {
+        event.currentTarget.classList.add('active');
     }
-}
+};
 
-// --- VERIFICAÇÃO DE LOGIN E DADOS EM TEMPO REAL ---
+// --- MÁSCARA DE MOEDA ---
+window.mascaraMoeda = (i) => {
+    let v = i.value.replace(/\D/g,'');
+    v = (v/100).toFixed(2) + '';
+    v = v.replace(".", ",");
+    v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+    i.value = "R$ " + v;
+};
+
 onAuthStateChanged(auth, (user) => {
     if (user) {
         usuarioLogadoId = user.uid;
-        ouvirClientes(); // Escuta o banco de dados em tempo real
+        ouvirClientes();
     } else {
         window.location.href = "login.html";
     }
 });
 
-// --- ESCUTAR CLIENTES CADASTRADOS (REALTIME) ---
 function ouvirClientes() {
     const q = query(collection(db, "clientes_cadastrados"), where("vendedorId", "==", usuarioLogadoId));
     
@@ -318,34 +327,26 @@ function ouvirClientes() {
         lista.innerHTML = "";
         const hoje = new Date().setHours(0,0,0,0);
 
-        if (snapshot.empty) {
-            lista.innerHTML = '<p style="text-align:center; font-size:12px; color:gray; margin-top:20px;">Nenhum cliente cadastrado.</p>';
-            return;
-        }
-
         snapshot.forEach((docSnap) => {
             const c = docSnap.data();
             const id = docSnap.id;
             
-            // Lógica de Datas para Cores
-            let cor = "#94a3b8"; // Padrão cinza
+            let cor = "#94a3b8";
             let statusTxt = "AGENDADO";
-            let animClass = "";
             
             if(c.dataVenc) {
-                const dVenc = new Date(c.dataVenc).setHours(24,0,0,0); // Ajuste de fuso
+                const dVenc = new Date(c.dataVenc).setHours(24,0,0,0);
                 if(dVenc === hoje) {
-                    cor = "#22c55e"; // Verde (Hoje)
+                    cor = "#22c55e";
                     statusTxt = "VENCE HOJE";
                 } else if (dVenc < hoje) {
-                    cor = "#ff4444"; // Vermelho (Vencido)
+                    cor = "#ff4444";
                     statusTxt = "VENCIDO";
-                    animClass = "anim-pago-pulsa"; // Sua animação pulsante
                 }
             }
 
             const item = document.createElement('div');
-            item.className = `item-cliente ${animClass}`;
+            item.className = `item-cliente`;
             item.style.borderLeft = `4px solid ${cor}`;
             item.innerHTML = `
                 <div class="item-info" style="flex:1">
@@ -361,16 +362,12 @@ function ouvirClientes() {
                 </div>
             `;
             
-            // Ação de clicar no William e preencher os campos acima
             item.onclick = () => {
                 document.getElementById('link-nome').value = c.nome;
                 document.getElementById('link-valor').value = c.valor;
                 document.getElementById('link-desc').value = c.desc;
-                
-                // Volta para a aba de "Gerar Link"
-                switchTab({currentTarget: document.querySelector('.tab-btn:first-child')}, 'gerar');
+                window.switchTab({currentTarget: document.querySelector('.tab-btn:first-child')}, 'gerar');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                showZModal("Cliente Selecionado", `${c.nome} carregado com sucesso!`, "✅");
             };
 
             lista.appendChild(item);
@@ -378,50 +375,58 @@ function ouvirClientes() {
     });
 }
 
-// --- SALVAR NOVO CLIENTE ---
 window.salvarCliente = async () => {
     const nome = document.getElementById('cad-nome').value;
     const valor = document.getElementById('cad-valor').value;
     const desc = document.getElementById('cad-desc').value;
     const data = document.getElementById('cad-data').value;
 
-    if(!nome || valor === "R$ 0,00") {
-        showZModal("Ops!", "Preencha o nome e o valor do cliente.", "⚠️");
+    if(!nome || valor === "R$ 0,00" || !valor) {
+        alert("Preencha o nome e o valor do cliente.");
         return;
     }
 
     try {
         await addDoc(collection(db, "clientes_cadastrados"), {
             vendedorId: usuarioLogadoId,
-            nome, valor, desc, dataVenc: data,
-            status: "pendente",
+            nome: nome,
+            valor: valor,
+            desc: desc,
+            dataVenc: data,
             dataCriacao: new Date().toISOString()
         });
         
-        // Limpa campos
-        document.querySelectorAll('#tab-cadastro input').forEach(i => i.value = "");
-        showZModal("Sucesso", "Cliente salvo no banco de dados!", "🛡️");
-        switchTab({currentTarget: document.querySelector('.tab-btn:first-child')}, 'gerar');
+        // Limpa campos e volta para a lista
+        document.getElementById('cad-nome').value = "";
+        document.getElementById('cad-valor').value = "";
+        document.getElementById('cad-desc').value = "";
+        document.getElementById('cad-data').value = "";
+        
+        alert("Cliente salvo com sucesso!");
+        window.switchTab({currentTarget: document.querySelector('.tab-btn:first-child')}, 'gerar');
     } catch (e) {
-        showZModal("Erro", "Falha ao salvar cliente.", "❌");
+        console.error("Erro ao salvar:", e);
+        alert("Erro ao salvar cliente.");
     }
 };
 
-// --- REMOVER CLIENTE ---
 window.removerCliente = async (id) => {
     if(confirm("Deseja excluir este cliente?")) {
-        await deleteDoc(doc(db, "clientes_cadastrados", id));
+        try {
+            await deleteDoc(doc(db, "clientes_cadastrados", id));
+        } catch (e) {
+            alert("Erro ao excluir cliente.");
+        }
     }
 };
 
-// --- GERAR E ENVIAR LINK ---
 window.enviarLink = async () => {
     const nome = document.getElementById('link-nome').value;
     const valor = document.getElementById('link-valor').value;
     const desc = document.getElementById('link-desc').value;
 
     if (!nome || valor === "R$ 0,00") {
-        showZModal("Atenção", "Selecione um cliente ou preencha os dados.", "📱");
+        alert("Selecione um cliente ou preencha os dados.");
         return;
     }
 
@@ -438,15 +443,15 @@ window.enviarLink = async () => {
             dataCriacao: new Date().toISOString()
         });
 
-        // Use o seu domínio aqui
         const linkFinal = `https://zentry-app.web.app/checkout.html?id=${cobrancaId}`;
         const msg = `Olá ${nome}, segue o link para pagamento de ${desc}: ${linkFinal}`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     } catch (e) {
-        showZModal("Erro", "Erro ao gerar cobrança.", "❌");
+        alert("Erro ao gerar cobrança.");
     }
 };
-       </script>
+        </script>
+       
        
 </body>
 </html> 
