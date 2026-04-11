@@ -129,10 +129,9 @@
 
         <button class="btn-confirm" id="btnMain" onclick="processar()">Confirmar Recarga</button>
     </div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -150,6 +149,7 @@
 
     let userUid = "";
     let saldoAtual = 0;
+    let totalSaidaAcumulada = 0; // Para não bugar o gráfico
     let operadora = "";
     let valorFinal = 20;
 
@@ -162,22 +162,23 @@
         e.target.value = v;
     });
 
-    // --- CARREGAR SALDO REAL ---
+    // --- CARREGAR DADOS REAIS ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             userUid = user.uid;
             const docRef = doc(db, "usuarios", user.uid);
             const snap = await getDoc(docRef);
             if(snap.exists()){
-                saldoAtual = snap.data().saldo || 0;
+                const data = snap.data();
+                saldoAtual = data.saldo || 0;
+                totalSaidaAcumulada = data.saida || 0;
                 document.getElementById('txtSaldo').innerText = saldoAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             }
         } else {
-            setTimeout(() => { if(!auth.currentUser) window.location.href='login.html' }, 2000);
+            window.location.href='login.html';
         }
     });
 
-    // --- LÓGICA DE SELEÇÃO ---
     window.selectOp = (el, name) => {
         document.querySelectorAll('.op-card').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
@@ -190,62 +191,71 @@
         document.getElementById('customValue').value = "";
         valorFinal = val;
     };
+
+    // --- FUNÇÃO DE PROCESSAR CORRIGIDA ---
     window.processar = async () => {
-    const phone = document.getElementById('phone').value;
-    const btn = document.getElementById('btnMain');
+        const phone = document.getElementById('phone').value;
+        const btn = document.getElementById('btnMain');
 
-    if(phone.length < 14) return alert("Número inválido!");
-    if(!operadora) return alert("Selecione uma operadora!");
-    if(valorFinal > saldoAtual) return alert("Saldo insuficiente!");
+        if(phone.length < 14) return alert("Número inválido!");
+        if(!operadora) return alert("Selecione uma operadora!");
+        if(valorFinal > saldoAtual) return alert("Saldo insuficiente!");
 
-    btn.innerText = "PROCESSANDO...";
-    btn.disabled = true;
+        btn.innerText = "PROCESSANDO...";
+        btn.disabled = true;
 
-    try {
-        const transacaoId = "TX" + Math.floor(Math.random() * 999999);
-        const dataAgora = new Date().toISOString();
+        try {
+            const transacaoId = "TX" + Math.floor(Math.random() * 999999);
+            const dataAgora = new Date().toISOString();
 
-        // 1. REGISTRA A RECARGA (Para o seu controle/Asaas)
-        await setDoc(doc(db, "recargas", transacaoId), {
-            userId: userUid,
-            telefone: phone,
-            operadora: operadora,
-            valor: valorFinal,
-            status: "Concluído", // Simulando concluído para teste
-            data: dataAgora
-        });
+            // 1. REGISTRA A RECARGA (Controle Asaas)
+            await setDoc(doc(db, "recargas", transacaoId), {
+                userId: userUid,
+                telefone: phone,
+                operadora: operadora,
+                valor: valorFinal,
+                status: "Concluído",
+                data: dataAgora
+            });
 
-        // 2. REGISTRA A TRANSAÇÃO (O que alimenta o gráfico e o resumo)
-        await setDoc(doc(db, "transacoes", transacaoId), {
-            userId: userUid,
-            tipo: "saida", // Faz a linha amarela subir e o "Saiu" aumentar
-            valor: valorFinal,
-            descricao: `Recarga ${operadora}`,
-            detalhe: phone,
-            data: dataAgora
-        });
+            // 2. REGISTRA A TRANSAÇÃO (O QUE O GRAFICO LÊ)
+            // IMPORTANTE: Aqui garantimos que o userId e os campos batem com o dashboard.js
+            await setDoc(doc(db, "transacoes", transacaoId), {
+                userId: userUid,
+                tipo: "saida",
+                valor: valorFinal,
+                descricao: `Recarga ${operadora}`,
+                data: dataAgora // dashboard.js usa esse campo para o eixo X
+            });
 
-        // 3. ATUALIZA O SALDO DO USUÁRIO (Débito real)
-        const novoSaldo = saldoAtual - valorFinal;
-        await setDoc(doc(db, "usuarios", userUid), { 
-            saldo: novoSaldo,
-            saida: (window.totalSaidaAtual || 0) + valorFinal // Atualiza o contador de saídas
-        }, { merge: true });
+            // 3. ATUALIZA O SALDO E O CONTADOR DE SAÍDA NO PERFIL
+            const novoSaldo = saldoAtual - valorFinal;
+            const novaSaidaTotal = totalSaidaAcumulada + valorFinal;
 
-        // Salva dados locais para a revisão
-        localStorage.setItem("tipoOperacao", "Recarga");
-        localStorage.setItem("ultimoValor", valorFinal);
-        localStorage.setItem("operadora", operadora);
-        localStorage.setItem("telefone", phone);
-        
-        window.location.href = 'revisao.html';
-    } catch (e) {
-        console.error(e);
-        alert("Erro ao processar. Tente novamente.");
-        btn.disabled = false;
-    }
-};
-    
+            await updateDoc(doc(db, "usuarios", userUid), { 
+                saldo: novoSaldo,
+                saida: novaSaidaTotal
+            });
+
+            // Salva dados locais para a revisão
+            localStorage.setItem("tipoOperacao", "Recarga");
+            localStorage.setItem("ultimoValor", valorFinal);
+            localStorage.setItem("operadora", operadora);
+            localStorage.setItem("telefone", phone);
+            
+            // Pequeno delay para garantir que o Firebase salvou antes de mudar de página
+            setTimeout(() => {
+                window.location.href = 'revisao.html';
+            }, 500);
+
+        } catch (e) {
+            console.error("Erro no Firebase:", e);
+            alert("Erro ao processar. Tente novamente.");
+            btn.disabled = false;
+        }
+    };
 </script>
+    
+
 </body>
 </html>
