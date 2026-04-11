@@ -81,8 +81,7 @@
 
         <button class="btn-confirm" id="btnMain" onclick="processar()">Confirmar Recarga</button>
     </div>
-
-<script type="module">
+    <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -106,31 +105,32 @@
     let operadora = "";
     let valorFinal = 20;
 
-    // --- MÁSCARA CELULAR ---
-    const phoneInput = document.getElementById('phone');
-    phoneInput.addEventListener('input', (e) => {
-        let v = e.target.value.replace(/\D/g,'');
-        v = v.replace(/^(\d{2})(\d)/g,"($1) $2");
-        v = v.replace(/(\d)(\d{4})$/,"$1-$2");
-        e.target.value = v;
-    });
-
-    // --- CARREGAR DADOS ---
+    // --- CARREGAR DADOS REAIS ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             userUid = user.uid;
             const docRef = doc(db, "usuarios", user.uid);
             const snap = await getDoc(docRef);
             if(snap.exists()){
-                const d = snap.data();
-                saldoAtual = parseFloat(d.saldo) || 0;
-                totalSaidaAcumulada = parseFloat(d.saida) || 0;
+                const data = snap.data();
+                saldoAtual = Number(data.saldo) || 0;
+                totalSaidaAcumulada = Number(data.saida) || 0;
                 document.getElementById('txtSaldo').innerText = saldoAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             }
+        } else {
+            window.location.href='login.html';
         }
     });
 
-    // --- FUNÇÕES GLOBAIS (Obrigatório para onclick funcionar no type=module) ---
+    // --- MÁSCARA TELEFONE ---
+    document.getElementById('phone').addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g,'');
+        v = v.replace(/^(\d{2})(\d)/g,"($1) $2");
+        v = v.replace(/(\d)(\d{4})$/,"$1-$2");
+        e.target.value = v;
+    });
+
+    // --- FUNÇÕES GLOBAIS (Expostas para o HTML) ---
     window.selectOp = (el, name) => {
         document.querySelectorAll('.op-card').forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
@@ -141,16 +141,8 @@
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         document.getElementById('customValue').value = "";
-        valorFinal = parseFloat(val);
+        valorFinal = val;
     };
-
-    // Escutar input personalizado
-    document.getElementById('customValue').addEventListener('input', (e) => {
-        if(e.target.value > 0) {
-            valorFinal = parseFloat(e.target.value);
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        }
-    });
 
     window.processar = async () => {
         const phone = document.getElementById('phone').value;
@@ -164,22 +156,23 @@
         btn.disabled = true;
 
         try {
-            const txId = "TX" + Math.floor(Math.random() * 999999);
+            const transacaoId = "TX" + Math.floor(Math.random() * 999999);
             const agora = new Date();
             const dataISO = agora.toISOString();
 
-            // 1. Grava a Transação (Para Gráfico e Extrato)
-            await setDoc(doc(db, "transacoes", txId), {
+            // 1. SALVA EM 'TRANSACOES' (Para o Gráfico e Extrato)
+            await setDoc(doc(db, "transacoes", transacaoId), {
                 userId: userUid,
                 tipo: "saida",
                 valor: valorFinal,
                 descricao: `Recarga ${operadora}`,
+                categoria: "Celular",
                 data: dataISO,
                 timestamp: agora
             });
 
-            // 2. Grava a Recarga (Histórico técnico)
-            await setDoc(doc(db, "recargas", txId), {
+            // 2. SALVA EM 'RECARGAS' (Histórico detalhado)
+            await setDoc(doc(db, "recargas", transacaoId), {
                 userId: userUid,
                 telefone: phone,
                 operadora: operadora,
@@ -188,21 +181,25 @@
                 data: dataISO
             });
 
-            // 3. Atualiza Saldo
-            await updateDoc(doc(db, "usuarios", userUid), {
-                saldo: saldoAtual - valorFinal,
-                saida: totalSaidaAcumulada + valorFinal
+            // 3. ATUALIZA SALDO DO USUÁRIO
+            const novoSaldo = saldoAtual - valorFinal;
+            const novaSaida = totalSaidaAcumulada + valorFinal;
+            await updateDoc(doc(db, "usuarios", userUid), { 
+                saldo: novoSaldo,
+                saida: novaSaida 
             });
 
             btn.innerText = "SUCESSO!";
-            setTimeout(() => window.location.href = 'home.html', 1000);
+            setTimeout(() => { window.location.href = 'home.html'; }, 1000);
 
         } catch (e) {
             console.error(e);
-            alert("Erro ao processar!");
+            alert("Erro ao processar.");
             btn.disabled = false;
+            btn.innerText = "Confirmar Recarga";
         }
     };
-</script>
+    </script>
+    
 </body>
 </html>
