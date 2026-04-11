@@ -265,142 +265,188 @@ Pagamento via link seguro ZENTRY
             </div>
         </div>
     </div>
-</div>
-<script>
-// Troca de abas
-function switchTab(e, tab){
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
-    e.currentTarget.classList.add('active');
-    document.getElementById('tab-'+tab).classList.add('active');
-}
+   </div>
+       <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, collection, query, where, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Máscara de Real
-function mascaraMoeda(i){
-    let v=i.value.replace(/\D/g,'');
-    v=(v/100).toFixed(2).replace(".",",");
-    v=v.replace(/(\d)(\d{3})(\d{3}),/g,"$1.$2.$3,");
-    v=v.replace(/(\d)(\d{3}),/g,"$1.$2,");
-    i.value="R$ "+v;
-}
+const firebaseConfig = {
+    apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
+    authDomain: "zentry-app-74275.firebaseapp.com",
+    projectId: "zentry-app-74275",
+    storageBucket: "zentry-app-74275.appspot.com",
+    messagingSenderId: "571422826071",
+    appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
+};
 
-// Salvar Cliente com ID ÚNICO (Para não apagar todos)
-function salvarCliente(){
-    const nome = document.getElementById('cad-nome').value;
-    const valor = document.getElementById('cad-valor').value;
-    const desc = document.getElementById('cad-desc').value;
-    const dataVenc = document.getElementById('cad-data').value;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    if(!nome || valor === "R$ 0,00") return alert("Preencha nome e valor!");
+let usuarioLogadoId = "";
 
-    let clientes = JSON.parse(localStorage.getItem("tp_clientes") || "[]");
-    
-    // Criamos um ID único usando Date.now()
-    const novoCliente = {
-        id: Date.now(), 
-        nome: nome,
-        valor: valor,
-        desc: desc,
-        dataVenc: dataVenc || "",
-        status: "pendente"
-    };
-
-    clientes.unshift(novoCliente);
-    localStorage.setItem("tp_clientes", JSON.stringify(clientes));
-
-    // Limpa campos
-    document.getElementById('cad-nome').value = "";
-    document.getElementById('cad-valor').value = "";
-    document.getElementById('cad-desc').value = "";
-    document.getElementById('cad-data').value = "";
-    
-    renderizarClientes();
-    switchTab({currentTarget: document.querySelector('.tab-btn:first-child')}, 'gerar');
-}
-
-// Renderizar com Lógica de Cores e Lixeira
-function renderizarClientes(){
-    const clientes = JSON.parse(localStorage.getItem("tp_clientes") || "[]");
-    const lista = document.getElementById('lista-clientes');
-    
-    if(clientes.length === 0) {
-        lista.innerHTML = '<p style="text-align:center; font-size:12px; color:gray; margin-top:20px;">Nenhum cliente na lista.</p>';
-        return;
+// --- BLINDAGEM DE MODAL ---
+function showZModal(titulo, texto, icon) {
+    const modal = document.getElementById('zModalGlobal');
+    if(modal) {
+        document.getElementById('zTitle').innerText = titulo;
+        document.getElementById('zText').innerText = texto;
+        document.getElementById('zIcon').innerText = icon;
+        modal.style.display = 'flex';
+    } else {
+        alert(texto); // fallback caso o modal não esteja no HTML
     }
+}
 
-    const hoje = new Date();
-    hoje.setHours(0,0,0,0);
+// --- VERIFICAÇÃO DE LOGIN E DADOS EM TEMPO REAL ---
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        usuarioLogadoId = user.uid;
+        ouvirClientes(); // Escuta o banco de dados em tempo real
+    } else {
+        window.location.href = "login.html";
+    }
+});
 
-    lista.innerHTML = clientes.map(c => {
-        let cor = "rgba(255,255,255,0.1)"; 
-        let statusTxt = "PENDENTE";
-        let anim = "";
-        let dataExibicao = "Sem data";
+// --- ESCUTAR CLIENTES CADASTRADOS (REALTIME) ---
+function ouvirClientes() {
+    const q = query(collection(db, "clientes_cadastrados"), where("vendedorId", "==", usuarioLogadoId));
+    
+    onSnapshot(q, (snapshot) => {
+        const lista = document.getElementById('lista-clientes');
+        lista.innerHTML = "";
+        const hoje = new Date().setHours(0,0,0,0);
 
-        if(c.dataVenc) {
-            const [ano, mes, dia] = c.dataVenc.split('-');
-            const dVenc = new Date(ano, mes - 1, dia);
-            dataExibicao = `${dia}/${mes}/${ano}`;
-            const diff = Math.ceil((dVenc - hoje) / (1000 * 60 * 60 * 24));
-
-            if(diff < 0) { cor = "#ff4444"; statusTxt = "VENCIDO"; anim = "anim-pulsa"; }
-            else if(diff === 0) { cor = "#ffbb33"; statusTxt = "HOJE"; }
-            else if(diff === 1) { cor = "#22c55e"; statusTxt = "AMANHÃ"; }
+        if (snapshot.empty) {
+            lista.innerHTML = '<p style="text-align:center; font-size:12px; color:gray; margin-top:20px;">Nenhum cliente cadastrado.</p>';
+            return;
         }
 
-        return `
-            <div class="item-cliente ${anim}" style="border-left: 4px solid ${cor}; display:flex; justify-content:space-between; align-items:center;">
-                <div class="item-info" onclick="selecionarCliente('${c.nome}', '${c.valor}', '${c.desc}')" style="flex:1">
+        snapshot.forEach((docSnap) => {
+            const c = docSnap.data();
+            const id = docSnap.id;
+            
+            // Lógica de Datas para Cores
+            let cor = "#94a3b8"; // Padrão cinza
+            let statusTxt = "AGENDADO";
+            let animClass = "";
+            
+            if(c.dataVenc) {
+                const dVenc = new Date(c.dataVenc).setHours(24,0,0,0); // Ajuste de fuso
+                if(dVenc === hoje) {
+                    cor = "#22c55e"; // Verde (Hoje)
+                    statusTxt = "VENCE HOJE";
+                } else if (dVenc < hoje) {
+                    cor = "#ff4444"; // Vermelho (Vencido)
+                    statusTxt = "VENCIDO";
+                    animClass = "anim-pago-pulsa"; // Sua animação pulsante
+                }
+            }
+
+            const item = document.createElement('div');
+            item.className = `item-cliente ${animClass}`;
+            item.style.borderLeft = `4px solid ${cor}`;
+            item.innerHTML = `
+                <div class="item-info" style="flex:1">
                     <b>${c.nome}</b>
                     <span>${c.desc} • ${c.valor}</span>
-                    <span style="display:block; color:${cor}; font-size:10px; margin-top:4px; font-weight:800;">📅 ${dataExibicao}</span>
+                    <span style="display:block; color:${cor}; font-size:10px; margin-top:4px; font-weight:800;">📅 ${c.dataVenc || 'Sem data'}</span>
                 </div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
                     <span style="font-size:9px; font-weight:900; color:${cor}">${statusTxt}</span>
-                    <button class="btn-delete" onclick="removerCliente(event, ${c.id})">
+                    <button class="btn-delete" onclick="event.stopPropagation(); window.removerCliente('${id}')">
                         <svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="#64748b"></path></svg>
                     </button>
                 </div>
-            </div>
-        `;
-    }).join('');
+            `;
+            
+            // Ação de clicar no William e preencher os campos acima
+            item.onclick = () => {
+                document.getElementById('link-nome').value = c.nome;
+                document.getElementById('link-valor').value = c.valor;
+                document.getElementById('link-desc').value = c.desc;
+                
+                // Volta para a aba de "Gerar Link"
+                switchTab({currentTarget: document.querySelector('.tab-btn:first-child')}, 'gerar');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showZModal("Cliente Selecionado", `${c.nome} carregado com sucesso!`, "✅");
+            };
+
+            lista.appendChild(item);
+        });
+    });
 }
 
-// Remover Individual (Corrigido para usar ID)
-function removerCliente(event, id) {
-    event.stopPropagation(); // Impede de clicar no card ao clicar na lixeira
-    if(confirm("Deseja excluir este registro?")) {
-        let clientes = JSON.parse(localStorage.getItem("tp_clientes") || "[]");
-        // Filtra pelo ID único, assim não apaga os outros
-        const novaLista = clientes.filter(c => c.id !== id);
-        localStorage.setItem("tp_clientes", JSON.stringify(novaLista));
-        renderizarClientes();
+// --- SALVAR NOVO CLIENTE ---
+window.salvarCliente = async () => {
+    const nome = document.getElementById('cad-nome').value;
+    const valor = document.getElementById('cad-valor').value;
+    const desc = document.getElementById('cad-desc').value;
+    const data = document.getElementById('cad-data').value;
+
+    if(!nome || valor === "R$ 0,00") {
+        showZModal("Ops!", "Preencha o nome e o valor do cliente.", "⚠️");
+        return;
     }
-}
 
-function selecionarCliente(nome, valor, desc){
-    document.getElementById('link-nome').value = nome;
-    document.getElementById('link-valor').value = valor;
-    document.getElementById('link-desc').value = desc;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+    try {
+        await addDoc(collection(db, "clientes_cadastrados"), {
+            vendedorId: usuarioLogadoId,
+            nome, valor, desc, dataVenc: data,
+            status: "pendente",
+            dataCriacao: new Date().toISOString()
+        });
+        
+        // Limpa campos
+        document.querySelectorAll('#tab-cadastro input').forEach(i => i.value = "");
+        showZModal("Sucesso", "Cliente salvo no banco de dados!", "🛡️");
+        switchTab({currentTarget: document.querySelector('.tab-btn:first-child')}, 'gerar');
+    } catch (e) {
+        showZModal("Erro", "Falha ao salvar cliente.", "❌");
+    }
+};
 
-function enviarLink() {
+// --- REMOVER CLIENTE ---
+window.removerCliente = async (id) => {
+    if(confirm("Deseja excluir este cliente?")) {
+        await deleteDoc(doc(db, "clientes_cadastrados", id));
+    }
+};
+
+// --- GERAR E ENVIAR LINK ---
+window.enviarLink = async () => {
     const nome = document.getElementById('link-nome').value;
     const valor = document.getElementById('link-valor').value;
     const desc = document.getElementById('link-desc').value;
-    if (!nome || valor === "R$ 0,00") return alert("Dados incompletos!");
-    
-    const vClean = valor.replace(/\D/g, '');
-    const id = "TP" + Date.now();
-    const linkFinal = `checkout.html?id=${id}&v=${vClean}&d=${encodeURIComponent(desc)}&n=${encodeURIComponent(nome)}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(linkFinal)}`, '_blank');
-}
 
-window.onload = renderizarClientes;
-                </script>
+    if (!nome || valor === "R$ 0,00") {
+        showZModal("Atenção", "Selecione um cliente ou preencha os dados.", "📱");
+        return;
+    }
+
+    const vClean = valor.replace(/\D/g, ''); 
+    const cobrancaId = "COB" + Date.now();
+
+    try {
+        await setDoc(doc(db, "links_pagamento", cobrancaId), {
+            vendedorId: usuarioLogadoId,
+            clienteNome: nome,
+            valorCentavos: vClean,
+            descricao: desc,
+            status: "aberto",
+            dataCriacao: new Date().toISOString()
+        });
+
+        // Use o seu domínio aqui
+        const linkFinal = `https://zentry-app.web.app/checkout.html?id=${cobrancaId}`;
+        const msg = `Olá ${nome}, segue o link para pagamento de ${desc}: ${linkFinal}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    } catch (e) {
+        showZModal("Erro", "Erro ao gerar cobrança.", "❌");
+    }
+};
+       </script>
        
-
-
 </body>
-</html>
+</html> 
