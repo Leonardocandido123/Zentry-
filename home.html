@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
    <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <title>ZENTRY- Home Premium</title>
   <style>
@@ -55,15 +57,53 @@ body {
 .action-icon { width: 54px; height: 54px; background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #FFF; box-shadow: 0 4px 8px rgba(0,0,0,0.25); }
 .action-icon svg { width: 22px; height: 22px; stroke: #fff; stroke-width: 1.8; fill: none; }
 .action-item span { font-size: 11px; font-weight: 500; color: #FFF; margin-top: 6px; opacity: 0.85; }
+/* RESUMO & GRÁFICO - ATUALIZADO PARA GRÁFICO REAL */
+.resumo-card { 
+    background: var(--bg-card); 
+    border: 1px solid var(--border); 
+    border-radius: 24px; 
+    padding: 20px; 
+    margin-bottom: 25px; 
+}
 
-/* RESUMO & GRÁFICO */
-.resumo-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 25px; }
-.grafico-container { width: 100%; height: 100px; margin: 10px 0; display: flex; align-items: center; }
-.grafico-svg { width: 100%; height: 80px; overflow: visible; }
-.resumo-footer-compacto { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 5px; }
+/* Aumentamos para 200px para o gráfico ter "respiro" e o dedo alcançar as linhas */
+.grafico-container { 
+    width: 100%; 
+    min-height: 200px; 
+    margin: 15px 0; 
+    display: block; /* Mudamos de flex para block para o ApexCharts renderizar certo */
+}
+
+/* Como não usamos mais o SVG fixo, essa classe pode ficar guardada ou removida */
+.grafico-svg { width: 100%; height: 80px; display: none; } 
+
+.resumo-footer-compacto { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-top: 1px solid var(--border); 
+    padding-top: 15px; 
+    margin-top: 10px; 
+}
+
 .status-item { display: flex; flex-direction: column; gap: 4px; }
-.status-item small { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
-.status-item strong { font-size: 14px; font-weight: 700; }
+.status-item small { 
+    font-size: 10px; 
+    color: var(--text-secondary); 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+.status-item strong { font-size: 15px; font-weight: 800; }
+
+/* Ajuste para o Balão que aparece quando encosta o dedo (Tooltip) */
+.apexcharts-tooltip {
+    background: #111827 !important;
+    border: 1px solid var(--border) !important;
+    color: #fff !important;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.5) !important;
+}
+    
 
 /* BANNERS ROTATIVOS */
 .banner-wrapper { width: 100%; margin: 20px 0 30px 0; position: relative; overflow: hidden; }
@@ -154,16 +194,16 @@ body {
         <small>Saldo disponível</small>
     </div>
   </div>
-
-  <div class="resumo-card">
-    <div class="resumo-header"><small>Visão Geral</small></div>
-    <div class="grafico-container">
-      <svg viewBox="0 0 500 100" class="grafico-svg">
-        <path d="M0,80 Q125,75 250,78 T500,75" fill="none" stroke="var(--primary)" stroke-width="3" opacity="0.8" />
-        <path d="M0,90 L50,40 L100,60 L150,20 L200,45 L250,10 L300,50 L350,15 L400,40 L450,5 L500,30" fill="none" stroke="#3B82F6" stroke-width="2" />
-        <path d="M0,95 L60,85 L120,95 L180,75 L240,90 L300,80 L360,95 L420,85 L500,98" fill="none" stroke="#FBBF24" stroke-width="2" stroke-dasharray="5,5" />
-      </svg>
+<div class="resumo-card">
+    <div class="resumo-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <small>Visão Geral (7 dias)</small>
+        <span id="label-periodo" style="font-size: 10px; color: var(--primary); font-weight: 700;">AO VIVO</span>
     </div>
+
+    <div class="grafico-container" style="min-height: 180px; padding: 10px 0;">
+        <div id="mainChart"></div>
+    </div>
+
     <div class="resumo-footer-compacto">
       <div class="status-item">
         <small>Entrou</small>
@@ -178,7 +218,8 @@ body {
         <strong id="resumo-lucro" style="color:var(--primary)">R$ 0,00</strong>
       </div>
     </div>
-  </div>
+</div>
+  
 
   <div class="pix-card">
     <div class="pix-info"><b>Pix rápido ⚡</b><br><span style="font-size: 11px; opacity: 0.8;">Receba e envia dinheiro 24h</span></div>
