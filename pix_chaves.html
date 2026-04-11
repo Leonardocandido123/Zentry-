@@ -6,36 +6,44 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <title>ZENTRY- Minhas Chaves</title>
   <style>
-    :root { --bg: #000; --card: #121826; --border: #2A3441; --accent: #818CF8; --text-sec: #9CA3AF; }
+    :root { --bg: #000; --card: #121826; --border: #2A3441; --accent: #22C55E; --text-sec: #9CA3AF; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; padding: 20px; overflow-x: hidden; }
 
     .header { display: flex; align-items: center; gap: 15px; margin-bottom: 35px; }
     .back-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
-    .back-btn:active { transform: scale(0.9); }
     .back-btn svg { stroke: var(--accent); width: 20px; fill: none; stroke-width: 3; }
 
     .key-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .key-info b { display: block; font-size: 14px; color: var(--text-sec); margin-bottom: 5px; }
+    .key-info b { display: block; font-size: 11px; text-transform: uppercase; color: var(--text-sec); margin-bottom: 5px; }
     .key-info span { font-size: 16px; font-weight: 600; }
     
-    .btn-add { width: 100%; padding: 18px; border-radius: 16px; border: 1px dashed var(--accent); background: rgba(129, 140, 248, 0.05); color: var(--accent); font-weight: 600; cursor: pointer; margin-top: 20px; font-size: 16px; transition: 0.2s; }
-    .btn-add:active { background: rgba(129, 140, 248, 0.2); }
+    .btn-add { width: 100%; padding: 18px; border-radius: 16px; border: 1px dashed var(--accent); background: rgba(34, 197, 94, 0.05); color: var(--accent); font-weight: 600; cursor: pointer; margin-top: 20px; font-size: 16px; }
 
     /* MODAL GAVETA */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: flex-end; backdrop-filter: blur(4px); }
     .modal-content { width: 100%; background: var(--card); border-top: 2px solid var(--accent); border-radius: 30px 30px 0 0; padding: 30px; animation: slideUp 0.3s ease-out; }
     
     .input-premium { width: 100%; padding: 16px; background: #000; border: 1px solid var(--border); border-radius: 14px; color: white; margin-bottom: 20px; font-size: 16px; outline: none; }
-    .input-premium:focus { border-color: var(--accent); }
+    .btn-confirm { width: 100%; padding: 18px; background: var(--accent); color: #000; border: none; border-radius: 14px; font-weight: 700; font-size: 16px; }
 
-    .btn-confirm { width: 100%; padding: 18px; background: var(--accent); color: #000; border: none; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
-    .btn-cancel { width: 100%; padding: 15px; background: transparent; color: var(--text-sec); border: none; font-weight: 500; cursor: pointer; }
+    /* MODAL ZENTRY (BLINDAGEM) */
+    #zModalGlobal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(5px); }
+    .z-content { background:#121826; border:1px solid #2A3441; border-radius:28px; width:100%; max-width:340px; padding:25px; text-align:center; }
 
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   </style>
 </head>
 <body>
+
+  <div id="zModalGlobal">
+    <div class="z-content">
+      <div id="zIcon" style="font-size:40px; margin-bottom:15px;">⚠️</div>
+      <h3 id="zTitle" style="margin:0; font-size:18px;">Aviso</h3>
+      <p id="zText" style="color:#9CA3AF; font-size:14px; margin: 10px 0 20px;"></p>
+      <button id="zBtnClose" style="width:100%; padding:15px; border-radius:14px; background:#22C55E; border:none; color:#000; font-weight:700;">Entendido</button>
+    </div>
+  </div>
 
   <div class="header">
     <div class="back-btn" onclick="location.href='pix.html'">
@@ -46,12 +54,7 @@
 
   <div id="lista-chaves">
     <div class="key-card">
-      <div class="key-info"><b>CPF</b><span>***.456.789-**</span></div>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-    </div>
-    <div class="key-card">
-      <div class="key-info"><b>E-mail</b><span>contato@uptech.com</span></div>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        <div class="key-info"><b>Carregando...</b><span>Aguarde...</span></div>
     </div>
   </div>
 
@@ -60,34 +63,70 @@
   <div class="modal-overlay" id="modalCadastro">
     <div class="modal-content">
       <h3 style="margin: 0 0 10px 0;">Nova Chave Pix</h3>
-      <p style="color: var(--text-sec); font-size: 14px; margin-bottom: 25px;">Selecione o tipo e digite o dado da chave.</p>
-      
       <select class="input-premium" id="tipoChave">
-        <option>Celular</option>
-        <option>E-mail</option>
-        <option>Chave Aleatória</option>
+        <option>CPF</option><option>Celular</option><option>E-mail</option>
       </select>
-      
-      <input type="text" class="input-premium" id="valorChave" placeholder="Digite aqui...">
-      
-      <button class="btn-confirm" onclick="salvarChave()">Cadastrar Chave</button>
-      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <input type="text" class="input-premium" id="valorChave" placeholder="Digite a chave...">
+      <button class="btn-confirm" id="btnSalvar">Cadastrar Chave</button>
+      <button style="width:100%; background:none; border:none; color:#9CA3AF; margin-top:10px;" onclick="fecharModal()">Cancelar</button>
     </div>
   </div>
 
-  <script>
-    function abrirModal() { document.getElementById('modalCadastro').style.display = 'flex'; }
-    function fecharModal() { document.getElementById('modalCadastro').style.display = 'none'; }
-    
-    function salvarChave() {
-      const valor = document.getElementById('valorChave').value;
-      if(!valor) return alert("Digite o valor da chave");
-      
-      alert("Chave cadastrada com sucesso!");
-      fecharModal();
-      document.getElementById('valorChave').value = "";
-    }
-  </script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
+      authDomain: "zentry-app-74275.firebaseapp.com",
+      projectId: "zentry-app-74275",
+      storageBucket: "zentry-app-74275.appspot.com",
+      messagingSenderId: "571422826071",
+      appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    function showZModal(titulo, texto, icon) {
+        document.getElementById('zModalGlobal').style.display = 'flex';
+        document.getElementById('zTitle').innerText = titulo;
+        document.getElementById('zText').innerText = texto;
+        document.getElementById('zIcon').innerText = icon;
+    }
+    document.getElementById('zBtnClose').onclick = () => document.getElementById('zModalGlobal').style.display = 'none';
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        onSnapshot(doc(db, "usuarios", user.uid), (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const chave = data.chavePix || "Nenhuma chave ativa";
+            document.getElementById('lista-chaves').innerHTML = `
+              <div class="key-card">
+                <div class="key-info"><b>Chave Ativa</b><span>${chave}</span></div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </div>`;
+          }
+        });
+      }
+    });
+
+    window.abrirModal = () => document.getElementById('modalCadastro').style.display = 'flex';
+    window.fecharModal = () => document.getElementById('modalCadastro').style.display = 'none';
+
+    document.getElementById('btnSalvar').onclick = async () => {
+        const valor = document.getElementById('valorChave').value;
+        if(!valor) { showZModal("Atenção", "Digite o valor da chave.", "⚠️"); return; }
+        
+        try {
+            await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { chavePix: valor });
+            showZModal("Sucesso", "Chave cadastrada com sucesso!", "✅");
+            fecharModal();
+        } catch(e) { showZModal("Erro", "Erro ao salvar.", "❌"); }
+    };
+  </script>
 </body>
 </html>
