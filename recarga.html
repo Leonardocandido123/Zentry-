@@ -4,70 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <title>ZENTRY - Recarga Express</title>
+    <title>ZENTRY</title>
     <style>
         :root { --primary: #22c55e; --bg: #000; --card: #111827; --border: rgba(255,255,255,0.1); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        .app-bar { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
-        .back-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; height: 100vh; display: flex; flex-direction: column; }
+        .app-bar { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
         .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
-        .section-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin: 25px 0 15px; letter-spacing: 1px; }
-        .input-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
-        .input-box label { display: block; font-size: 10px; color: #9CA3AF; margin-bottom: 5px; font-weight: 600; }
-        .input-box input { background: transparent; border: none; color: #fff; font-size: 18px; width: 100%; font-weight: 600; }
+        .section-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin: 20px 0 10px; }
+        .input-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-bottom: 10px; }
+        .input-box input { background: transparent; border: none; color: #fff; font-size: 18px; width: 100%; }
+        
+        /* Grid Operadoras */
         .op-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .op-item { background: var(--card); border: 2px solid transparent; border-radius: 16px; padding: 15px 5px; text-align: center; transition: 0.2s; cursor: pointer; }
-        .op-item img { width: 28px; height: 28px; object-fit: contain; margin-bottom: 8px; filter: brightness(1); }
-        .op-item span { display: block; font-size: 9px; font-weight: 700; color: #9CA3AF; }
+        .op-item { background: var(--card); border: 2px solid transparent; border-radius: 16px; padding: 12px 5px; text-align: center; }
+        .op-item img { width: 30px; height: 30px; object-fit: contain; }
         .op-item.active { border-color: var(--primary); background: rgba(34, 197, 94, 0.1); }
-        .op-item.active span { color: #fff; }
+        
         .value-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .v-chip { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; font-weight: 800; font-size: 14px; cursor: pointer; }
-        .v-chip.active { background: var(--primary); color: #000; border-color: var(--primary); }
-        .footer-action { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(transparent, #000 40%); }
-        .btn-pay { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--primary); color: #052e16; font-weight: 800; font-size: 16px; cursor: pointer; }
-        .btn-pay:disabled { opacity: 0.5; }
+        .v-chip { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; font-weight: 800; }
+        .v-chip.active { background: var(--primary); color: #000; }
+        
+        .footer-action { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: #000; }
+        .btn-pay { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--primary); color: #052e16; font-weight: 800; font-size: 16px; }
     </style>
 </head>
 <body>
 
     <div class="app-bar">
-        <div class="back-btn" onclick="window.location.href='home.html'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
-        <div style="text-align: right;">
-            <small style="color: #9CA3AF; font-size: 10px; font-weight: 700;">SALDO DISPONÍVEL</small>
-            <div id="displaySaldo" style="color: var(--primary); font-weight: 800; font-size: 16px;">R$ 0,00</div>
-        </div>
+        <div onclick="window.location.href='home.html'" style="padding: 10px; background: var(--card); border-radius: 10px;">Voltar</div>
+        <div id="displaySaldo" style="color: var(--primary); font-weight: 800;">R$ ---</div>
     </div>
 
     <div class="content">
-        <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 5px;">Recarga Celular</h2>
-        <div class="section-title">Dados da Linha</div>
+        <h2 style="margin: 0;">Recarga Celular</h2>
+        
+        <div class="section-title">Número</div>
         <div class="input-box">
-            <label>NÚMERO DO TELEFONE</label>
-            <input type="tel" id="numTel" placeholder="(00) 00000-0000" maxlength="15">
+            <input type="tel" id="numTel" placeholder="(00) 00000-0000">
         </div>
 
-        <div class="section-title">Selecione a Operadora</div>
+        <div class="section-title">Operadora</div>
         <div class="op-grid">
-            <div class="op-item" onclick="selOp(this, 'Vivo')"><img src="https://img.icons8.com/color/96/vivo.png"><span>VIVO</span></div>
-            <div class="op-item" onclick="selOp(this, 'Tim')"><img src="https://img.icons8.com/color/96/tim.png"><span>TIM</span></div>
-            <div class="op-item" onclick="selOp(this, 'Claro')"><img src="https://img.icons8.com/color/96/claro.png"><span>CLARO</span></div>
-            <div class="op-item" onclick="selOp(this, 'Oi')"><img src="https://img.icons8.com/color/96/oi.png"><span>OI</span></div>
+            <div class="op-item" onclick="escolherOp(this, 'Vivo')"><img src="https://img.icons8.com/color/96/vivo.png"><br><small>VIVO</small></div>
+            <div class="op-item" onclick="escolherOp(this, 'Tim')"><img src="https://img.icons8.com/color/96/tim.png"><br><small>TIM</small></div>
+            <div class="op-item" onclick="escolherOp(this, 'Claro')"><img src="https://img.icons8.com/color/96/claro.png"><br><small>CLARO</small></div>
+            <div class="op-item" onclick="escolherOp(this, 'Oi')"><img src="https://img.icons8.com/color/96/oi.png"><br><small>OI</small></div>
         </div>
 
-        <div class="section-title">Valor da Recarga</div>
+        <div class="section-title">Valor</div>
         <div class="value-grid">
-            <div class="v-chip" onclick="selVal(this, 15)">R$ 15</div>
-            <div class="v-chip active" onclick="selVal(this, 20)">R$ 20</div>
-            <div class="v-chip" onclick="selVal(this, 30)">R$ 30</div>
-            <div class="v-chip" onclick="selVal(this, 50)">R$ 50</div>
-            <div class="v-chip" onclick="selVal(this, 100)">R$ 100</div>
+            <div class="v-chip" onclick="escolherVal(this, 15)">R$ 15</div>
+            <div class="v-chip active" onclick="escolherVal(this, 20)">R$ 20</div>
+            <div class="v-chip" onclick="escolherVal(this, 30)">R$ 30</div>
         </div>
     </div>
 
     <div class="footer-action">
-        <button id="btnFinish" class="btn-pay" onclick="executarRecarga()">Confirmar Pagamento</button>
+        <button id="btnFinish" class="btn-pay" onclick="finalizarAgora()">Confirmar</button>
     </div>
 
 <script type="module">
@@ -90,81 +84,60 @@
 
     let userUid = "";
     let saldoAtual = 0;
-    let saidaAcumulada = 0;
-    let opSelecionada = "";
-    let valorSelecionado = 20;
+    let operadora = "";
+    let valor = 20;
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             userUid = user.uid;
             const snap = await getDoc(doc(db, "usuarios", user.uid));
             if(snap.exists()){
-                saldoAtual = Number(snap.data().saldo || 0);
-                saidaAcumulada = Number(snap.data().saida || 0);
-                document.getElementById('displaySaldo').innerText = saldoAtual.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                saldoAtual = snap.data().saldo || 0;
+                document.getElementById('displaySaldo').innerText = "R$ " + saldoAtual.toFixed(2);
             }
-        } else { window.location.href='login.html'; }
+        }
     });
 
-    window.selOp = (el, name) => {
+    window.escolherOp = (el, nome) => {
         document.querySelectorAll('.op-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
-        opSelecionada = name;
+        operadora = nome;
     };
 
-    window.selVal = (el, val) => {
+    window.escolherVal = (el, v) => {
         document.querySelectorAll('.v-chip').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
-        valorSelecionado = val;
+        valor = v;
     };
 
-    window.executarRecarga = async () => {
+    window.finalizarAgora = async () => {
         const tel = document.getElementById('numTel').value;
-        const btn = document.getElementById('btnFinish');
-
-        if(tel.length < 14) return alert("Número inválido");
-        if(!opSelecionada) return alert("Selecione a operadora");
-        if(valorSelecionado > saldoAtual) return alert("Saldo insuficiente");
-
-        btn.disabled = true;
-        btn.innerText = "PROCESSANDO...";
-
+        if(tel.length < 5 || !operadora) return alert("Preencha tudo!");
+        
+        document.getElementById('btnFinish').innerText = "Processando...";
+        
         try {
-            const txId = "TX" + Date.now();
-            const agora = new Date();
-            const dataSimples = agora.toISOString().split('T')[0];
+            const id = "TX" + Date.now();
+            const data = new Date().toISOString().split('T')[0];
 
-            // SALVA PARA O GRÁFICO (O QUE ESTAVA FALTANDO)
-            await setDoc(doc(db, "transacoes", txId), {
+            // Grava transação (pro gráfico)
+            await setDoc(doc(db, "transacoes", id), {
                 userId: userUid,
                 tipo: "saida",
-                valor: valorSelecionado,
-                descricao: "Recarga " + opSelecionada,
-                data: dataSimples,
-                timestamp: agora
+                valor: valor,
+                data: data,
+                descricao: "Recarga " + operadora
             });
 
-            // ATUALIZA SALDO DO USUÁRIO
+            // Atualiza saldo
             await updateDoc(doc(db, "usuarios", userUid), {
-                saldo: saldoAtual - valorSelecionado,
-                saida: saidaAcumulada + valorSelecionado
+                saldo: saldoAtual - valor
             });
 
-            btn.innerText = "SUCESSO!";
-            setTimeout(() => { window.location.href = 'home.html'; }, 1000);
-
-        } catch (e) {
-            alert("Erro ao processar. Tente novamente.");
-            btn.disabled = false;
-        }
+            alert("Sucesso!");
+            window.location.href = "home.html";
+        } catch(e) { alert("Erro!"); }
     };
-
-    document.getElementById('numTel').addEventListener('input', (e) => {
-        let v = e.target.value.replace(/\D/g,'');
-        v = v.replace(/^(\d{2})(\d)/g,"($1) $2");
-        v = v.replace(/(\d)(\d{4})$/,"$1-$2");
-        e.target.value = v;
-    });
 </script>
 </body>
 </html>
