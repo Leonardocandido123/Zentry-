@@ -225,21 +225,33 @@
       btn.classList.remove("active");
     }
   }
+   // Use addEventListener para garantir o funcionamento em Mobile
+  btn.addEventListener("click", () => {
+    if (btn.disabled) return; // Segurança extra
 
-  btn.onclick = () => {
     const valorLimpo = valorInput.value.replace("R$ ", "").replace(/\./g, "").replace(",", ".");
+    const vNum = parseFloat(valorLimpo);
+
+    if (vNum > saldoDisponivel) {
+      showZModal("Saldo Insuficiente", "Você não tem saldo para esta operação.", "❌");
+      return;
+    }
+
     const dados = {
         valor: valorInput.value,
-        valorNumerico: parseFloat(valorLimpo),
+        valorNumerico: vNum,
         nomeDestino: destinoEncontrado.nome,
         uidDestino: destinoEncontrado.id,
         bancoDestino: "Zentry Bank - 001",
         chavePix: chaveInput.value,
         tipo: "transferencia"
     };
+    
     localStorage.setItem("transacao_pendente", JSON.stringify(dados));
     window.location.href = 'revisao.html';
-  }
+  });
+ 
+
 </script>
 </body>
 </html>
