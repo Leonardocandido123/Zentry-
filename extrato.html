@@ -3,52 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>ZENTRY - Extrato V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Extrato - ZENTRY</title>
     <style>
-        :root { --primary: #22C55E; --bg: #000; --card: #121826; --border: #2A3441; --text-sec: #9CA3AF; --danger: #EF4444; }
+        :root {
+            --primary: #cc0000; /* Vermelho Santander */
+            --bg: #f4f5f7;      /* Cinza bem clarinho de fundo */
+            --card: #ffffff;    /* Branco puro para os cards */
+            --text-main: #1f2937;
+            --text-sec: #6b7280;
+            --success: #22C55E;
+            --danger: #ef4444;
+            --border: #e5e7eb;
+        }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; padding: 20px; }
         
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            padding: 20px;
+            min-height: 100vh;
+        }
+
         /* HEADER */
         .header { display: flex; align-items: center; margin-bottom: 25px; }
-        .back-btn { background: var(--card); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: 15px; }
+        .back-btn { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            border-radius: 50%; 
+            width: 44px; height: 44px; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
 
-        /* SALDO */
-        .balance-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 20px; }
-        .balance-card small { color: var(--text-sec); font-size: 12px; text-transform: uppercase; }
-        .balance-card h1 { margin: 5px 0 0; font-size: 28px; color: #fff; }
+        /* SALDO ESTILO BANCO */
+        .balance-card { 
+            background: var(--card); 
+            border-radius: 24px; 
+            padding: 25px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+        .balance-card small { color: var(--text-sec); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .balance-card h1 { margin: 8px 0 0; font-size: 32px; font-weight: 800; color: var(--text-main); letter-spacing: -1px; }
 
         /* FILTROS */
-        .filters { display: flex; gap: 10px; margin-bottom: 20px; }
-        .filter { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text-sec); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
-        .filter.active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .filters { display: flex; gap: 10px; margin-bottom: 25px; }
+        .filter { 
+            flex: 1; padding: 12px; border-radius: 14px; 
+            border: 1px solid var(--border); background: var(--card); 
+            color: var(--text-sec); font-size: 14px; font-weight: 700; 
+            cursor: pointer; text-align: center; transition: 0.2s;
+        }
+        .filter.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* LISTA */
-        .item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 16px; border-radius: 18px; margin-bottom: 10px; border: 1px solid var(--border); }
-        .left { display: flex; align-items: center; gap: 12px; }
-        .icon { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .info b { display: block; font-size: 14px; }
-        .info span { font-size: 11px; color: var(--text-sec); }
+        /* LISTA DE TRANSAÇÕES */
+        .item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: var(--card); padding: 18px; border-radius: 20px; 
+            margin-bottom: 12px; border: 1px solid var(--border);
+            transition: 0.2s;
+        }
+        .item:active { transform: scale(0.98); background: #fafafa; }
+        
+        .left { display: flex; align-items: center; gap: 15px; }
+        .icon { 
+            width: 46px; height: 46px; border-radius: 14px; 
+            background: #f9fafb; display: flex; align-items: center; 
+            justify-content: center; font-size: 20px; border: 1px solid var(--border);
+        }
+        
+        .info b { display: block; font-size: 15px; color: var(--text-main); font-weight: 700; }
+        .info span { font-size: 12px; color: var(--text-sec); }
+        
         .right { text-align: right; }
-        .val { font-weight: 700; font-size: 15px; }
-        .val.pos { color: var(--primary); }
+        .val { font-weight: 800; font-size: 16px; }
+        .val.pos { color: var(--success); }
         .val.neg { color: var(--danger); }
 
-        .empty { text-align: center; color: var(--text-sec); margin-top: 50px; font-size: 14px; }
+        .empty { text-align: center; color: var(--text-sec); margin-top: 60px; font-weight: 500; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div class="back-btn" onclick="history.back()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1f2937" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
         </div>
-        <b style="font-size: 18px;">Movimentações</b>
+        <b style="font-size: 20px; flex: 1; text-align: center; margin-right: 44px;">Extrato</b>
     </div>
 
     <div class="balance-card">
-        <small>Saldo Disponível</small>
+        <small>Saldo em conta</small>
         <h1 id="txtSaldo">R$ 0,00</h1>
     </div>
 
@@ -59,12 +110,12 @@
     </div>
 
     <div id="listaExtrato">
-        <div class="empty">Carregando...</div>
+        <div class="empty">Buscando movimentações...</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -84,7 +135,7 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // 1. Monitorar Saldo
+                // Monitorar Saldo
                 onSnapshot(doc(db, "usuarios", user.uid), (ds) => {
                     if(ds.exists()) {
                         const s = ds.data().saldo || 0;
@@ -92,18 +143,17 @@
                     }
                 });
 
-                // 2. Buscar Transações (Onde sou remetente OU destinatário)
-                // Usamos onSnapshot na coleção toda e filtramos no JS para evitar erro de Index do Firebase
+                // Monitorar Transações
                 onSnapshot(collection(db, "transacoes"), (snap) => {
                     transacoesCache = [];
                     snap.forEach(d => {
                         const t = d.data();
+                        // Aparece se eu enviei (userId) ou recebi (uidDestino)
                         if (t.userId === user.uid || t.uidDestino === user.uid) {
                             transacoesCache.push({ id: d.id, ...t });
                         }
                     });
 
-                    // Ordenar por data
                     transacoesCache.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
                     renderizar("todos");
                 });
@@ -124,28 +174,29 @@
             });
 
             if (filtradas.length === 0) {
-                lista.innerHTML = `<div class="empty">Nenhuma transação encontrada.</div>`;
+                lista.innerHTML = `<div class="empty">Nenhuma transação disponível.</div>`;
                 return;
             }
 
             filtradas.forEach(t => {
                 const souEuRecebendo = t.uidDestino === me;
-                const valorFormatado = t.valor || "R$ 0,00";
+                const valorFormatado = t.valor;
+                const nome = souEuRecebendo ? (t.nomeRemetente || "Pix Recebido") : (t.descricao || t.nomeDestino || "Enviado");
                 
                 const html = `
-                    <div class="item">
+                    <div class="item" onclick="verComprovante('${t.id}')">
                         <div class="left">
-                            <div class="icon">${souEuRecebendo ? '➕' : '➖'}</div>
+                            <div class="icon">${souEuRecebendo ? '💰' : '💸'}</div>
                             <div class="info">
-                                <b>${souEuRecebendo ? (t.nomeRemetente || "Recebido") : (t.nomeDestino || "Enviado")}</b>
+                                <b>${nome}</b>
                                 <span>${t.data || 'Recentemente'}</span>
                             </div>
                         </div>
                         <div class="right">
                             <div class="val ${souEuRecebendo ? 'pos' : 'neg'}">
-                                ${souEuRecebendo ? '+' : '-'} ${valorFormatado}
+                                ${souEuRecebendo ? '+' : '-'} R$ ${valorFormatado}
                             </div>
-                            <span style="font-size:10px; color:#9CA3AF;">PIX</span>
+                            <span style="font-size:11px; color:#9CA3AF; font-weight:600;">PIX</span>
                         </div>
                     </div>
                 `;
@@ -153,7 +204,12 @@
             });
         }
 
-        // Eventos de Filtro
+        window.verComprovante = (id) => {
+            const transacao = transacoesCache.find(t => t.id === id);
+            localStorage.setItem("comprovante_atual", JSON.stringify(transacao));
+            window.location.href = "comprovante.html";
+        };
+
         document.querySelectorAll('.filter').forEach(btn => {
             btn.onclick = () => {
                 document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
