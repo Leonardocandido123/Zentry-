@@ -231,35 +231,6 @@ body {
         if (user) {
             usuarioLogadoId = user.uid;
             
-            // --- INICIALIZA O GRÁFICO REAL ---
-            inicializarDashboard(db, user.uid);
-            
-            // 1. Monitoramento de Saldo e Dados do Perfil (Realtime)
-            onSnapshot(doc(db, "usuarios", user.uid), (docSnap) => {
-                if (docSnap.exists()) {
-                    const d = docSnap.data();
-                    const format = (v) => (parseFloat(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    
-                    document.getElementById("nome-usuario").innerText = (d.nome || "Usuário") + "!";
-                    window.currentSaldo = parseFloat(d.saldo || 0);
-                    renderSaldo();
-                    
-                    // Nota: O dashboard.js agora cuida dos valores de resumo abaixo do gráfico, 
-                    // mas mantivemos aqui para garantir a atualização em tempo real do texto.
-                    const entrada = parseFloat(d.entrada || 0);
-                    const saida = parseFloat(d.saida || 0);
-                    const lucro = entrada - saida;
-
-                    document.getElementById("resumo-entrada").innerText = format(entrada);
-                    document.getElementById("resumo-saida").innerText = format(saida);
-                    const elLucro = document.getElementById("resumo-lucro");
-                    elLucro.innerText = format(lucro);
-                    elLucro.style.color = lucro >= 0 ? "var(--primary)" : "#ef4444";
-                  
-                    atualizarSaudacao();
-                    verificarAlertasGerais(); 
-                }
-            });
         } else {
             // Delay de segurança para não deslogar por erro de rede
             setTimeout(() => {
