@@ -131,16 +131,49 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let allTransacoes = [];
-
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // 1. Monitorar Saldo Real
+        // 1. Monitorar Saldo (Mantém igual)
         onSnapshot(doc(db, "usuarios", user.uid), (docSnap) => {
             if (docSnap.exists()) {
                 const saldo = docSnap.data().saldo || 0;
                 document.getElementById('txt-saldo').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             }
         });
+
+        // 2. Consulta Simplificada
+        // Removi o 'where' e o 'orderBy' daqui para evitar o erro de índice
+        const q = query(collection(db, "transacoes"));
+
+        onSnapshot(q, (snapshot) => {
+            allTransacoes = [];
+            
+            snapshot.forEach(docSnap => {
+                const dados = docSnap.data();
+                // Filtramos manualmente aqui para garantir que só pegue do usuário logado
+                // Usamos trim() para evitar erros de espaços invisíveis no banco
+                if (dados.userId && dados.userId.trim() === user.uid.trim()) {
+                    allTransacoes.push({ id: docSnap.id, ...dados });
+                }
+            });
+
+            // Ordenamos por data (mais recente primeiro)
+            allTransacoes.sort((a, b) => {
+                const dataA = a.timestamp?.seconds || 0;
+                const dataB = b.timestamp?.seconds || 0;
+                return dataB - dataA;
+            });
+
+            render("todos");
+        }, (error) => {
+            console.error("Erro no Firebase:", error);
+            document.getElementById('lista').innerHTML = `<div class="empty">Erro de conexão com o banco.</div>`;
+        });
+    } else {
+        window.location.href = "login.html";
+    }
+});
+  
 const q = query(
     collection(db, "transacoes"), 
     where("userId", "==", user.uid),
