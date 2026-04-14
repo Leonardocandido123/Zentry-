@@ -4,31 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>ZENTRY - Extrato V2</title>
+    <title>ZENTRY - Extrato</title>
     <style>
         :root { --primary: #22C55E; --bg: #000; --card: #121826; --border: #2A3441; --text-sec: #9CA3AF; --danger: #EF4444; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; padding: 20px; }
         
-        /* HEADER */
         .header { display: flex; align-items: center; margin-bottom: 25px; }
         .back-btn { background: var(--card); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: 15px; }
 
-        /* SALDO */
         .balance-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 20px; }
         .balance-card small { color: var(--text-sec); font-size: 12px; text-transform: uppercase; }
         .balance-card h1 { margin: 5px 0 0; font-size: 28px; color: #fff; }
 
-        /* FILTROS */
         .filters { display: flex; gap: 10px; margin-bottom: 20px; }
         .filter { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text-sec); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
         .filter.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
-        /* LISTA */
         .item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 16px; border-radius: 18px; margin-bottom: 10px; border: 1px solid var(--border); }
         .left { display: flex; align-items: center; gap: 12px; }
         .icon { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .info b { display: block; font-size: 14px; }
+        .info b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
         .info span { font-size: 11px; color: var(--text-sec); }
         .right { text-align: right; }
         .val { font-weight: 700; font-size: 15px; }
@@ -60,142 +56,136 @@
 
     <div id="listaExtrato">
         <div class="empty">Carregando...</div>
-    </div>', { style: 'currency', currency: 'BRL' });
-                };
+    </div>
 
-            const itemHtml = `
-                <div class="item" onclick="verComprovante('${t.id}')">
-                    <div class="left">
-                        <div class="icon-money ${classeIcone}">${icone}</div>
-                        <div class="info">
-                            <b>${souEuRecebendo ? (t.nomeRemetente || "Pix Recebido") : (t.nomeDestino || "Pix Enviado")}</b>
-                            <span>${t.data || 'Recentemente'} • PIX</span>
-                        </div>
-                    </div>
-                    <div class="right" style="text-align:right">
-                        <div class="val ${souEuRecebendo ? 'pos' : 'neg'}">
-                            ${souEuRecebendo ? '+' : '-'} ${valorFormatado}
-                        </div>
-                    </div>
-                </div>
-    
     <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
-        authDomain: "zentry-app-74275.firebaseapp.com",
-        projectId: "zentry-app-74275",
-        storageBucket: "zentry-app-74275.appspot.com",
-        messagingSenderId: "571422826071",
-        appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
-    };
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
+            authDomain: "zentry-app-74275.firebaseapp.com",
+            projectId: "zentry-app-74275",
+            storageBucket: "zentry-app-74275.appspot.com",
+            messagingSenderId: "571422826071",
+            appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-    let transacoesCache = [];
+        let transacoesCache = [];
 
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            onSnapshot(doc(db, "usuarios", user.uid), (ds) => {
-                if(ds.exists()) {
-                    const s = ds.data().saldo || 0;
-                    document.getElementById('txtSaldo').innerText = s.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                }
-            });
-
-            onSnapshot(collection(db, "transacoes"), (snap) => {
-                const trintaDiasAtras = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
-                transacoesCache = [];
-
-                snap.forEach(d => {
-                    const t = d.data();
-                    const timestamp = t.timestamp?.seconds || 0;
-                    if ((t.userId === user.uid || t.uidDestino === user.uid) && timestamp > trintaDiasAtras) {
-                        transacoesCache.push({ id: d.id, ...t });
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Monitorar Saldo
+                onSnapshot(doc(db, "usuarios", user.uid), (ds) => {
+                    if(ds.exists()) {
+                        const s = ds.data().saldo || 0;
+                        document.getElementById('txtSaldo').innerText = s.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                     }
                 });
 
-                transacoesCache.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-                renderizar("todos");
+                // Monitorar Transações
+                onSnapshot(collection(db, "transacoes"), (snap) => {
+                    const trintaDiasAtras = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
+                    transacoesCache = [];
+
+                    snap.forEach(d => {
+                        const t = d.data();
+                        const timestamp = t.timestamp?.seconds || 0;
+                        if ((t.userId === user.uid || t.uidDestino === user.uid) && timestamp > trintaDiasAtras) {
+                            transacoesCache.push({ id: d.id, ...t });
+                        }
+                    });
+
+                    transacoesCache.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                    renderizar("todos");
+                });
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // Filtros
+        document.querySelectorAll('.filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderizar(btn.dataset.type);
             });
-        } else {
-            window.location.href = "login.html";
-        }
-    });
-
-    // --- CORREÇÃO DOS FILTROS ---
-    document.querySelectorAll('.filter').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderizar(btn.dataset.type);
-        });
-    });
-
-    function renderizar(filtro) {
-        const lista = document.getElementById('listaExtrato');
-        lista.innerHTML = "";
-        const me = auth.currentUser.uid;
-
-        let filtradas = transacoesCache.filter(t => {
-            if (filtro === "entrada") return t.uidDestino === me;
-            if (filtro === "saida") return t.userId === me;
-            return true;
         });
 
-        if (filtradas.length === 0) {
-            lista.innerHTML = `<div class="empty">Nenhuma movimentação encontrada.</div>`;
-            return;
-        }
+        function renderizar(filtro) {
+            const lista = document.getElementById('listaExtrato');
+            lista.innerHTML = "";
+            const me = auth.currentUser ? auth.currentUser.uid : null;
 
-        filtradas.forEach(t => {
-            const souEuRecebendo = t.uidDestino === me;
-            const valorLimpo = typeof t.valor === 'string' ? parseFloat(t.valor.replace(/[^\d,.-]/g, '').replace(',', '.')) : t.valor;
-            const valorFormatado = valorLimpo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            
-            let icone = '💸'; 
-            let titulo = t.nomeDestino || "Pix Enviado";
+            if(!me) return;
 
-            if(souEuRecebendo) {
-                icone = '💰';
-                titulo = t.nomeRemetente || "Pix Recebido";
-            } else if(t.tipo === 'recarga') {
-                icone = '📱';
-                titulo = "Recarga de Celular";
+            let filtradas = transacoesCache.filter(t => {
+                if (filtro === "entrada") return t.uidDestino === me;
+                if (filtro === "saida") return t.userId === me;
+                return true;
+            });
+
+            if (filtradas.length === 0) {
+                lista.innerHTML = `<div class="empty">Nenhuma movimentação encontrada.</div>`;
+                return;
             }
 
-            lista.innerHTML += `
-                <div class="item" onclick="verComprovante('${t.id}')">
-                    <div class="left">
-                        <div class="icon">${icone}</div>
-                        <div class="info">
-                            <b>${titulo}</b>
-                            <span>${t.data || 'Recentemente'} • ${t.tipo?.toUpperCase() || 'PIX'}</span>
-                        </div>
-                    </div>
-                    <div class="right">
-                        <div class="val ${souEuRecebendo ? 'pos' : 'neg'}">
-                            ${souEuRecebendo ? '+' : '-'} ${valorFormatado}
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-    }
+            filtradas.forEach(t => {
+                const souEuRecebendo = t.uidDestino === me;
+                
+                // Formatação do valor para não quebrar
+                let valorNumerico = 0;
+                if (typeof t.valor === 'number') {
+                    valorNumerico = t.valor;
+                } else if (typeof t.valor === 'string') {
+                    valorNumerico = parseFloat(t.valor.replace(/[^\d,.-]/g, '').replace(',', '.'));
+                }
+                
+                const valorFormatado = valorNumerico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                
+                let icone = '💸'; 
+                let titulo = t.nomeDestino || "Pix Enviado";
 
-    window.verComprovante = (id) => {
-        const t = transacoesCache.find(x => x.id === id);
-        if (t) {
-            localStorage.setItem("comprovante_ativo", JSON.stringify(t));
-            window.location.href = "comprovante.html";
+                if(souEuRecebendo) {
+                    icone = '💰';
+                    titulo = t.nomeRemetente || "Pix Recebido";
+                } else if(t.tipo === 'recarga') {
+                    icone = '📱';
+                    titulo = "Recarga de Celular";
+                }
+
+                lista.innerHTML += `
+                    <div class="item" onclick="verComprovante('${t.id}')">
+                        <div class="left">
+                            <div class="icon">${icone}</div>
+                            <div class="info">
+                                <b>${titulo}</b>
+                                <span>${t.data || 'Recentemente'} • ${t.tipo?.toUpperCase() || 'PIX'}</span>
+                            </div>
+                        </div>
+                        <div class="right">
+                            <div class="val ${souEuRecebendo ? 'pos' : 'neg'}">
+                                ${souEuRecebendo ? '+' : '-'} ${valorFormatado}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
         }
-    };
+
+        window.verComprovante = (id) => {
+            const t = transacoesCache.find(x => x.id === id);
+            if (t) {
+                localStorage.setItem("comprovante_ativo", JSON.stringify(t));
+                window.location.href = "comprovante.html";
+            }
+        };
     </script>
-    
 </body>
 </html>
