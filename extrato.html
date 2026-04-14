@@ -82,7 +82,7 @@
                     <div class="right">
                         <div class="val ${corClasse}">${sinal} ${valorFormatado}</div>
                     </div>
-                </div>
+</div>   
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -105,40 +105,37 @@
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // Monitora Saldo
+            // 1. Monitora Saldo em tempo real
             onSnapshot(doc(db, "usuarios", user.uid), (ds) => {
                 if(ds.exists()) {
                     const s = ds.data().saldo || 0;
-                    document.getElementById('txtSaldo').innerText = s.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const txtSaldo = document.getElementById('txtSaldo');
+                    if(txtSaldo) txtSaldo.innerText = s.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 }
             });
 
-            // Monitora Transações
+            // 2. Monitora Transações do banco
             onSnapshot(collection(db, "transacoes"), (snap) => {
                 const agoraUnix = Math.floor(Date.now() / 1000);
-                const trintaDiasAtras = agoraUnix - (30 * 24 * 60 * 60);
                 transacoesCache = [];
 
                 snap.forEach(d => {
                     const t = d.data();
-                    const timestamp = t.timestamp?.seconds || agoraUnix;
-
-                    // Filtra apenas o que pertence ao usuário logado
-                    if ((t.userId === user.uid || t.uidDestino === user.uid) && timestamp >= trintaDiasAtras) {
+                    // Filtra: Só entra o que for meu (Remetente ou Destino)
+                    if (t.userId === user.uid || t.uidDestino === user.uid) {
                         transacoesCache.push({ id: d.id, ...t });
                     }
                 });
 
-                // Ordena por data (mais recente primeiro)
+                // Ordena: Mais recentes primeiro
                 transacoesCache.sort((a,b) => {
                     const timeA = a.timestamp?.seconds || agoraUnix;
                     const timeB = b.timestamp?.seconds || agoraUnix;
                     return timeB - timeA;
                 });
 
-                // Pega o filtro ativo e renderiza
-                const filtroAtivo = document.querySelector('.filter.active')?.dataset.type || "todos";
-                renderizar(filtroAtivo);
+                const btnAtivo = document.querySelector('.filter.active');
+                renderizar(btnAtivo ? btnAtivo.dataset.type : "todos");
             });
         } else {
             window.location.href = "login.html";
@@ -148,12 +145,11 @@
     function renderizar(filtro) {
         const lista = document.getElementById('listaExtrato');
         if (!lista) return;
-        
         lista.innerHTML = ""; 
+        
         const me = auth.currentUser ? auth.currentUser.uid : null;
         if (!me) return;
 
-        // Filtragem
         let filtradas = transacoesCache.filter(t => {
             const ehEntrada = t.uidDestino === me || t.tipo === "entrada";
             if (filtro === "entrada") return ehEntrada;
@@ -169,14 +165,14 @@
         filtradas.forEach(t => {
             const souEuRecebendo = t.uidDestino === me || t.tipo === "entrada";
             
-            // Tratamento de Valor Blindado
+            // FORÇA O VALOR A VIR DO FIREBASE (Tratando String ou Número)
             let val = 0;
             if (typeof t.valor === 'number') {
                 val = t.valor;
             } else if (typeof t.valor === 'string') {
                 val = parseFloat(t.valor.replace(/[^\d,.-]/g, '').replace(',', '.'));
             }
-            
+
             const valorFormatado = (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             const corClasse = souEuRecebendo ? 'pos' : 'neg';
             const sinal = souEuRecebendo ? '+' : '-';
@@ -184,25 +180,23 @@
             
             const nomeExibicao = souEuRecebendo ? (t.nomeRemetente || "Pix Recebido") : (t.nomeDestino || "Pix Enviado");
 
-            const itemHtml = `
-                <div class="item" onclick="verComprovante('${t.id}')">
+            lista.innerHTML += `
+                <div class="item" style="cursor:pointer" onclick="verComprovante('${t.id}')">
                     <div class="left">
                         <div class="icon">${icone}</div>
                         <div class="info">
                             <b>${nomeExibicao}</b>
-                            <span>${t.data || 'Recentemente'} • ${t.tipo?.toUpperCase() || 'PIX'}</span>
+                            <span>${t.data || 'Hoje'} • ${t.tipo?.toUpperCase() || 'PIX'}</span>
                         </div>
                     </div>
                     <div class="right">
                         <div class="val ${corClasse}">${sinal} ${valorFormatado}</div>
                     </div>
                 </div>`;
-            
-            lista.insertAdjacentHTML('beforeend', itemHtml);
         });
     }
 
-    // Gerenciador de cliques
+    // Gerencia cliques nos filtros (Tudo, Entradas, Saídas)
     document.querySelectorAll('.filter').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
@@ -211,10 +205,12 @@
         });
     });
 
-    // Função global para o onclick
+    // FUNÇÃO GLOBAL DE CLIQUE NO COMPROVANTE
     window.verComprovante = (id) => {
+        // Busca a transação exata clicada dentro do cache do Firebase
         const t = transacoesCache.find(x => x.id === id);
         if (t) {
+            // Salva os dados REAIS do banco para o comprovante exibir
             localStorage.setItem("comprovante_ativo", JSON.stringify(t));
             window.location.href = "comprovante.html";
         }
