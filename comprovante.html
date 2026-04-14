@@ -11,6 +11,7 @@
   --bg: radial-gradient(circle at 20% 0%, #0f172a, #000 70%);
   --card: rgba(18,24,38,0.95);
   --green:#22C55E;
+  --text-muted: #94a3b8;
 }
 body {
   margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:#fff;
@@ -20,30 +21,41 @@ body {
   width:100%; max-width:420px; border-radius:28px; padding:30px 20px;
   backdrop-filter:blur(20px); background:var(--card); border: 1px solid rgba(255,255,255,0.05);
 }
-.check{ width:70px; height:70px; margin:0 auto 15px; }
+.check{ width:60px; height:60px; margin:0 auto 15px; }
 circle{ fill:none; stroke:var(--green); stroke-width:2; stroke-dasharray:200; stroke-dashoffset:200; animation:circle 0.6s forwards;}
 path{ fill:none; stroke:var(--green); stroke-width:3; stroke-dasharray:50; stroke-dashoffset:50; animation:check 0.4s 0.6s forwards;}
 @keyframes circle{to{stroke-dashoffset:0}}
 @keyframes check{to{stroke-dashoffset:0}}
 
-.valor{ font-size:36px; font-weight:800; text-align:center; margin-bottom: 5px; letter-spacing: -1px;}
-.status{ text-align:center; color:var(--green); margin-bottom:30px; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;}
-.linha{ display:flex; justify-content:space-between; margin-bottom:15px; font-size:14px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 8px;}
-.linha span:first-child { color: #94a3b8; }
-.linha span:last-child { font-weight: 600; text-align: right; max-width: 60%; }
+.valor{ font-size:32px; font-weight:800; text-align:center; margin-bottom: 5px; letter-spacing: -1px;}
+.status{ text-align:center; color:var(--green); margin-bottom:30px; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;}
+
+.secao-titulo { 
+    font-size: 12px; font-weight: 700; color: var(--text-muted); 
+    text-transform: uppercase; margin: 20px 0 10px; padding-bottom: 5px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.linha{ display:flex; justify-content:space-between; margin-bottom:12px; font-size:14px;}
+.linha span:first-child { color: var(--text-muted); }
+.linha span:last-child { font-weight: 600; text-align: right; max-width: 65%; color: #fff; }
+
+.footer-contato {
+    margin-top: 25px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1);
+    text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.6;
+}
 
 .actions{ margin-top:20px; display:flex; flex-direction:column; gap:10px; width: 100%; max-width: 420px;}
-button{ padding:16px; border-radius:16px; border:none; font-weight:700; font-size: 15px; transition: 0.2s;}
+button{ padding:16px; border-radius:16px; border:none; font-weight:700; font-size: 15px; cursor: pointer;}
 .primary{ background:var(--green); color:#000;}
 .secondary{ background:rgba(255,255,255,0.05); color:#fff; border: 1px solid rgba(255,255,255,0.1);}
-button:active { transform: scale(0.97); }
 
-/* Ajustes para Exportação de Imagem */
-.export-mode { background: #fff !important; padding: 40px !important; }
-.export-mode .card { background:#fff !important; color:#000 !important; border:none !important; box-shadow:none !important; }
-.export-mode .linha { border-color: #eee !important; }
-.export-mode .linha span:first-child { color: #666 !important; }
+/* Export Mode */
+.export-mode { background: #fff !important; }
+.export-mode .card { background:#fff !important; color:#000 !important; border:1px solid #eee !important; }
+.export-mode .linha span:first-child, .export-mode .secao-titulo, .export-mode .footer-contato { color: #666 !important; }
 .export-mode .linha span:last-child { color: #000 !important; }
+.export-mode .secao-titulo { border-bottom-color: #eee !important; }
 </style>
 </head>
 <body>
@@ -57,23 +69,24 @@ button:active { transform: scale(0.97); }
   </div>
 
   <div class="valor" id="txtValor">R$ 0,00</div>
-  <div class="status" id="txtStatus">Realizado com sucesso</div>
+  <div class="status" id="txtStatus">Transação Realizada</div>
 
   <div id="conteudo">
-    </div>
+      </div>
+
+  <div class="footer-contato">
+      Em caso de dúvidas, entre em contato com a <b>Zentry</b> através do nosso chat no app ou e-mail: <b>suporte@zentry.com</b>
+  </div>
 </div>
 
 <div class="actions">
     <button class="primary" onclick="compartilhar()">Compartilhar Comprovante</button>
     <button class="secondary" onclick="voltar()">Voltar ao Início</button>
-    <button class="secondary" style="opacity: 0.6; font-size: 12px;" onclick="copiarID()">Copiar ID da Transação</button>
 </div>
 
 <script>
-// Pega os dados de onde quer que eles venham
-const dados = JSON.parse(localStorage.getItem("comprovante_ativo")) || 
-              JSON.parse(localStorage.getItem("comprovante_final")) || 
-              JSON.parse(localStorage.getItem("comprovante")) || {};
+const dados = JSON.parse(localStorage.getItem("comprovante_final")) || 
+              JSON.parse(localStorage.getItem("comprovante_ativo")) || {};
 
 function inicializar() {
     if (!dados.valor) {
@@ -81,37 +94,30 @@ function inicializar() {
         return;
     }
 
-    const valorStr = typeof dados.valor === 'number' ? 
-        dados.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : dados.valor;
-
-    document.getElementById("txtValor").innerText = valorStr;
-    
-    // Título dinâmico
-    const labels = { pix: "Pix Enviado", recarga: "Recarga realizada", entrada: "Pix Recebido", link: "Link de Pagamento", qrcode: "Pagamento QR Code" };
-    document.getElementById("txtStatus").innerText = labels[dados.tipo] || "Transação Realizada";
+    document.getElementById("txtValor").innerText = dados.valor;
+    const labels = { pix: "Pix Enviado", recarga: "Recarga realizada", entrada: "Pix Recebido" };
+    document.getElementById("txtStatus").innerText = labels[dados.tipo] || "Transferência Realizada";
 
     let html = "";
     
-    // Campo Dinâmico: Destinatário ou Remetente
-    if (dados.nomeDestino || dados.nomeRemetente || dados.nome) {
-        const rotulo = dados.tipo === "entrada" ? "Origem" : "Destino";
-        html += `<div class="linha"><span>${rotulo}</span><span>${dados.nomeDestino || dados.nomeRemetente || dados.nome}</span></div>`;
-    }
-
-    // Campo Dinâmico: Instituição/Banco
-    if (dados.bancoDestino || dados.banco) {
-        html += `<div class="linha"><span>Instituição</span><span>${dados.bancoDestino || dados.banco}</span></div>`;
-    }
-
-    // Campo Dinâmico: Recarga
-    if (dados.tipo === "recarga") {
-        html += `<div class="linha"><span>Número</span><span>${dados.telefone || dados.numero || '-'}</span></div>`;
-        html += `<div class="linha"><span>Operadora</span><span>${dados.operadora || '-'}</span></div>`;
-    }
-
-    // Campos Fixos
+    // --- SEÇÃO DADOS DA TRANSAÇÃO ---
+    html += `<div class="secao-titulo">Dados da Transação</div>`;
+    html += `<div class="linha"><span>Valor</span><span>${dados.valor}</span></div>`;
     html += `<div class="linha"><span>Data e Hora</span><span>${dados.data || new Date().toLocaleString()}</span></div>`;
     html += `<div class="linha"><span>ID da Transação</span><span>${dados.id || 'ZNT'+Math.random().toString(36).substr(2,9).toUpperCase()}</span></div>`;
+
+    // --- SEÇÃO DESTINO ---
+    html += `<div class="secao-titulo">Destino</div>`;
+    html += `<div class="linha"><span>Nome</span><span>${dados.nomeDestino || '---'}</span></div>`;
+    if(dados.chavePix) html += `<div class="linha"><span>Chave Pix</span><span>${dados.chavePix}</span></div>`;
+    html += `<div class="linha"><span>Instituição</span><span>${dados.bancoDestino || 'Zentry Bank'}</span></div>`;
+
+    // --- SEÇÃO ORIGEM ---
+    html += `<div class="secao-titulo">Origem</div>`;
+    // Aqui você pode puxar o nome do usuário logado se tiver salvo
+    html += `<div class="linha"><span>Nome</span><span>${dados.nomeRemetente || 'Usuário Zentry'}</span></div>`;
+    html += `<div class="linha"><span>Instituição</span><span>ZENTRY</span></div>`;
+    html += `<div class="linha"><span>CNPJ</span><span>98.768.908/0001-01</span></div>`;
 
     document.getElementById("conteudo").innerHTML = html;
 }
@@ -123,18 +129,12 @@ async function compartilhar() {
     try {
         const canvas = await html2canvas(card, { scale: 3, backgroundColor: "#ffffff" });
         document.body.classList.remove("export-mode");
-        
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
         const file = new File([blob], "comprovante_zentry.png", { type: "image/png" });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                files: [file],
-                title: 'Comprovante Zentry',
-                text: 'Comprovante de pagamento enviado via Zentry App.'
-            });
+            await navigator.share({ files: [file], title: 'Comprovante Zentry' });
         } else {
-            // Fallback: Baixa a imagem se o navegador não der suporte a compartilhar arquivos
             const link = document.createElement("a");
             link.download = "comprovante_zentry.png";
             link.href = canvas.toDataURL();
@@ -142,19 +142,10 @@ async function compartilhar() {
         }
     } catch (err) {
         document.body.classList.remove("export-mode");
-        alert("Erro ao gerar imagem.");
     }
 }
 
-function copiarID() {
-    navigator.clipboard.writeText(dados.id || "");
-    alert("ID Copiado!");
-}
-
-function voltar() {
-    window.location.href = 'home.html';
-}
-
+function voltar() { window.location.href = 'home.html'; }
 inicializar();
 </script>
 
