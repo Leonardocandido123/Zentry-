@@ -56,7 +56,13 @@
 
     <div id="listaExtrato">
         <div class="empty">Carregando...</div>
-    </div>
+    </div> recebeu'}</span>
+                        </div>
+                    </div>
+                    <div class="right">
+                        <div class="val ${corClasse}">${sinal} ${valorExibir}</div>
+                 </div>
+                </div>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -79,7 +85,7 @@
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // Monitora o Saldo em tempo real
+            // Monitora Saldo
             onSnapshot(doc(db, "usuarios", user.uid), (ds) => {
                 if(ds.exists()) {
                     const s = ds.data().saldo || 0;
@@ -87,7 +93,7 @@
                 }
             });
 
-            // Monitora as Transações em tempo real
+            // Monitora Transações
             onSnapshot(collection(db, "transacoes"), (snap) => {
                 const agoraUnix = Math.floor(Date.now() / 1000);
                 const trintaDiasAtras = agoraUnix - (30 * 24 * 60 * 60);
@@ -95,24 +101,24 @@
 
                 snap.forEach(d => {
                     const t = d.data();
-                    // SE o timestamp ainda não chegou (null), usamos o tempo atual do PC do usuário 
-                    // para a transação não sumir da lista no primeiro segundo.
                     const timestamp = t.timestamp?.seconds || agoraUnix;
 
-                    // Filtro: Se eu sou o remetente (userId) OU o destino (uidDestino)
+                    // Filtra apenas o que pertence ao usuário logado
                     if ((t.userId === user.uid || t.uidDestino === user.uid) && timestamp >= trintaDiasAtras) {
                         transacoesCache.push({ id: d.id, ...t });
                     }
                 });
 
-                // Ordena: Mais recentes primeiro
+                // Ordena por data (mais recente primeiro)
                 transacoesCache.sort((a,b) => {
                     const timeA = a.timestamp?.seconds || agoraUnix;
                     const timeB = b.timestamp?.seconds || agoraUnix;
                     return timeB - timeA;
                 });
 
-                renderizar("todos");
+                // Pega o filtro ativo no momento
+                const filtroAtivo = document.querySelector('.filter.active').dataset.type;
+                renderizar(filtroAtivo);
             });
         } else {
             window.location.href = "login.html";
@@ -121,17 +127,15 @@
 
     function renderizar(filtro) {
         const lista = document.getElementById('listaExtrato');
-        lista.innerHTML = "";
+        lista.innerHTML = ""; // Limpa a lista para não repetir itens
+        
         const me = auth.currentUser ? auth.currentUser.uid : null;
         if (!me) return;
 
         let filtradas = transacoesCache.filter(t => {
-            // Lógica de entrada/saída baseada em quem enviou e quem recebeu
-            const ehEntrada = t.tipo === "entrada" || t.uidDestino === me;
-            const ehSaida = t.tipo === "saida" || (t.userId === me && t.uidDestino !== me);
-
+            const ehEntrada = t.uidDestino === me || t.tipo === "entrada";
             if (filtro === "entrada") return ehEntrada;
-            if (filtro === "saida") return ehSaida;
+            if (filtro === "saida") return !ehEntrada;
             return true;
         });
 
@@ -141,23 +145,26 @@
         }
 
         filtradas.forEach(t => {
-            // Define se o item aparece como positivo ou negativo
+            // Lógica de Entrada ou Saída
             const souEuRecebendo = t.uidDestino === me || t.tipo === "entrada";
             
-            let valorExibir = t.valor;
-            // Garante que números virem R$ 0,00 e strings permaneçam como estão
-            if (typeof t.valor === 'number') {
-                valorExibir = t.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            // TRATAMENTO DE VALOR (Crucial para não repetir os 0,30)
+            let val = t.valor;
+            if (typeof val === 'string') {
+                // Se vier como "R$ 100,00", limpa e vira número
+                val = parseFloat(val.replace(/[^\d,.-]/g, '').replace(',', '.'));
             }
-
+            
+            const valorFormatado = (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
             const corClasse = souEuRecebendo ? 'pos' : 'neg';
             const sinal = souEuRecebendo ? '+' : '-';
             const icone = souEuRecebendo ? '💰' : '💸';
             
-            // Define o nome que aparece (Prioriza o destino se for saída, remetente se for entrada)
+            // Define o nome (Quem enviou ou quem recebeu)
             const nomeExibicao = souEuRecebendo ? (t.nomeRemetente || "Pix Recebido") : (t.nomeDestino || "Pix Enviado");
 
-            lista.innerHTML += `
+            const itemHtml = `
                 <div class="item" onclick="verComprovante('${t.id}')">
                     <div class="left">
                         <div class="icon">${icone}</div>
@@ -167,13 +174,15 @@
                         </div>
                     </div>
                     <div class="right">
-                        <div class="val ${corClasse}">${sinal} ${valorExibir}</div>
+                        <div class="val ${corClasse}">${sinal} ${valorFormatado}</div>
                     </div>
                 </div>`;
+            
+            lista.insertAdjacentHTML('beforeend', itemHtml);
         });
     }
 
-    // Filtros de Botão
+    // Gerenciador de cliques nos filtros
     document.querySelectorAll('.filter').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
@@ -189,7 +198,7 @@
             window.location.href = "comprovante.html";
         }
     };
-                        </script>
+</script>
     
     
 </body>
