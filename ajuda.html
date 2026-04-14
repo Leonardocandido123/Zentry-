@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zentry - Suporte</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { 
+            --primary: #22c55e; 
+            --bg-card: rgba(255, 255, 255, 0.05); 
+            --border: rgba(255, 255, 255, 0.08); 
+            --text-sec: #94a3b8;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body {
+            margin: 0; font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 20% 0%, #0f172a, #000 60%);
+            color: #fff; min-height: 100vh;
+        }
+        .container { padding: 25px; max-width: 450px; margin: auto; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
+        .back-nav {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; background: var(--bg-card);
+            border-radius: 50%; color: #fff; text-decoration: none; border: 1px solid var(--border);
+        }
+
+        .search-container {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 18px; padding: 12px 18px; display: flex; align-items: center; gap: 12px;
+            margin-bottom: 30px;
+        }
+        .search-container input { background: transparent; border: none; color: #fff; font-size: 15px; width: 100%; }
+        .search-container i { color: var(--text-sec); }
+
+        .support-channels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 35px; }
+        .channel-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 24px; padding: 20px; text-align: center;
+            text-decoration: none; color: #fff; transition: 0.2s;
+        }
+        .channel-card:active { transform: scale(0.96); background: rgba(255,255,255,0.08); }
+        .channel-card i { color: var(--primary); margin-bottom: 10px; }
+        .channel-card b { display: block; font-size: 14px; margin-bottom: 4px; }
+        .channel-card span { font-size: 11px; color: var(--text-sec); }
+
+        .section-title { font-size: 11px; text-transform: uppercase; color: var(--text-sec); letter-spacing: 1.5px; font-weight: 800; margin-bottom: 15px; padding-left: 5px; }
+        
+        .faq-list { display: flex; flex-direction: column; gap: 10px; }
+        .faq-item {
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 20px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer;
+        }
+        .faq-item:active { background: rgba(255,255,255,0.1); }
+
+        /* MODAL CUSTOMIZADO (ANTI-NATIVO ANDROID) */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; 
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); 
+            z-index: 2000; align-items: center; justify-content: center; padding: 25px;
+        }
+        .modal-card {
+            background: #111; width: 100%; max-width: 350px; 
+            border-radius: 28px; padding: 30px; border: 1px solid var(--border);
+            animation: modalUp 0.3s ease-out;
+        }
+        @keyframes modalUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-card h3 { margin: 0 0 15px 0; color: var(--primary); }
+        .modal-card p { font-size: 14px; color: var(--text-sec); line-height: 1.6; margin-bottom: 25px; }
+        .btn-modal {
+            width: 100%; background: var(--primary); color: #000; border: none;
+            padding: 15px; border-radius: 15px; font-weight: 800; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <a href="perfil.html" class="back-nav"><i data-lucide="arrow-left"></i></a>
+        <h1 style="font-size: 22px; font-weight: 800; margin: 0;">Como podemos ajudar?</h1>
+    </div>
+
+    <div class="search-container">
+        <i data-lucide="search" size="20"></i>
+        <input type="text" placeholder="Busque por um assunto...">
+    </div>
+
+    <div class="support-channels">
+        <a href="https://wa.me/5518997696284" class="channel-card">
+            <i data-lucide="message-circle" size="28"></i>
+            <b>WhatsApp</b>
+            <span>Atendimento 24h</span>
+        </a>
+        <a href="mailto:suporte@zentry.com" class="channel-card">
+            <i data-lucide="mail" size="28"></i>
+            <b>E-mail</b>
+            <span>Resposta em 2h</span>
+        </a>
+    </div>
+
+    <div class="section-title">Dúvidas Frequentes</div>
+    
+    <div class="faq-list">
+        <div class="faq-item" onclick="mostrarDuvida('Pix', 'Transferências via Pix são instantâneas. Caso seu saldo não tenha atualizado, verifique o comprovante no extrato ou aguarde 5 minutos.')">
+            <span>Problemas com meu Pix</span>
+            <i data-lucide="chevron-right"></i>
+        </div>
+        <div class="faq-item" onclick="mostrarDuvida('Prazos', 'TED e DOC podem levar até 1 dia útil. Boletos levam de 24h a 72h para compensação bancária.')">
+            <span>Prazo de compensação</span>
+            <i data-lucide="chevron-right"></i>
+        </div>
+        <div class="faq-item" onclick="mostrarDuvida('Taxas', 'Nossa conta é 100% gratuita para pessoa física. Não cobramos manutenção nem transferências Pix.')">
+            <span>Taxas e tarifas</span>
+            <i data-lucide="chevron-right"></i>
+        </div>
+        <div class="faq-item" onclick="mostrarDuvida('Segurança', 'Sua conta pode ser bloqueada preventivamente por suspeita de fraude. Entre em contato com o suporte para desbloqueio.')">
+            <span>Minha conta foi bloqueada</span>
+            <i data-lucide="chevron-right"></i>
+        </div>
+    </div>
+</div>
+
+<div id="modal-faq" class="modal-overlay" onclick="fecharModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <h3 id="modal-titulo">Título</h3>
+        <p id="modal-texto">Texto da dúvida aqui...</p>
+        <button class="btn-modal" onclick="fecharModal()">Entendi</button>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    function mostrarDuvida(titulo, texto) {
+        document.getElementById('modal-titulo').innerText = titulo;
+        document.getElementById('modal-texto').innerText = texto;
+        document.getElementById('modal-faq').style.display = 'flex';
+    }
+
+    function fecharModal() {
+        document.getElementById('modal-faq').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
