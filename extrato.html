@@ -24,7 +24,7 @@
         .item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 16px; border-radius: 18px; margin-bottom: 10px; border: 1px solid var(--border); }
         .left { display: flex; align-items: center; gap: 12px; }
         .icon { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .info b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+        .info b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
         .info span { font-size: 11px; color: var(--text-sec); }
         .right { text-align: right; }
         .val { font-weight: 700; font-size: 15px; }
@@ -80,7 +80,6 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Monitorar Saldo
                 onSnapshot(doc(db, "usuarios", user.uid), (ds) => {
                     if(ds.exists()) {
                         const s = ds.data().saldo || 0;
@@ -88,7 +87,6 @@
                     }
                 });
 
-                // Monitorar Transações
                 onSnapshot(collection(db, "transacoes"), (snap) => {
                     const trintaDiasAtras = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
                     transacoesCache = [];
@@ -96,6 +94,7 @@
                     snap.forEach(d => {
                         const t = d.data();
                         const timestamp = t.timestamp?.seconds || 0;
+                        // Filtra transações onde o usuário é o remetente OU o destino
                         if ((t.userId === user.uid || t.uidDestino === user.uid) && timestamp > trintaDiasAtras) {
                             transacoesCache.push({ id: d.id, ...t });
                         }
@@ -109,7 +108,6 @@
             }
         });
 
-        // Filtros
         document.querySelectorAll('.filter').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
@@ -137,9 +135,9 @@
             }
 
             filtradas.forEach(t => {
+                // Lógica crucial: se o uidDestino for o meu, o dinheiro ENTROU.
                 const souEuRecebendo = t.uidDestino === me;
                 
-                // Formatação do valor para não quebrar
                 let valorNumerico = 0;
                 if (typeof t.valor === 'number') {
                     valorNumerico = t.valor;
@@ -149,16 +147,21 @@
                 
                 const valorFormatado = valorNumerico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 
+                // Define ícone e título baseado no tipo e direção
                 let icone = '💸'; 
                 let titulo = t.nomeDestino || "Pix Enviado";
 
                 if(souEuRecebendo) {
                     icone = '💰';
-                    titulo = t.nomeRemetente || "Pix Recebido";
+                    titulo = t.nomeRemetente || t.nomeDestino || "Pix Recebido";
                 } else if(t.tipo === 'recarga') {
                     icone = '📱';
                     titulo = "Recarga de Celular";
                 }
+
+                // Ajuste visual da cor e sinal (+ para verde, - para vermelho)
+                const corClasse = souEuRecebendo ? 'pos' : 'neg';
+                const sinal = souEuRecebendo ? '+' : '-';
 
                 lista.innerHTML += `
                     <div class="item" onclick="verComprovante('${t.id}')">
@@ -170,8 +173,8 @@
                             </div>
                         </div>
                         <div class="right">
-                            <div class="val ${souEuRecebendo ? 'pos' : 'neg'}">
-                                ${souEuRecebendo ? '+' : '-'} ${valorFormatado}
+                            <div class="val ${corClasse}">
+                                ${sinal} ${valorFormatado}
                             </div>
                         </div>
                     </div>
