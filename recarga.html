@@ -4,81 +4,157 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <title>ZENTRY</title>
+    <title>ZENTRY - Recarga</title>
     <style>
         :root { --primary: #22c55e; --bg: #000; --card: #111827; --border: rgba(255,255,255,0.1); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; height: 100vh; display: flex; flex-direction: column; }
-        .app-bar { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
-        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
-        .section-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin: 20px 0 10px; }
-        .input-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-bottom: 10px; }
-        .input-box input { background: transparent; border: none; color: #fff; font-size: 18px; width: 100%; }
         
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            background: radial-gradient(circle at 20% 0%, #0f172a, #000 80%);
+            color: #fff; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        .app-bar { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .back-btn { padding: 10px 15px; background: var(--card); border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600; border: 1px solid var(--border); }
+        
+        .content { flex: 1; overflow-y: auto; padding: 20px 20px 120px 20px; }
+        .section-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin: 20px 0 10px; letter-spacing: 1px; }
+        
+        .input-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; }
+        .input-box input { background: transparent; border: none; color: #fff; font-size: 18px; width: 100%; font-weight: 600; }
+        
+        /* GRID DE OPERADORAS COM IMAGENS */
         .op-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .op-item { background: var(--card); border: 2px solid transparent; border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; }
-        .op-item img { width: 30px; height: 30px; object-fit: contain; }
-        .op-item span { display: block; font-size: 9px; font-weight: 700; color: #9CA3AF; margin-top: 5px; }
-        .op-item.active { border-color: var(--primary); background: rgba(34, 197, 94, 0.1); }
+        .op-item { 
+            background: var(--card); 
+            border: 2px solid transparent; 
+            border-radius: 16px; 
+            padding: 12px 5px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .op-item img { 
+            width: 32px; 
+            height: 32px; 
+            object-fit: contain; 
+            margin-bottom: 8px; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        
+        .op-item span { display: block; font-size: 9px; font-weight: 800; color: #9CA3AF; }
+        
+        /* ESTADOS ATIVOS PERSONALIZADOS */
+        .op-item.active { background: rgba(255, 255, 255, 0.05); }
         .op-item.active span { color: #fff; }
         
-        .value-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .v-chip { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; font-weight: 800; cursor: pointer; }
-        .v-chip.active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .op-vivo.active { border-color: #662d91; box-shadow: 0 0 15px rgba(102, 45, 145, 0.3); }
+        .op-tim.active { border-color: #0038a8; box-shadow: 0 0 15px rgba(0, 56, 168, 0.3); }
+        .op-claro.active { border-color: #ee1d23; box-shadow: 0 0 15px rgba(238, 29, 35, 0.3); }
+        .op-oi.active { border-color: #f7941d; box-shadow: 0 0 15px rgba(247, 148, 29, 0.3); }
         
-        .footer-action { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(transparent, #000 30%); }
-        .btn-pay { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--primary); color: #052e16; font-weight: 800; font-size: 16px; box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2); }
+        /* GRID DE VALORES */
+        .value-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .v-chip { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            border-radius: 14px; 
+            padding: 15px; 
+            text-align: center; 
+            font-weight: 800; 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: 0.2s;
+        }
+        .v-chip.active { background: var(--primary); color: #052e16; border-color: var(--primary); transform: scale(1.05); }
+        
+        /* CAMPO PERSONALIZADO */
+        #customValueBox { display: none; margin-top: 15px; animation: slideIn 0.3s ease-out; border-color: var(--primary); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .footer-action { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(transparent, #000 40%); }
+        .btn-pay { 
+            width: 100%; 
+            padding: 18px; 
+            border-radius: 20px; 
+            border: none; 
+            background: var(--primary); 
+            color: #052e16; 
+            font-weight: 800; 
+            font-size: 16px; 
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.3); 
+            cursor: pointer;
+        }
+        .btn-pay:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
 
     <div class="app-bar">
-        <div onclick="window.location.href='home.html'" style="padding: 10px; background: var(--card); border-radius: 10px; cursor: pointer;">Voltar</div>
-        <div id="displaySaldo" style="color: var(--primary); font-weight: 800;">R$ 0,00</div>
+        <div class="back-btn" onclick="window.location.href='index.html'">Voltar</div>
+        <div id="displaySaldo" style="color: var(--primary); font-weight: 800; font-size: 18px;">R$ 0,00</div>
     </div>
 
     <div class="content">
-        <h2 style="margin: 0; font-weight: 800;">Recarga Celular</h2>
+        <h2 style="margin: 0; font-weight: 800; font-size: 24px; letter-spacing: -0.5px;">Recarga Celular</h2>
         
-        <div class="section-title">Número</div>
+        <div class="section-title">Número do Telefone</div>
         <div class="input-box">
-            <input type="tel" id="numTel" placeholder="(00) 00000-0000">
+            <input type="tel" id="numTel" placeholder="(00) 00000-0000" maxlength="15">
         </div>
 
-<div class="op-grid">
-    <div class="op-item" onclick="escolherOp(this, 'Vivo')">
-        <img src="https://logodownload.org/wp-content/uploads/2014/04/vivo-logo-1.png" style="width:30px; height:30px;">
-        <span>VIVO</span>
-    </div>
-    <div class="op-item" onclick="escolherOp(this, 'Tim')">
-        <img src="https://logodownload.org/wp-content/uploads/2014/05/tim-logo-1.png" style="width:30px; height:30px;">
-        <span>TIM</span>
-    </div>
-    <div class="op-item" onclick="escolherOp(this, 'Claro')">
-        <img src="https://logodownload.org/wp-content/uploads/2014/02/claro-logo-1.png" style="width:30px; height:30px;">
-        <span>CLARO</span>
-    </div>
-    <div class="op-item" onclick="escolherOp(this, 'Oi')">
-        <img src="https://logodownload.org/wp-content/uploads/2014/05/oi-logo-1.png" style="width:30px; height:30px;">
-        <span>OI</span>
-    </div>
-</div>
+        <div class="section-title">Selecione a Operadora</div>
+        <div class="op-grid">
+            <div class="op-item op-vivo" onclick="escolherOp(this, 'Vivo')">
+                <img src="https://logospng.org/download/vivo/logo-vivo-icon-256.png">
+                <span>VIVO</span>
+            </div>
+            <div class="op-item op-tim" onclick="escolherOp(this, 'Tim')">
+                <img src="https://logospng.org/download/tim/logo-tim-icon-256.png">
+                <span>TIM</span>
+            </div>
+            <div class="op-item op-claro" onclick="escolherOp(this, 'Claro')">
+                <img src="https://logospng.org/download/claro/logo-claro-icon-256.png">
+                <span>CLARO</span>
+            </div>
+            <div class="op-item op-oi" onclick="escolherOp(this, 'Oi')">
+                <img src="https://logospng.org/download/oi/logo-oi-icon-256.png">
+                <span>OI</span>
+            </div>
+        </div>
         
-        <div class="section-title">Valor</div>
+        <div class="section-title">Escolha o Valor</div>
         <div class="value-grid">
             <div class="v-chip" onclick="escolherVal(this, 15)">R$ 15</div>
             <div class="v-chip active" onclick="escolherVal(this, 20)">R$ 20</div>
             <div class="v-chip" onclick="escolherVal(this, 30)">R$ 30</div>
+            <div class="v-chip" onclick="mostrarPersonalizado(this)">Outro</div>
+        </div>
+
+        <div id="customValueBox" class="input-box">
+            <span style="color: var(--primary); font-weight: 800; margin-right: 10px;">R$</span>
+            <input type="number" id="outroValor" placeholder="0,00" inputmode="decimal">
         </div>
     </div>
 
     <div class="footer-action">
-        <button id="btnFinish" class="btn-pay" onclick="finalizarAgora()">Confirmar</button>
+        <button id="btnFinish" class="btn-pay" onclick="finalizarAgora()">Confirmar Recarga</button>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -96,8 +172,8 @@
 
     let userUid = "";
     let saldoAtual = 0;
-    let operadora = "";
-    let valor = 20;
+    let valorFinal = 20;
+    let operadoraFinal = "";
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -113,58 +189,70 @@
     window.escolherOp = (el, nome) => {
         document.querySelectorAll('.op-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
-        operadora = nome;
+        operadoraFinal = nome;
     };
 
     window.escolherVal = (el, v) => {
+        document.getElementById('customValueBox').style.display = 'none';
         document.querySelectorAll('.v-chip').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
-        valor = v;
+        valorFinal = v;
+    };
+
+    window.mostrarPersonalizado = (el) => {
+        document.querySelectorAll('.v-chip').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('customValueBox').style.display = 'flex';
+        document.getElementById('outroValor').focus();
     };
 
     window.finalizarAgora = async () => {
         const tel = document.getElementById('numTel').value;
+        const outroV = document.getElementById('outroValor').value;
         const btn = document.getElementById('btnFinish');
 
-        if(tel.length < 5) return alert("Digite o número!");
-        if(!operadora) return alert("Selecione a operadora!");
-        if(valor > saldoAtual) return alert("Saldo insuficiente!");
+        let valorParaDebitar = valorFinal;
+        if(document.getElementById('customValueBox').style.display === 'flex') {
+            valorParaDebitar = Number(outroV);
+        }
+
+        if(tel.length < 14) return alert("Digite um número válido!");
+        if(!operadoraFinal) return alert("Selecione a operadora!");
+        if(valorParaDebitar <= 0) return alert("Insira um valor válido!");
+        if(valorParaDebitar > saldoAtual) return alert("Saldo insuficiente!");
 
         btn.disabled = true;
         btn.innerText = "Processando...";
-        
-        try {
-            const txId = "TX" + Date.now();
-            const agora = new Date();
-            const dataSimples = agora.toISOString().split('T')[0];
 
-            // 1. GRAVA PARA O GRÁFICO (O ÍNDICE QUE VOCÊ CRIOU É PRA ISSO)
+        try {
+            const txId = "REC" + Date.now();
+            
+            // Grava a transação para o extrato/gráfico
             await setDoc(doc(db, "transacoes", txId), {
                 userId: userUid,
                 tipo: "saida",
-                valor: valor,
-                data: dataSimples,
-                timestamp: agora,
-                descricao: "Recarga " + operadora
+                valor: valorParaDebitar,
+                data: new Date().toISOString().split('T')[0],
+                timestamp: new Date(),
+                descricao: "Recarga " + operadoraFinal
             });
 
-            // 2. ATUALIZA O SALDO DO USUÁRIO
+            // Atualiza o saldo do usuário
             await updateDoc(doc(db, "usuarios", userUid), {
-                saldo: saldoAtual - valor
+                saldo: saldoAtual - valorParaDebitar
             });
 
-            btn.innerText = "SUCESSO!";
-            setTimeout(() => { window.location.href = "home.html"; }, 1500);
+            btn.style.background = "#fff";
+            btn.innerText = "Recarga Concluída!";
+            setTimeout(() => { window.location.href = "index.html"; }, 1500);
 
         } catch(e) {
-            console.error(e);
-            alert("Erro ao processar recarga.");
+            alert("Erro ao processar. Tente novamente.");
             btn.disabled = false;
-            btn.innerText = "Confirmar";
+            btn.innerText = "Confirmar Recarga";
         }
     };
 
-    // Máscara de telefone
     document.getElementById('numTel').addEventListener('input', (e) => {
         let v = e.target.value.replace(/\D/g,'');
         v = v.replace(/^(\d{2})(\d)/g,"($1) $2");
