@@ -83,36 +83,46 @@
   </div>
 
   <div class="tip-msg">Posicione o código de barras na linha verde</div>
+<script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.min.js"></script>
 
-  <script>
-    let html5QrCode;
-
-    function startScanner() {
-        html5QrCode = new Html5Qrcode("reader");
-        
-        // Configurações para ler código de barras 1D (EAN, Code 128, etc)
-        const config = { 
-            fps: 30, // Mais frames para não perder o foco
-            qrbox: (viewWidth, viewHeight) => {
-                return { width: viewWidth * 0.8, height: viewHeight * 0.3 };
-            },
-            aspectRatio: 1.777778 // 16:9 
-        };
-
-        // Começa a ler
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            config,
-            (decodedText) => {
-                if (navigator.vibrate) navigator.vibrate(200);
-                html5QrCode.stop();
-                alert("Código detectado: " + decodedText);
-                // Aqui você manda pro seu checkout
-            }
-        ).catch(err => console.error("Erro:", err));
+<script>
+function startScanner() {
+  Quagga.init({
+    inputStream: {
+      type: "LiveStream",
+      target: document.querySelector('#reader'),
+      constraints: {
+        facingMode: "environment"
+      }
+    },
+    decoder: {
+      readers: [
+        "ean_reader",
+        "ean_13_reader",
+        "code_128_reader",
+        "code_39_reader"
+      ]
+    },
+    locate: true
+  }, function(err) {
+    if (err) {
+      console.error(err);
+      return;
     }
+    Quagga.start();
+  });
 
-    window.onload = startScanner;
-  </script>
+  Quagga.onDetected(function(result) {
+    const code = result.codeResult.code;
+
+    if (navigator.vibrate) navigator.vibrate(200);
+
+    Quagga.stop();
+    alert("Código detectado: " + code);
+  });
+}
+
+window.onload = startScanner;
+</script>
 </body>
 </html>
