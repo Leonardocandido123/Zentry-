@@ -104,14 +104,8 @@ onAuthStateChanged(auth, (user) => {
     authCarregado = true;
 
     if (!user) {
-      // espera Firebase restaurar sessão
-      setTimeout(() => {
-        if (!auth.currentUser) {
-        
-        }
-      },);
-      ;
-    }
+    
+      
   }
 
   if (user && !scannerIniciado) {
