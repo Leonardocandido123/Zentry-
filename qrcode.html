@@ -1,14 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZENTRY - Pagar</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/html5-qrcode"></script>
-
-<style>
+<title>ZENTRY - Pagar</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode"></script><style>
 :root { --primary:#22C55E; --bg:#000; --card:#121826; --border:#2A3441; }
 * { box-sizing:border-box; font-family:'Inter'; }
 
@@ -17,7 +12,6 @@ body { margin:0; background:var(--bg); color:white; }
 .header { padding:20px; display:flex; align-items:center; gap:15px; }
 .back-btn { background:var(--card); border:none; padding:10px; border-radius:50%; color:white; }
 
-/* SCANNER */
 .scanner-container {
   height:320px;
   margin:20px;
@@ -28,25 +22,13 @@ body { margin:0; background:var(--bg); color:white; }
   background:#000;
 }
 
-#reader {
-  width:100%;
-  height:100%;
-  position:relative;
-}
+#reader { width:100%; height:100%; }
+#reader video { width:100%; height:100%; object-fit:cover; }
 
-#reader video {
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-/* LINHA PERFEITAMENTE CENTRAL */
 .scan-line {
   position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  width:90%;
-  height:3px;
+  left:50%; transform:translateX(-50%);
+  width:90%; height:3px;
   background:var(--primary);
   box-shadow:0 0 20px var(--primary);
   z-index:10;
@@ -59,46 +41,42 @@ body { margin:0; background:var(--bg); color:white; }
   100% { top: 10%; }
 }
 
-.status {
-  text-align:center;
-  color:var(--primary);
-  font-size:13px;
-  margin:10px;
-}
+.status { text-align:center; color:var(--primary); font-size:13px; margin:10px; }
 
-.option {
+.confirm-box {
   margin:20px;
   padding:20px;
   border-radius:20px;
   background:var(--card);
   border:1px solid var(--border);
-  text-align:center;
+  display:none;
 }
-</style>
-</head>
 
-<body>
-
-<div class="header">
+.btn {
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:15px;
+  background:var(--primary);
+  color:#000;
+  font-weight:bold;
+  margin-top:15px;
+}
+</style></head><body><div class="header">
   <button class="back-btn" onclick="history.back()">←</button>
   <h2>Pagar</h2>
-</div>
-
-<div class="scanner-container">
+</div><div class="scanner-container">
   <div id="reader"></div>
   <div class="scan-line"></div>
-</div>
+</div><div class="status" id="status">Carregando câmera...</div><!-- TELA DE CONFIRMAÇÃO --><div class="confirm-box" id="confirmBox">
+  <p><b>Nome:</b> <span id="nome"></span></p>
+  <p><b>Valor:</b> R$ <span id="valor"></span></p>
+  <p><b>Saldo:</b> R$ <span id="saldo"></span></p><button class="btn" onclick="confirmarPagamento()">Concluir pagamento</button>
 
-<div class="status" id="status">Carregando câmera...</div>
-
-<div class="option" onclick="modoManual()">
-  Digitar código manualmente
-</div>
-
-<script type="module">
+</div><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, increment, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "SUA_KEY_AQUI",
@@ -112,9 +90,9 @@ const db = getFirestore(app);
 
 let userLogado = null;
 let html5QrCode = null;
-let jaLeu = false;
+let dadosPix = null;
+let saldoAtual = 0;
 
-/* LOGIN SEGURO (SEM BUG DE LOOP) */
 onAuthStateChanged(auth, async (user) => {
   const status = document.getElementById("status");
 
@@ -125,95 +103,72 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   userLogado = user;
-  status.innerText = "Abrindo câmera...";
-
   iniciarScanner();
 });
 
 async function iniciarScanner() {
   const status = document.getElementById("status");
 
-  try {
-    html5QrCode = new Html5Qrcode("reader");
+  html5QrCode = new Html5Qrcode("reader");
 
-    await html5QrCode.start(
-      { facingMode: "environment" },
-      {
-        fps: 15,
-        qrbox: { width: 250, height: 250 }
-      },
-      (text) => {
-        if (jaLeu) return;
-        jaLeu = true;
+  await html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 15, qrbox: { width: 250, height: 250 } },
+    async (text) => {
+      html5QrCode.stop();
+      navigator.vibrate?.(150);
 
-        navigator.vibrate?.(150);
+      try {
+        dadosPix = JSON.parse(text);
 
-        html5QrCode.stop();
+        const ref = doc(db, "usuarios", userLogado.uid);
+        const snap = await getDoc(ref);
+        saldoAtual = snap.data()?.saldo || 0;
 
-        status.innerText = "Código lido ✔";
-        processarPagamento(text);
+        document.getElementById("nome").innerText = dadosPix.nome;
+        document.getElementById("valor").innerText = dadosPix.valor;
+        document.getElementById("saldo").innerText = saldoAtual;
+
+        document.getElementById("confirmBox").style.display = "block";
+        document.getElementById("status").innerText = "Confirme o pagamento";
+
+      } catch {
+        alert("QR inválido");
+        location.reload();
       }
-    );
+    }
+  );
 
-    status.innerText = "Aponte para o QR Code";
-
-    /* CORREÇÃO MOBILE (ANDROID) */
-    setTimeout(() => {
-      const video = document.querySelector("#reader video");
-      if (video) {
-        video.setAttribute("playsinline", true);
-        video.muted = true;
-        video.play().catch(()=>{});
-      }
-    }, 500);
-
-  } catch (err) {
-    console.error(err);
-    status.innerText = "Erro na câmera. Permita o acesso.";
-  }
+  status.innerText = "Aponte para o QR Code";
 }
 
-async function processarPagamento(codigo) {
-  try {
-    let valor = prompt("Digite o valor:");
+window.confirmarPagamento = async () => {
+  if (!dadosPix) return;
 
-    if (!valor) return location.reload();
-
-    valor = parseFloat(valor.replace(",", "."));
-
-    if (!valor || valor <= 0) {
-      alert("Valor inválido");
-      return location.reload();
-    }
-
-    const ref = doc(db, "usuarios", userLogado.uid);
-    const snap = await getDoc(ref);
-
-    const saldo = snap.data()?.saldo || 0;
-
-    if (saldo < valor) {
-      alert("Saldo insuficiente");
-      return location.reload();
-    }
-
-    await updateDoc(ref, { saldo: increment(-valor) });
-
-    localStorage.setItem("transacao", JSON.stringify({
-      valor,
-      data: new Date().toLocaleString(),
-      codigo
-    }));
-
-    window.location.href = "comprovante.html";
-
-  } catch {
-    alert("Erro no pagamento");
-    location.reload();
+  if (saldoAtual < dadosPix.valor) {
+    alert("Saldo insuficiente");
+    return;
   }
-}
 
-window.modoManual = () => processarPagamento("manual");
+  const ref = doc(db, "usuarios", userLogado.uid);
 
-</script>
-</body>
+  await updateDoc(ref, {
+    saldo: increment(-dadosPix.valor)
+  });
+
+  const transacao = {
+    valor: dadosPix.valor,
+    nome: dadosPix.nome,
+    data: new Date().toLocaleString(),
+    user: userLogado.uid
+  };
+
+  await addDoc(collection(db, "transacoes"), transacao);
+
+  localStorage.setItem("comprovante", JSON.stringify(transacao));
+
+  window.location.href = "comprovante.html";
+};
+
+</script></body>
 </html>
