@@ -3,29 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pagamento QR</title>
+<title>Zentry - Confirmar</title>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc, increment, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "SUA_KEY",
+  authDomain: "zentry-app-74275.firebaseapp.com",
+  projectId: "zentry-app-74275"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const pixID = localStorage.getItem("pixID");
+
+if (!pixID) {
+  alert("Erro: QR não encontrado");
+  window.location.href = "scanner.html";
+}
+
+let dadosPix = null;
+let saldoAtual = 0;
+
+// 🔥 carregar dados
+async function carregar() {
+  const ref = doc(db, "pix_temp", pixID);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    alert("QR expirado");
+    return;
+  }
+
+  dadosPix = snap.data();
+
+  document.getElementById("nome").innerText = dadosPix.nome;
+  document.getElementById("valor").innerText = dadosPix.valor;
+
+  // 🔥 pegar saldo
+  const uid = localStorage.getItem("userLogado");
+  const userRef = doc(db, "usuarios", uid);
+  const userSnap = await getDoc(userRef);
+
+  saldoAtual = userSnap.data()?.saldo || 0;
+
+  document.getElementById("saldo").innerText = saldoAtual;
+}
+
+window.confirmarPagamento = async () => {
+  if (saldoAtual < dadosPix.valor) {
+    alert("Saldo insuficiente");
+    return;
+  }
+
+  const uid = localStorage.getItem("userLogado");
+  const userRef = doc(db, "usuarios", uid);
+
+  await updateDoc(userRef, {
+    saldo: increment(-dadosPix.valor)
+  });
+
+  await addDoc(collection(db, "transacoes"), {
+    ...dadosPix,
+    user: uid,
+    data: new Date().toLocaleString()
+  });
+
+  window.location.href = "comprovante.html";
+};
+
+window.onload = carregar;
+</script>
 
 <style>
-body {
-  background:#000;
-  color:#fff;
-  font-family:Arial;
-  padding:20px;
-}
-
-.box {
-  background:#111;
-  padding:20px;
-  border-radius:15px;
-}
-button {
-  margin-top:20px;
-  padding:15px;
-  background:#22C55E;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-}
+body { background:#000; color:#fff; padding:20px; }
+.box { background:#111; padding:20px; border-radius:15px; }
+button { width:100%; padding:15px; background:#22C55E; border:none; margin-top:20px; }
 </style>
 </head>
 
@@ -36,32 +92,10 @@ button {
 <div class="box">
   <p>Nome: <span id="nome"></span></p>
   <p>Valor: R$ <span id="valor"></span></p>
+  <p>Saldo: R$ <span id="saldo"></span></p>
 </div>
 
-<button onclick="pagar()">Pagar</button>
-
-<script>
-const dados = JSON.parse(localStorage.getItem("pixData"));
-
-if (!dados) {
-  alert("Nenhum QR encontrado");
-}
-
-document.getElementById("nome").innerText = dados.nome;
-document.getElementById("valor").innerText = dados.valor;
-
-function pagar() {
-
-  const comprovante = {
-    ...dados,
-    data: new Date().toLocaleString()
-  };
-
-  localStorage.setItem("comprovante", JSON.stringify(comprovante));
-
-  window.location.href = "comprovante.html";
-}
-</script>
+<button onclick="confirmarPagamento()">Pagar</button>
 
 </body>
 </html>
