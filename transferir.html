@@ -212,6 +212,28 @@
     color: #fff; font-weight: 600; font-size: 15px;
     font-family: 'Sora', sans-serif; cursor: pointer; margin-top: 10px;
   }
+  .tipo-chip {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+}
+
+.chave-box input {
+  font-weight: 500;
+}
+
+.valor-input {
+  letter-spacing: -1px;
+}
+
+.desc-box input {
+  font-weight: 500;
+}
+
+.confirm-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 </style>
 </head>
 <body>
@@ -238,21 +260,10 @@
     <p class="tela-titulo">Para quem vai?</p>
     <p class="tela-sub">Digite a chave Pix do destinatário.</p>
 
-    <div class="tipos-grid">
-      <div class="tipo-chip active" data-tipo="cpf" onclick="selecionarTipo(this)">
-        <span class="tipo-icon">🪪</span>CPF
-      </div>
-      <div class="tipo-chip" data-tipo="celular" onclick="selecionarTipo(this)">
-        <span class="tipo-icon">📱</span>Celular
-      </div>
-      <div class="tipo-chip" data-tipo="email" onclick="selecionarTipo(this)">
-        <span class="tipo-icon">📧</span>E-mail
-      </div>
-      <div class="tipo-chip" data-tipo="cnpj" onclick="selecionarTipo(this)">
-        <span class="tipo-icon">🏢</span>CNPJ
-      </div>
-    </div>
-
+<div class="tipo-chip active" data-tipo="cpf" onclick="selecionarTipo(this)">CPF</div>
+<div class="tipo-chip" data-tipo="celular" onclick="selecionarTipo(this)">Celular</div>
+<div class="tipo-chip" data-tipo="email" onclick="selecionarTipo(this)">E-mail</div>
+<div class="tipo-chip" data-tipo="cnpj" onclick="selecionarTipo(this)">CNPJ</div>
     <div class="chave-box">
       <span class="chave-icon">🔑</span>
       <input type="text" id="chaveInput" placeholder="Digite a chave Pix" inputmode="numeric">
@@ -287,7 +298,7 @@
     </div>
 
     <div class="desc-box">
-      <span style="font-size:18px;">💬</span>
+      <div style="width:4px;height:100%;background:var(--border);border-radius:4px;"></div>
       <input type="text" id="descInput" placeholder="Adicionar descrição (opcional)" maxlength="50">
     </div>
   </div>
@@ -311,7 +322,7 @@
       <div class="confirm-row"><span class="confirm-label">Valor</span><span class="confirm-val confirm-total" id="confirmValor"></span></div>
     </div>
 
-    <div class="aviso-box" style="margin-bottom:20px;">⚡ Pix é instantâneo e irreversível. Verifique os dados antes de confirmar.</div>
+    <div class="aviso-box" style="margin-bottom:20px;">⚡Pix é instantâneo e irreversível. Revise os dados antes de confirmar a transferência.</div>
 
     <div class="pin-wrap" onclick="document.getElementById('hiddenPin').focus()">
       <p class="pin-titulo">Digite sua senha de 4 dígitos</p>
@@ -328,7 +339,7 @@
   <!-- ETAPA 4 — SUCESSO -->
   <div class="tela" id="tela3">
     <div class="sucesso-wrap">
-      <div class="sucesso-circle">✓</div>
+      <div class="sucesso-circle" style="font-size:20px;font-weight:800;">OK</div>
       <p class="sucesso-titulo">Pix enviado!</p>
       <p class="sucesso-sub" id="sucessoSub"></p>
       <div class="sucesso-comp">
