@@ -3,75 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Comprovante</title>
+<title>Comprovante - Zentry</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-<style>
-:root{
-  --bg:#f4f6f8;
-  --card:#ffffff;
-  --text:#0f172a;
-  --muted:#64748b;
-  --border:#e5e7eb;
-  --green:#16a34a;
-  --red:#dc2626;
-}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+<style>
 body{
-  margin:0;
-  background:var(--bg);
   font-family:'Sora',sans-serif;
+  background:#f5f7fa;
+  margin:0;
+  padding:20px;
 }
 
 .card{
   max-width:420px;
-  margin:30px auto;
+  margin:auto;
   background:#fff;
   border-radius:24px;
-  border:1px solid var(--border);
+  border:1px solid #e5e7eb;
   overflow:hidden;
 }
 
 /* TOPO */
 .top{
-  padding:30px;
   text-align:center;
+  padding:28px;
   background:linear-gradient(180deg,#f0fdf4,#fff);
 }
-.top.neg{background:linear-gradient(180deg,#fef2f2,#fff);}
 
 .status{
   font-size:12px;
   font-weight:700;
+  color:#16a34a;
 }
-.status.pos{color:var(--green);}
-.status.neg{color:var(--red);}
 
 .valor{
-  font-size:40px;
+  font-size:38px;
   font-weight:800;
-  margin:8px 0;
+  margin:10px 0;
+  color:#16a34a;
 }
-.valor.pos{color:var(--green);}
-.valor.neg{color:var(--red);}
 
 .data{
   font-size:12px;
-  color:var(--muted);
+  color:#64748b;
 }
 
 /* SEÇÕES */
 .section{
   padding:20px;
-  border-top:1px solid var(--border);
-}
-
-.title{
-  font-size:11px;
-  font-weight:700;
-  color:var(--muted);
-  margin-bottom:10px;
+  border-top:1px solid #e5e7eb;
 }
 
 .row{
@@ -80,8 +63,8 @@ body{
   padding:10px 0;
 }
 
-.label{color:var(--muted);}
-.value{font-weight:600;text-align:right;}
+.label{color:#64748b;}
+.value{font-weight:600;}
 
 .tx{
   font-family:monospace;
@@ -89,89 +72,128 @@ body{
   padding:4px 8px;
   border-radius:8px;
 }
+
+/* BOTÃO */
+.btn{
+  max-width:420px;
+  width:100%;
+  margin:20px auto 0;
+  display:block;
+  padding:16px;
+  border:none;
+  border-radius:16px;
+  font-weight:700;
+  background:#22c55e;
+  color:#052e16;
+  cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <div id="top" class="top">
-    <div id="status" class="status"></div>
-    <div id="valor" class="valor"></div>
-    <div id="data" class="data"></div>
+<div id="card" class="card">
+  <div class="top">
+    <div class="status" id="status">Carregando...</div>
+    <div class="valor" id="valor">R$ 0,00</div>
+    <div class="data" id="data"></div>
   </div>
 
   <div id="conteudo"></div>
 </div>
 
+<button class="btn" onclick="share()">Compartilhar comprovante</button>
+
+<!-- 🔥 SCRIPT DO BANCO -->
 <script type="module">
-import { db } from './zentry-core.js';
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { db, ZentryAuth, ZentryUI } from "./zentry-core.js";
+import { collection, query, where, getDocs } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const url = new URLSearchParams(window.location.search);
-const id = url.get("id");
+const user = await ZentryAuth.exigirLogin();
+const uid = user.uid;
 
-if(!id){
- document.body.innerHTML = "Comprovante inválido";
- throw "";
+// pegar ID da URL
+const params = new URLSearchParams(window.location.search);
+const txId = params.get("id");
+
+if(!txId){
+  document.body.innerHTML = "<h2>Comprovante inválido</h2>";
 }
 
-const ref = doc(db,"transacoes",id);
-const snap = await getDoc(ref);
+// buscar no banco
+const q = query(
+  collection(db, "usuarios", uid, "transacoes"),
+  where("id", "==", txId)
+);
 
-if(!snap.exists()){
- document.body.innerHTML = "Transação não encontrada";
- throw "";
+const snap = await getDocs(q);
+
+if(snap.empty){
+  document.body.innerHTML = "<h2>Transação não encontrada</h2>";
 }
 
-const d = snap.data();
+const dados = snap.docs[0].data();
 
-/* FORMAT */
-const fmt = v => Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const data = new Date(d.criadoEm.seconds*1000).toLocaleString('pt-BR');
+// formatadores
+const fmt = ZentryUI.formatarMoeda;
+const data = ZentryUI.formatarData(dados.criadoEm);
 
-/* TIPO */
-const entrada = d.direcao === "entrada";
+// tipo
+let statusTxt = dados.tipo === "entrada" 
+  ? "Pix Recebido" 
+  : "Pix Enviado";
 
-/* UI */
-document.getElementById("top").classList.add(entrada?"":"neg");
-document.getElementById("status").classList.add(entrada?"pos":"neg");
-document.getElementById("valor").classList.add(entrada?"pos":"neg");
-
-document.getElementById("status").innerText =
- d.status === "pendente" ? "Pendente" :
- entrada ? "Recebido" : "Pagamento realizado";
-
-document.getElementById("valor").innerText = fmt(d.valor);
+// UI topo
+document.getElementById("status").innerText = statusTxt;
+document.getElementById("valor").innerText = fmt(dados.valor);
 document.getElementById("data").innerText = data;
 
-/* CONTEÚDO UNIVERSAL */
+// conteúdo
 document.getElementById("conteudo").innerHTML = `
-
 <div class="section">
-<div class="title">Transação</div>
-
-<div class="row"><span class="label">Tipo</span><span class="value">${d.tipo}</span></div>
-<div class="row"><span class="label">Descrição</span><span class="value">${d.descricao||"-"}</span></div>
-<div class="row"><span class="label">ID</span><span class="value"><span class="tx">${d.id}</span></span></div>
+  <div class="row"><span class="label">Valor</span><span class="value">${fmt(dados.valor)}</span></div>
+  <div class="row"><span class="label">Tipo</span><span class="value">${statusTxt}</span></div>
+  <div class="row"><span class="label">Descrição</span><span class="value">${dados.descricao || "-"}</span></div>
+  <div class="row"><span class="label">ID</span><span class="value"><span class="tx">${dados.id}</span></span></div>
 </div>
 
 <div class="section">
-<div class="title">Destino</div>
-
-<div class="row"><span class="label">Nome</span><span class="value">${d.destino?.nome||"-"}</span></div>
-<div class="row"><span class="label">Chave</span><span class="value">${d.destino?.chave||"-"}</span></div>
-<div class="row"><span class="label">Instituição</span><span class="value">${d.destino?.instituicao||"-"}</span></div>
+  <div class="row"><span class="label">Destino</span><span class="value">${dados.nomeDestino || "-"}</span></div>
+  <div class="row"><span class="label">Chave Pix</span><span class="value">${dados.chavePix || "-"}</span></div>
 </div>
 
 <div class="section">
-<div class="title">Origem</div>
-
-<div class="row"><span class="label">Nome</span><span class="value">${d.origem?.nome||"-"}</span></div>
-<div class="row"><span class="label">Instituição</span><span class="value">${d.origem?.instituicao||"ZENTRY"}</span></div>
+  <div class="row"><span class="label">Origem</span><span class="value">${dados.nomeRemetente}</span></div>
+  <div class="row"><span class="label">Instituição</span><span class="value">ZENTRY</span></div>
 </div>
-
 `;
+</script>
+
+<!-- 🔥 SHARE NATIVO ANDROID -->
+<script>
+async function share(){
+ const canvas = await html2canvas(document.getElementById("card"),{
+   scale:3,
+   backgroundColor:"#fff"
+ });
+
+ const blob = await new Promise(r=>canvas.toBlob(r));
+ const file = new File([blob],"comprovante.png",{type:"image/png"});
+
+ if(navigator.share){
+   await navigator.share({
+     files:[file],
+     title:"Comprovante Pix",
+     text:"Comprovante de pagamento"
+   });
+ } else {
+   const a=document.createElement("a");
+   a.href=canvas.toDataURL();
+   a.download="comprovante.png";
+   a.click();
+ }
+}
 </script>
 
 </body>
