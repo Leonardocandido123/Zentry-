@@ -241,113 +241,78 @@ body {
     <button class="nav-btn" onclick="location.href='notificacoes.html'"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Notificação</button>
     <button class="nav-btn" onclick="logout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sair</button>
   </nav>
-</div> 
-<script type="module">
-    // Importando o padrão Zentry Core
-    import { auth, db, ZentryAuth, ZentryUser } from './zentry-core.js';
-    import { doc, onSnapshot, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+</div>
+  <script type="module">
+    import { auth, db, ZentryAuth } from './zentry-core.js';
+    import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let saldoOculto = false;
     window.currentSaldo = 0;
-    let usuarioLogadoId = "";
 
     async function initHome() {
         try {
-            // 1. Valida login via Core
             const user = await ZentryAuth.exigirLogin();
-            usuarioLogadoId = user.uid;
 
-            // 2. Escuta dados do usuário e PREFERÊNCIAS em tempo real
+            // Escuta os dados do banco
             onSnapshot(doc(db, "usuarios", user.uid), (docSnap) => {
                 if (docSnap.exists()) {
                     const d = docSnap.data();
                     
-                    // Atualiza Nome e Saldo
-                    document.getElementById("nome-usuario").innerText = (d.nome || "Usuário") + "!";
+                    // 1. Atualiza o Nome (com trava de segurança)
+                    const elNome = document.getElementById("nome-usuario");
+                    if (elNome) elNome.innerText = (d.nome || "Usuário") + "!";
+                    
+                    // 2. Atualiza o Saldo
                     window.currentSaldo = parseFloat(d.saldo || 0);
 
-                    // --- LÓGICA DE CONFIGURAÇÕES ---
-                    if (d.preferencias) {
-                        // MODO DISCRETO: Se estiver ativo no banco, começa com saldo oculto
-                        // Mas só aplica ao carregar a primeira vez para não irritar o usuário
-                        if (d.preferencias.modoDiscreto === true && !sessionStorage.getItem('ja_abriu')) {
+                    // 3. Aplica Preferências (Modo Discreto)
+                    if (d.preferencias && d.preferencias.modoDiscreto === true) {
+                        if (!sessionStorage.getItem('ja_abriu')) {
                             saldoOculto = true;
                             sessionStorage.setItem('ja_abriu', 'true');
                         }
                     }
 
+                    // 4. Mostra na tela
                     renderSaldo();
                     atualizarSaudacao();
                 }
             });
-
-            verificarAlertasGerais();
         } catch (error) {
-            console.error("Erro ao iniciar Home:", error);
+            console.error("Erro ao carregar Home:", error);
         }
     }
 
-    function renderSaldo() {
-        const el = document.getElementById("saldo-home");
-        if(el) {
-            el.innerText = saldoOculto 
+    // Função para desenhar o saldo (oculto ou visível)
+    window.renderSaldo = () => {
+        const elSaldo = document.getElementById("saldo-home");
+        if (elSaldo) {
+            elSaldo.innerText = saldoOculto 
                 ? "••••••••" 
                 : window.currentSaldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
-    }
-
-    // Função do ícone do Olhinho
-    window.toggleSaldoHome = () => { 
-        saldoOculto = !saldoOculto; 
-        renderSaldo(); 
     };
 
-    window.logout = () => { 
-        auth.signOut().then(() => { window.location.href = 'login.html'; }); 
+    // Função do Botão de Olho (agora global para o onclick funcionar)
+    window.toggleSaldoHome = () => { 
+        saldoOculto = !saldoOculto; 
+        window.renderSaldo(); 
     };
 
     function atualizarSaudacao() {
         const hora = new Date().getHours();
-        const el = document.getElementById("greeting");
-        if (hora >= 5 && hora < 12) el.innerText = "Bom dia,";
-        else if (hora >= 12 && hora < 18) el.innerText = "Boa tarde,";
-        else el.innerText = "Boa noite,";
+        const elGreet = document.getElementById("greeting");
+        if (elGreet) {
+            if (hora >= 5 && hora < 12) elGreet.innerText = "Bom dia,";
+            else if (hora >= 12 && hora < 18) elGreet.innerText = "Boa tarde,";
+            else elGreet.innerText = "Boa noite,";
+        }
     }
 
-    // BANNER DINÂMICO
-    function renderizarBanners(slides) {
-        const bannerSlider = document.getElementById('banner-slider');
-        const bannerDots = document.getElementById('banner-dots');
-        if(!bannerSlider) return;
-
-        bannerSlider.innerHTML = slides.map(s => `
-            <div class="smart-banner" onclick="location.href='${s.h}'" style="border-left: 5px solid ${s.c};">
-                <b>${s.t}</b><p>${s.p}</p>
-                <button style="background:${s.c}; color:#fff; border:none; padding:8px 14px; border-radius:12px; font-weight:bold; font-size:11px;">${s.b}</button>
-            </div>`).join('');
-
-        if(bannerDots) bannerDots.innerHTML = slides.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
-        
-        let cur = 0;
-        setInterval(() => {
-            cur = (cur + 1) % slides.length;
-            if(bannerSlider) bannerSlider.style.transform = `translateX(-${cur * 100}%)`;
-            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
-        }, 5000);
-    }
-
-    async function verificarAlertasGerais() {
-        const slides = [
-            { t: 'Contas a Pagar', p: 'Organize seus gastos de hoje.', b: 'Ver', c: '#3b82f6', h: 'contas.html' },
-            { t: 'Recarga Celular', p: 'Crédito em segundos.', b: 'Recarregar', c: '#22c55e', h: 'recarga.html' },
-            { t: 'Cobranças Pix', p: 'Crie um QR Code agora.', b: 'Cobrar', c: '#ff5f1f', h: 'cobrar.html' }
-        ];
-        renderizarBanners(slides);
-    }
-
-    // Inicializa tudo
+    // Inicializa a Home
     initHome();
-      </script>
+              </script>
+  
   
 </body>
 </html>
