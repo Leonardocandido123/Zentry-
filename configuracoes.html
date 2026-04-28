@@ -127,10 +127,66 @@
         Zentry App v1.0.4<br>Todos os direitos reservados
     </p>
 </div>
+    <script type="module">
+    import { auth, db, ZentryAuth, ZentryUser } from './zentry-core.js';
+    import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-<script>
     lucide.createIcons();
-    // Aqui você pode adicionar a lógica para salvar essas preferências no LocalStorage ou Firebase
-</script>
+
+    let userUid = "";
+
+    async function initConfig() {
+        try {
+            // 1. Garante que está logado
+            const user = await ZentryAuth.exigirLogin();
+            userUid = user.uid;
+
+            // 2. Carrega as preferências atuais do banco de dados
+            ZentryUser.escutar(userUid, (dados) => {
+                if (dados && dados.preferencias) {
+                    const p = dados.preferencias;
+                    
+                    // Aplica os estados nos switches
+                    document.getElementById('checkBiometria').checked = p.biometria !== false;
+                    document.getElementById('checkDiscreto').checked = p.modoDiscreto === true;
+                    document.getElementById('checkNotif').checked = p.notificacoes !== false;
+
+                    // Salva no LocalStorage para uso imediato nas outras telas (ex: Home esconder saldo)
+                    localStorage.setItem('zentry_discreto', p.modoDiscreto);
+                }
+            });
+        } catch (error) {
+            console.error("Erro ao carregar configs:", error);
+        }
+    }
+
+    // 3. Função para salvar alteração
+    window.toggleConfig = async (campo, valor) => {
+        if (!userUid) return;
+
+        try {
+            const userRef = doc(db, "usuarios", userUid);
+            
+            // Atualiza apenas o campo específico dentro do objeto preferencias
+            await updateDoc(userRef, {
+                [`preferencias.${campo}`]: valor
+            });
+
+            // Se for o modo discreto, atualiza o LocalStorage na hora
+            if (campo === 'modoDiscreto') {
+                localStorage.setItem('zentry_discreto', valor);
+            }
+
+            console.log(`Config ${campo} atualizada para ${valor}`);
+        } catch (e) {
+            alert("Erro ao salvar preferência.");
+        }
+    };
+
+    // Inicializa
+    initConfig();
+    </script>
+    
+    
 </body>
 </html>
