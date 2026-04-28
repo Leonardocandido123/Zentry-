@@ -135,20 +135,46 @@
         <button class="btn-modal" onclick="fecharModal()">Entendi</button>
     </div>
 </div>
+<script type="module">
+    import { ZentryAuth } from './zentry-core.js';
 
-<script>
+    // Inicializa os ícones do Lucide
     lucide.createIcons();
 
-    function mostrarDuvida(titulo, texto) {
+    // 1. Proteção de rota: Só acessa o suporte se estiver logado
+    async function initSuporte() {
+        try {
+            await ZentryAuth.exigirLogin();
+        } catch (error) {
+            console.error("Usuário não autenticado");
+        }
+    }
+
+    // 2. Lógica do Modal (Exposta para o HTML)
+    window.mostrarDuvida = (titulo, texto) => {
         document.getElementById('modal-titulo').innerText = titulo;
         document.getElementById('modal-texto').innerText = texto;
         document.getElementById('modal-faq').style.display = 'flex';
-    }
+    };
 
-    function fecharModal() {
+    window.fecharModal = () => {
         document.getElementById('modal-faq').style.display = 'none';
-    }
-</script>
+    };
 
+    // 3. Pesquisa simples (Opcional: filtra o FAQ enquanto digita)
+    const searchInput = document.querySelector('.search-container input');
+    searchInput.addEventListener('input', (e) => {
+        const termo = e.target.value.toLowerCase();
+        const itens = document.querySelectorAll('.faq-item');
+        
+        itens.forEach(item => {
+            const texto = item.innerText.toLowerCase();
+            item.style.display = texto.includes(termo) ? 'flex' : 'none';
+        });
+    });
+
+    initSuporte();
+</script>
+    
 </body>
 </html>
