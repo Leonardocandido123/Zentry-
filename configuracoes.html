@@ -67,7 +67,6 @@
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="header">
         <a href="perfil.html" class="back-nav"><i data-lucide="arrow-left"></i></a>
@@ -81,7 +80,10 @@
                 <i data-lucide="fingerprint"></i>
                 <div><b>Acesso Biométrico</b><span>Usar digital ou FaceID</span></div>
             </div>
-            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            <label class="switch">
+                <input type="checkbox" id="checkBiometria" onchange="toggleConfig('biometria', this.checked)">
+                <span class="slider"></span>
+            </label>
         </div>
         
         <div class="config-item" onclick="alert('Funcionalidade de troca de senha em breve')">
@@ -111,7 +113,10 @@
                 <i data-lucide="eye-off"></i>
                 <div><b>Modo Discreto</b><span>Esconder saldo ao abrir o app</span></div>
             </div>
-            <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+            <label class="switch">
+                <input type="checkbox" id="checkDiscreto" onchange="toggleConfig('modoDiscreto', this.checked)">
+                <span class="slider"></span>
+            </label>
         </div>
 
         <div class="config-item">
@@ -119,7 +124,10 @@
                 <i data-lucide="bell"></i>
                 <div><b>Notificações</b><span>Avisos de gastos e ganhos</span></div>
             </div>
-            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            <label class="switch">
+                <input type="checkbox" id="checkNotif" onchange="toggleConfig('notificacoes', this.checked)">
+                <span class="slider"></span>
+            </label>
         </div>
     </div>
 
@@ -127,6 +135,7 @@
         Zentry App v1.0.4<br>Todos os direitos reservados
     </p>
 </div>
+    
     <script type="module">
     import { auth, db, ZentryAuth, ZentryUser } from './zentry-core.js';
     import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
