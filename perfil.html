@@ -96,45 +96,57 @@
         </div>
     </div>
 </div>
+    <script type="module">
+    // Importando o padrão Zentry para acabar com a bagunça
+    import { auth, ZentryAuth, ZentryUser } from './zentry-core.js';
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-    // Suas configs aqui
-    const firebaseConfig = { 
-        apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
-        authDomain: "zentry-app-74275.firebaseapp.com",
-        projectId: "zentry-app-74275",
-        storageBucket: "zentry-app-74275.appspot.com",
-        messagingSenderId: "571422826071",
-        appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
+    // Inicializa os ícones do Lucide
     lucide.createIcons();
 
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-            if (userDoc.exists()) {
-                document.getElementById("nomeUser").innerText = userDoc.data().nome;
-            }
-        } else {
-            window.location.replace("login.html");
-        }
-    });
+    async function initPerfil() {
+        try {
+            // 1. Valida se o usuário está logado usando o Core
+            const user = await ZentryAuth.exigirLogin();
 
-    window.confirmarSair = () => {
-        auth.signOut().then(() => {
-            localStorage.clear();
-            window.location.replace("login.html");
-        });
+            // 2. Escuta os dados do usuário em tempo real
+            ZentryUser.escutar(user.uid, (dados) => {
+                if (dados) {
+                    // Atualiza o nome na tela
+                    document.getElementById("nomeUser").innerText = dados.nome || "Usuário Zentry";
+                    
+                    // Se você tiver um campo 'foto' no Firestore, pode carregar aqui:
+                    if (dados.foto) {
+                        document.getElementById("avatar-image").innerHTML = `<img src="${dados.foto}" alt="Avatar">`;
+                    } else {
+                        // Caso contrário, gera uma inicial ou mantém o ícone
+                        const inicial = dados.nome ? dados.nome.charAt(0).toUpperCase() : "";
+                        document.getElementById("avatar-image").innerHTML = `<span style="font-size: 40px; font-weight: 800; color: var(--primary)">${inicial}</span>`;
+                    }
+                }
+            });
+        } catch (error) {
+            console.error("Erro ao carregar perfil:", error);
+        }
+    }
+
+    // Função de Sair (Logout)
+    window.confirmarSair = async () => {
+        // Um simples confirm do navegador para evitar cliques acidentais
+        if (confirm("Deseja realmente sair da sua conta?")) {
+            try {
+                await auth.signOut();
+                localStorage.clear(); // Limpa dados temporários
+                window.location.replace("login.html");
+            } catch (error) {
+                alert("Erro ao sair. Tente novamente.");
+            }
+        }
     };
-</script>
+
+    // Rodar a inicialização
+    initPerfil();
+    </script>
+    
+
 </body>
 </html>
