@@ -337,10 +337,10 @@
     <div class="proc-sub" id="procSub">Aguarde alguns instantes...</div>
   </div>
 </div>
-
 <script type="module">
-  import { auth, db, ZentryAuth, ZentryUser, ZentryUI } from './zentry-core.js';
-  import { doc, setDoc, updateDoc, increment }
+  // IMPORTANTE: Removi o ZentryAuth que causava o erro
+  import { db } from './zentry-core.js'; 
+  import { doc, setDoc, updateDoc, increment, getDoc } 
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   let valorRaw   = "";
@@ -350,12 +350,33 @@
   let timerInterval  = null;
   let timerSecs      = 300; // 5 min
 
-  // ── INIT ──
+  // ── INIT (FECHADURA MANUAL) ──
   async function init() {
-    const user = await ZentryAuth.exigirLogin();
-    userUid  = user.uid;
-    userData = await ZentryUser.buscar(userUid);
+    // 1. Pegamos o ID que o login salvou
+    const docID = localStorage.getItem("idUsuarioLogado");
+    
+    if (!docID) {
+      console.log("Usuário não logado na Maquininha. Voltando...");
+      window.location.href = "login.html";
+      return;
+    }
+
+    userUid = docID;
+
+    try {
+      // 2. Busca os dados do vendedor no banco
+      const userSnap = await getDoc(doc(db, "usuarios", userUid));
+      if (userSnap.exists()) {
+        userData = userSnap.data();
+      } else {
+        window.location.href = "login.html";
+      }
+    } catch (e) {
+      console.error("Erro ao carregar dados do vendedor:", e);
+    }
   }
+  
+  // Chama a função de início
   init();
 
   // ── TECLADO ──
@@ -407,7 +428,6 @@
 
   window.irParaPix = function() {
     document.getElementById('valorTopoPix').textContent = valorFmt();
-    // Gera QR Code com a API gratuita (substituir pelo Asaas depois)
     const payload = encodeURIComponent("ZentryPay|" + valorFmt() + "|" + Date.now());
     document.getElementById('qrImg').src =
       `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${payload}&format=png`;
@@ -434,7 +454,6 @@
     const lista = document.getElementById('listaParcelas');
     lista.innerHTML = "";
     const total = valorNum();
-    // Taxa simulada (substituir pelo Asaas: taxas reais por bandeira)
     const taxas = [0,0,0,0,0, 0.0199, 0.0249, 0.0299, 0.0349, 0.0399, 0.0449, 0.0499];
     for (let i=1; i<=12; i++) {
       const taxa   = taxas[i-1] || 0;
@@ -468,32 +487,25 @@
       document.getElementById('timerFill').style.width = (timerSecs/300*100) + '%';
       if (timerSecs <= 0) {
         clearInterval(timerInterval);
-        ZentryUI.toast("QR Code expirado. Gere um novo.", "aviso");
         irParaPix();
       }
     }, 1000);
   }
 
-  // ── COPIAR CHAVE PIX ──
   window.copiarChave = async function() {
     try {
       await navigator.clipboard.writeText("suporte@zentry.com.br");
-      ZentryUI.toast("Chave Pix copiada!", "sucesso");
-    } catch(e) { ZentryUI.toast("Chave: suporte@zentry.com.br", "info"); }
+      alert("Chave Pix copiada!");
+    } catch(e) { }
   };
 
   // ── SIMULAR/PROCESSAR PAGAMENTO ──
-  // TODO ASAAS: substituir esta função por chamada real à API
-  // POST https://api.asaas.com/v3/payments
-  // Headers: { access_token: ASAAS_API_KEY }
-  // Body: { customer, billingType, value, dueDate, description }
   window.simularPagamento = async function(metodo) {
     clearInterval(timerInterval);
     document.getElementById('procTxt').textContent = "Processando " + metodo;
     document.getElementById('procSub').textContent = "Aguarde a confirmação...";
     irPara('tela-proc');
 
-    // Simula delay de processamento (2s)
     await new Promise(r => setTimeout(r, 2000));
 
     try {
@@ -501,7 +513,7 @@
       const valor  = valorNum();
       const dataFmt = new Date().toLocaleString('pt-BR');
 
-      // Grava transação na subcoleção do usuário
+      // SALVA A VENDA NO BANCO (Usando o ID manual)
       await setDoc(doc(db, "usuarios", userUid, "transacoes", txId), {
         tipo:      "entrada",
         valor,
@@ -513,10 +525,9 @@
         id:        txId
       });
 
-      // Credita saldo
+      // ATUALIZA O SALDO DO VENDEDOR
       await updateDoc(doc(db, "usuarios", userUid), { saldo: increment(valor) });
 
-      // Salva para comprovante PDV
       localStorage.setItem("comprovante_pdv", JSON.stringify({
         valor,
         valorFmt:  valorFmt(),
@@ -530,11 +541,13 @@
       window.location.href = "comprovante_pdv.html";
 
     } catch(e) {
-      ZentryUI.toast("Erro ao processar. Tente novamente.", "erro");
+      console.error(e);
+      alert("Erro ao processar. Tente novamente.");
       irPara('tela-metodo');
     }
   };
-</script>
+    </script>
+  
 </body>
 </html>
   
