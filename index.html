@@ -90,7 +90,12 @@
     <span class="white">ZEN</span><span class="green">TRY</span>
   </div>
 </div>
-
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+</script>
+ 
 <script>
 // Aguarda 2.5s e redireciona
 setTimeout(() => {
