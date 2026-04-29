@@ -169,7 +169,7 @@
       <a href="cadastro_unificado.html" class="create-acc">Criar conta</a>
     </div>
   </div>
-  <script type="module">
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -201,7 +201,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btnEntrar");
 
   input.addEventListener("input", () => {
-    if(input.value.length >= 4) btn.classList.add("active"); // Ajustei para 4 dígitos se sua senha for curta
+    if(input.value.length >= 4) btn.classList.add("active");
     else btn.classList.remove("active");
   });
 
@@ -225,12 +225,10 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Inicia carregamento
     btn.innerHTML = `<div class="spinner"></div>`;
     btn.style.pointerEvents = "none";
     
     try {
-      // BUSCA NO FIRESTORE (BANCO DE DADOS)
       const usuariosRef = collection(db, "usuarios");
       const q = query(usuariosRef, where("email", "==", emailSalvo));
       const querySnapshot = await getDocs(q);
@@ -240,14 +238,20 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       let dadosUsuario = null;
+      let idDocumento = "";
+
+      // PEGA OS DADOS E O ID REAL (EX: user_882544)
       querySnapshot.forEach((doc) => {
         dadosUsuario = doc.data();
+        idDocumento = doc.id; 
       });
 
-      // VALIDA A SENHA QUE ESTÁ NO BANCO
       if (dadosUsuario.senha === senhaDigitada) {
-        // Sucesso: Salva os dados na sessão e entra
+        // --- AQUI ESTÁ O SEGREDO ---
+        // Salva o ID real para a Home usar no onSnapshot
+        localStorage.setItem("idUsuarioLogado", idDocumento);
         localStorage.setItem("dadosUsuario", JSON.stringify(dadosUsuario));
+
         document.body.style.opacity = "0";
         document.body.style.transition = "0.4s";
         setTimeout(() => { window.location.href = "home.html"; }, 400);
