@@ -2,199 +2,208 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Comprovante - Zentry</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+<title>Comprovante Zentry</title>
 <style>
-body{
-  font-family:'Sora',sans-serif;
-  background:#f5f7fa;
-  margin:0;
-  padding:20px;
-}
+  :root {
+    --primary: #22c55e; 
+    --red: #ef4444; 
+    --bg: #f8fafc; 
+    --text: #0f172a; 
+    --muted: #64748b;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+  body { 
+    font-family: 'Sora', sans-serif; 
+    background: var(--bg); 
+    color: var(--text); 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    padding: 20px;
+    min-height: 100vh;
+  }
 
-.card{
-  max-width:420px;
-  margin:auto;
-  background:#fff;
-  border-radius:24px;
-  border:1px solid #e5e7eb;
-  overflow:hidden;
-}
+  /* CARD ESTILO COMPROVANTE BANCÁRIO */
+  .card-export {
+    width: 100%; 
+    max-width: 400px; 
+    background: #fff; 
+    border-radius: 28px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+    overflow: hidden; 
+    border: 1px solid var(--border);
+  }
 
-/* TOPO */
-.top{
-  text-align:center;
-  padding:28px;
-  background:linear-gradient(180deg,#f0fdf4,#fff);
-}
+  /* CABEÇALHO DINÂMICO */
+  .top-info { 
+    padding: 32px 24px; 
+    text-align: center; 
+    border-bottom: 1px solid #f1f5f9; 
+  }
+  .top-info.entrada { background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%); }
+  .top-info.saida { background: linear-gradient(180deg, #fef2f2 0%, #fff 100%); }
 
-.status{
-  font-size:12px;
-  font-weight:700;
-  color:#16a34a;
-}
+  .status-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
+  .status-label.entrada { color: var(--primary); }
+  .status-label.saida { color: var(--red); }
 
-.valor{
-  font-size:38px;
-  font-weight:800;
-  margin:10px 0;
-  color:#16a34a;
-}
+  .valor-principal { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 6px; }
+  .valor-principal.entrada { color: var(--primary); }
+  .valor-principal.saida { color: var(--red); }
 
-.data{
-  font-size:12px;
-  color:#64748b;
-}
+  .data-hora { font-size: 13px; color: var(--muted); }
 
-/* SEÇÕES */
-.section{
-  padding:20px;
-  border-top:1px solid #e5e7eb;
-}
+  /* CORPO DO COMPROVANTE */
+  .section { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; }
+  .section:last-child { border-bottom: none; }
+  
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 14px; }
+  .label { color: var(--muted); font-weight: 400; }
+  .value { color: var(--text); font-weight: 600; text-align: right; }
+  
+  .tx-id { 
+    font-family: monospace; 
+    background: #f1f5f9; 
+    padding: 3px 8px; 
+    border-radius: 6px; 
+    font-size: 11px; 
+    color: var(--muted);
+  }
 
-.row{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 0;
-}
+  /* BOTÕES DE AÇÃO */
+  .actions { width: 100%; max-width: 400px; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .btn { 
+    width: 100%; 
+    padding: 16px; 
+    border-radius: 16px; 
+    border: none; 
+    font-family: 'Sora', sans-serif; 
+    font-weight: 700; 
+    font-size: 15px;
+    cursor: pointer; 
+    transition: 0.2s; 
+  }
+  .btn-share { background: var(--primary); color: #052e16; box-shadow: 0 4px 15px rgba(34,197,94,0.2); }
+  .btn-back { background: #fff; color: var(--text); border: 1px solid var(--border); }
+  .btn:active { transform: scale(0.97); }
 
-.label{color:#64748b;}
-.value{font-weight:600;}
-
-.tx{
-  font-family:monospace;
-  background:#f1f5f9;
-  padding:4px 8px;
-  border-radius:8px;
-}
-
-/* BOTÃO */
-.btn{
-  max-width:420px;
-  width:100%;
-  margin:20px auto 0;
-  display:block;
-  padding:16px;
-  border:none;
-  border-radius:16px;
-  font-weight:700;
-  background:#22c55e;
-  color:#052e16;
-  cursor:pointer;
-}
+  .footer-auth { padding: 16px; text-align: center; background: #fafafa; border-top: 1px dashed var(--border); }
+  .auth-text { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
 </style>
 </head>
-
 <body>
 
-<div id="card" class="card">
-  <div class="top">
-    <div class="status" id="status">Carregando...</div>
-    <div class="valor" id="valor">R$ 0,00</div>
-    <div class="data" id="data"></div>
-  </div>
-
-  <div id="conteudo"></div>
+<div id="cardComprovante" class="card-export">
+    <div style="padding:50px; text-align:center; color:var(--muted)">Buscando transação...</div>
 </div>
 
-<button class="btn" onclick="share()">Compartilhar comprovante</button>
+<div class="actions">
+  <button class="btn btn-share" onclick="compartilhar()">📤 Compartilhar Comprovante</button>
+  <button class="btn btn-back" onclick="window.history.back()">Voltar</button>
+</div>
 
-<!-- 🔥 SCRIPT DO BANCO -->
 <script type="module">
 import { db, ZentryAuth, ZentryUI } from "./zentry-core.js";
-import { collection, query, where, getDocs } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const user = await ZentryAuth.exigirLogin();
-const uid = user.uid;
+async function renderizar() {
+    const user = await ZentryAuth.exigirLogin();
+    const params = new URLSearchParams(window.location.search);
+    const txId = params.get("id");
 
-// pegar ID da URL
-const params = new URLSearchParams(window.location.search);
-const txId = params.get("id");
+    if (!txId) {
+        document.getElementById('cardComprovante').innerHTML = "<p style='padding:40px; text-align:center;'>ID inválido.</p>";
+        return;
+    }
 
-if(!txId){
-  document.body.innerHTML = "<h2>Comprovante inválido</h2>";
+    const snap = await getDoc(doc(db, "usuarios", user.uid, "transacoes", txId));
+    
+    if (!snap.exists()) {
+        document.getElementById('cardComprovante').innerHTML = "<p style='padding:40px; text-align:center;'>Transação não encontrada.</p>";
+        return;
+    }
+
+    const d = snap.data();
+    
+    // Define se o dinheiro saiu (Vermelho) ou entrou (Verde)
+    const tiposSaida = ['saida', 'recarga', 'pagamento', 'cartao'];
+    const isSaida = tiposSaida.includes(d.tipo);
+    
+    // Título dinâmico por tipo de operação
+    let tituloHeader = "Transação Realizada";
+    if (d.tipo === 'entrada') tituloHeader = "Pix Recebido";
+    if (d.tipo === 'saida')   tituloHeader = "Pix Enviado";
+    if (d.tipo === 'recarga') tituloHeader = "Recarga Celular";
+    if (d.tipo === 'cartao')  tituloHeader = "Pagamento Cartão";
+
+    const container = document.getElementById('cardComprovante');
+    container.innerHTML = `
+        <div class="top-info ${isSaida ? 'saida' : 'entrada'}">
+            <div class="status-label ${isSaida ? 'saida' : 'entrada'}">${tituloHeader}</div>
+            <div class="valor-principal ${isSaida ? 'saida' : 'entrada'}">${ZentryUI.formatarMoeda(d.valor)}</div>
+            <div class="data-hora">${ZentryUI.formatarData(d.timestamp || d.criadoEm)}</div>
+        </div>
+
+        <div class="section">
+            <div class="row"><span class="label">ID Transação</span><span class="value"><span class="tx-id">${txId}</span></span></div>
+            <div class="row"><span class="label">Status</span><span class="value" style="color:var(--primary)">✓ Aprovada</span></div>
+        </div>
+
+        <div class="section">
+            <div class="row"><span class="label">${isSaida ? 'Para' : 'De'}</span><span class="value">${isSaida ? (d.nomeDestino || 'Zentry User') : (d.nomeRemetente || 'Cliente')}</span></div>
+            ${d.chavePix ? `<div class="row"><span class="label">Chave Pix</span><span class="value">${d.chavePix}</span></div>` : ''}
+            <div class="row"><span class="label">Instituição</span><span class="value">${d.instituicao || 'ZENTRY'}</span></div>
+        </div>
+
+        ${d.tipo === 'recarga' ? `
+        <div class="section">
+            <div class="row"><span class="label">Telefone</span><span class="value">${d.telefone || '-'}</span></div>
+            <div class="row"><span class="label">Operadora</span><span class="value">${d.operadora || '-'}</span></div>
+        </div>` : ''}
+
+        <div class="footer-auth">
+            <div class="auth-text">Autenticação: ${btoa(txId).substring(0,22)}</div>
+        </div>
+    `;
 }
 
-// buscar no banco
-const q = query(
-  collection(db, "usuarios", uid, "transacoes"),
-  where("id", "==", txId)
-);
+renderizar();
 
-const snap = await getDocs(q);
+window.compartilhar = async function() {
+    const btn = document.querySelector('.btn-share');
+    btn.innerHTML = "Gerando Imagem...";
+    
+    try {
+        const canvas = await html2canvas(document.getElementById("cardComprovante"), {
+            scale: 3,
+            backgroundColor: "#ffffff",
+            logging: false
+        });
+        
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        const file = new File([blob], "comprovante_zentry.png", { type: "image/png" });
 
-if(snap.empty){
-  document.body.innerHTML = "<h2>Transação não encontrada</h2>";
-}
-
-const dados = snap.docs[0].data();
-
-// formatadores
-const fmt = ZentryUI.formatarMoeda;
-const data = ZentryUI.formatarData(dados.criadoEm);
-
-// tipo
-let statusTxt = dados.tipo === "entrada" 
-  ? "Pix Recebido" 
-  : "Pix Enviado";
-
-// UI topo
-document.getElementById("status").innerText = statusTxt;
-document.getElementById("valor").innerText = fmt(dados.valor);
-document.getElementById("data").innerText = data;
-
-// conteúdo
-document.getElementById("conteudo").innerHTML = `
-<div class="section">
-  <div class="row"><span class="label">Valor</span><span class="value">${fmt(dados.valor)}</span></div>
-  <div class="row"><span class="label">Tipo</span><span class="value">${statusTxt}</span></div>
-  <div class="row"><span class="label">Descrição</span><span class="value">${dados.descricao || "-"}</span></div>
-  <div class="row"><span class="label">ID</span><span class="value"><span class="tx">${dados.id}</span></span></div>
-</div>
-
-<div class="section">
-  <div class="row"><span class="label">Destino</span><span class="value">${dados.nomeDestino || "-"}</span></div>
-  <div class="row"><span class="label">Chave Pix</span><span class="value">${dados.chavePix || "-"}</span></div>
-</div>
-
-<div class="section">
-  <div class="row"><span class="label">Origem</span><span class="value">${dados.nomeRemetente}</span></div>
-  <div class="row"><span class="label">Instituição</span><span class="value">ZENTRY</span></div>
-</div>
-`;
+        if (navigator.share) {
+            await navigator.share({
+                files: [file],
+                title: 'Comprovante Zentry',
+                text: 'Segue o comprovante da minha transação.'
+            });
+        } else {
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL();
+            link.download = "comprovante_zentry.png";
+            link.click();
+        }
+    } catch (e) {
+        alert("Erro ao compartilhar comprovante.");
+    }
+    btn.innerHTML = "📤 Compartilhar Comprovante";
+};
 </script>
-
-<!-- 🔥 SHARE NATIVO ANDROID -->
-<script>
-async function share(){
- const canvas = await html2canvas(document.getElementById("card"),{
-   scale:3,
-   backgroundColor:"#fff"
- });
-
- const blob = await new Promise(r=>canvas.toBlob(r));
- const file = new File([blob],"comprovante.png",{type:"image/png"});
-
- if(navigator.share){
-   await navigator.share({
-     files:[file],
-     title:"Comprovante Pix",
-     text:"Comprovante de pagamento"
-   });
- } else {
-   const a=document.createElement("a");
-   a.href=canvas.toDataURL();
-   a.download="comprovante.png";
-   a.click();
- }
-}
-</script>
-
 </body>
 </html>
