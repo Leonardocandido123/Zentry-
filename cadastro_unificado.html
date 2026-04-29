@@ -149,182 +149,162 @@
     </div>
 
     <div id="recaptcha-container"></div>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+        getAuth,
+        RecaptchaVerifier,
+        signInWithPhoneNumber,
+        EmailAuthProvider,
+        linkWithCredential
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import {
-            getAuth,
-            RecaptchaVerifier,
-            signInWithPhoneNumber,
-            EmailAuthProvider,
-            linkWithCredential
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
+        authDomain: "zentry-app-74275.firebaseapp.com",
+        projectId: "zentry-app-74275",
+        storageBucket: "zentry-app-74275.appspot.com",
+        messagingSenderId: "571422826071",
+        appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
+    };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
-            authDomain: "zentry-app-74275.firebaseapp.com",
-            projectId: "zentry-app-74275",
-            storageBucket: "zentry-app-74275.appspot.com",
-            messagingSenderId: "571422826071",
-            appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
-        };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    // --- Modal ---
+    function showZModal(titulo, texto, icon) {
+        document.getElementById('zModalGlobal').style.display = 'flex';
+        document.getElementById('zTitle').innerText = titulo;
+        document.getElementById('zText').innerText = texto;
+        document.getElementById('zIcon').innerText = icon;
+    }
+    document.getElementById('zBtnClose').onclick = () => document.getElementById('zModalGlobal').style.display = 'none';
 
-        // --- Modal ---
-        function showZModal(titulo, texto, icon) {
-            document.getElementById('zModalGlobal').style.display = 'flex';
-            document.getElementById('zTitle').innerText = titulo;
-            document.getElementById('zText').innerText = texto;
-            document.getElementById('zIcon').innerText = icon;
-        }
-        document.getElementById('zBtnClose').onclick = () => document.getElementById('zModalGlobal').style.display = 'none';
+    // --- Máscaras ---
+    const inputCPF = document.getElementById('cad_cpf');
+    const inputTel = document.getElementById('cad_tel');
 
-        // --- Máscaras ---
-        const inputCPF = document.getElementById('cad_cpf');
-        const inputTel = document.getElementById('cad_tel');
-
-        inputCPF.addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, "");
-            v = v.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-            e.target.value = v;
-        });
-
-        inputTel.addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, "");
-            v = v.replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
-            e.target.value = v;
-        });
-
-        // --- reCAPTCHA invisível (necessário para Phone Auth) ---
-        const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible'
-        });
-
-        // --- Navegação ---
-        let currentStep = 0;
-        const totalSteps = 7;
-        const slider = document.getElementById('main-slider');
-        const pBar = document.getElementById('p-bar');
-        const nextBtn = document.getElementById('nextBtn');
-        const finishBtn = document.getElementById('finishBtn');
-        let confirmationResult = null;
-
-        async function avancar() {
-            // Saindo do passo do telefone -> envia SMS de verdade
-            if (currentStep === 2) {
-                const numeroLimpo = inputTel.value.replace(/\D/g, "");
-                if (numeroLimpo.length < 10) {
-                    showZModal("Número inválido", "Digite um celular válido com DDD.", "📱");
-                    return;
-                }
-                const numeroE164 = "+55" + numeroLimpo;
-
-                nextBtn.classList.remove('active');
-                document.getElementById('token-msg').innerText = "Enviando código...";
-
-                try {
-                    confirmationResult = await signInWithPhoneNumber(auth, numeroE164, recaptchaVerifier);
-                    document.getElementById('token-msg').innerText = "Código enviado para " + inputTel.value;
-                } catch (e) {
-                    console.error(e);
-                    let msg = "Não conseguimos enviar o SMS. Verifique o número e tente novamente.";
-                    if (e.code === 'auth/too-many-requests') msg = "Muitas tentativas. Aguarde um pouco.";
-                    if (e.code === 'auth/invalid-phone-number') msg = "Número de celular inválido.";
-                    showZModal("Erro no SMS", msg, "❌");
-                    return;
-                }
-            }
-
-            // Saindo do passo do token -> confirma código
-            if (currentStep === 3) {
-                const inputs = document.querySelectorAll('.token-input');
-                let digitado = "";
-                inputs.forEach(i => digitado += i.value);
-                if (digitado.length !== 6) {
-                    showZModal("Código incompleto", "Digite os 6 dígitos do SMS.", "📱");
-                    return;
-                }
-                if (!confirmationResult) {
-                    showZModal("Sessão perdida", "Volte e solicite o código novamente.", "⚠️");
-                    return;
-                }
-
-                try {
-                    await confirmationResult.confirm(digitado);
-                } catch (e) {
-                    console.error(e);
-                    showZModal("Código inválido", "O código inserido não confere. Tente novamente.", "❌");
-                    return;
-                }
-            }
-
-            if (currentStep < totalSteps - 1) {
-                currentStep++;
-                const deslocamento = currentStep * (100 / totalSteps);
-                slider.style.transform = `translateX(-${deslocamento}%)`;
-                pBar.style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
-
-                if (currentStep === 6) {
-                    nextBtn.style.display = 'none';
-                    finishBtn.style.display = 'block';
-                }
-                nextBtn.classList.remove('active');
-            }
-        }
-
-        nextBtn.onclick = avancar;
-
-        // --- Pulos no token ---
-        const tokenInputs = document.querySelectorAll('.token-input');
-        tokenInputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                if (e.target.value.length === 1 && index < tokenInputs.length - 1) tokenInputs[index + 1].focus();
-                if (Array.from(tokenInputs).every(i => i.value.length === 1)) nextBtn.classList.add('active');
-            });
-            input.addEventListener('keydown', (e) => {
-                if (e.key === "Backspace" && input.value === "" && index > 0) tokenInputs[index - 1].focus();
-            });
-        });
-
-        // --- Finalização: vincula e-mail/senha ao usuário já autenticado por SMS ---
-        // Trecho final do seu script que garante a integração com o login
-try {
-    const credential = EmailAuthProvider.credential(email, senha);
-    await linkWithCredential(user, credential);
-
-    await setDoc(doc(db, "usuarios", user.uid), {
-        nome, cpf, telefone: tel, email,
-        saldo: 0,
-        transacoes: [], // Já inicia o array de extrato vazio
-        dataCriacao: new Date().toISOString()
+    inputCPF.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, "");
+        v = v.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        e.target.value = v;
+        validarBotao();
     });
 
-    // CRUCIAL: Salva o e-mail para a tela de login usar depois
-    localStorage.setItem("usuarioEmail", email); 
-    
-    showZModal("Bem-vindo!", "Sua conta ZENTRY foi criada com sucesso.", "🎉");
-    
-    setTimeout(() => { 
-        window.location.href = "login.html"; 
-    }, 2500);
+    inputTel.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, "");
+        v = v.replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
+        e.target.value = v;
+        validarBotao();
+    });
 
-} catch (error) {
-    // Tratamento de erros já incluso no seu código
-}
-        
+    // --- Navegação e Lógica de Pulo ---
+    let currentStep = 0;
+    const totalSteps = 7;
+    const slider = document.getElementById('main-slider');
+    const pBar = document.getElementById('p-bar');
+    const nextBtn = document.getElementById('nextBtn');
+    const finishBtn = document.getElementById('finishBtn');
 
-        finishBtn.onclick = finalizar;
-
-        document.querySelectorAll('.input-line').forEach(input => {
-            input.addEventListener('input', () => {
-                if (input.value.length >= 3) nextBtn.classList.add('active');
-                else nextBtn.classList.remove('active');
-            });
+    // Função para validar se o botão deve ficar verde
+    function validarBotao() {
+        const inputsAtuais = slider.children[currentStep].querySelectorAll('input');
+        let tudoPreenchido = true;
+        inputsAtuais.forEach(input => {
+            if (input.value.length < 3) tudoPreenchido = false;
         });
-    </script>
+
+        if (tudoPreenchido) nextBtn.classList.add('active');
+        else nextBtn.classList.remove('active');
+    }
+
+    async function avancar() {
+        // MODO TESTE: Simulando envio de SMS
+        if (currentStep === 2) {
+            document.getElementById('token-msg').innerText = "Simulando envio para " + inputTel.value;
+            // Não chama mais o Firebase aqui para não dar erro de SMS
+        }
+
+        // MODO TESTE: Simulando validação do código
+        if (currentStep === 3) {
+            const inputs = document.querySelectorAll('.token-input');
+            let digitado = "";
+            inputs.forEach(i => digitado += i.value);
+            if (digitado.length !== 6) {
+                showZModal("Código incompleto", "Digite 6 números para testar.", "📱");
+                return;
+            }
+            // Passa direto sem validar no Firebase
+        }
+
+        if (currentStep < totalSteps - 1) {
+            currentStep++;
+            const deslocamento = currentStep * (100 / totalSteps);
+            slider.style.transform = `translateX(-${deslocamento}%)`;
+            pBar.style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
+
+            if (currentStep === 6) {
+                nextBtn.style.display = 'none';
+                finishBtn.style.display = 'block';
+            }
+            nextBtn.classList.remove('active');
+            validarBotao(); // Checa o próximo campo
+        }
+    }
+
+    nextBtn.onclick = avancar;
+
+    // --- Pulos no token ---
+    const tokenInputs = document.querySelectorAll('.token-input');
+    tokenInputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            if (e.target.value.length === 1 && index < tokenInputs.length - 1) tokenInputs[index + 1].focus();
+            validarBotao();
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === "Backspace" && input.value === "" && index > 0) tokenInputs[index - 1].focus();
+        });
+    });
+
+    // --- Finalização ---
+    async function finalizar() {
+        const nome = document.getElementById('cad_nome').value;
+        const cpf = document.getElementById('cad_cpf').value;
+        const tel = document.getElementById('cad_tel').value;
+        const email = document.getElementById('cad_email').value;
+        const senha = document.getElementById('cad_senha').value;
+
+        try {
+            // No modo teste, vamos criar o doc direto no Firestore usando o email como ID ou um ID gerado
+            const tempID = "user_" + Math.floor(Math.random() * 1000000);
+            
+            await setDoc(doc(db, "usuarios", tempID), {
+                nome, cpf, telefone: tel, email, senha, // salvando senha direto para o seu teste
+                saldo: 0,
+                transacoes: [],
+                dataCriacao: new Date().toISOString()
+            });
+
+            localStorage.setItem("usuarioEmail", email); 
+            showZModal("Sucesso!", "Conta de teste criada (SMS pulado).", "🎉");
+            
+            setTimeout(() => { window.location.href = "login.html"; }, 2500);
+        } catch (error) {
+            console.error(error);
+            showZModal("Erro", "Erro ao salvar dados.", "❌");
+        }
+    }
+
+    finishBtn.onclick = finalizar;
+
+    // Listener global para inputs ficarem verdes
+    document.querySelectorAll('.input-line').forEach(input => {
+        input.addEventListener('input', validarBotao);
+    });
+
+        </script>
+    
 </body>
 </html>
