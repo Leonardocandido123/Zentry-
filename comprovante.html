@@ -106,75 +106,77 @@
   <button class="btn btn-back" onclick="window.history.back()">Voltar</button>
 </div>
   <script type="module">
-import { db, ZentryUI } from "./zentry-core.js";
+import { db, ZentryUI, ZentryUser } from "./zentry-core.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 async function renderizar() {
-    // 1. TROCA AQUI: Em vez de ZentryAuth.exigirLogin, pegamos o ID do localStorage
-    const uid = localStorage.getItem("idUsuarioLogado");
     const params = new URLSearchParams(window.location.search);
     const txId = params.get("id");
 
-    if (!uid || !txId) {
-        document.getElementById('cardComprovante').innerHTML = "<p style='padding:40px; text-align:center;'>Sessão expirada ou ID inválido.</p>";
-        // Opcional: window.location.href = "login.html";
+    // 1. Usamos a função do core para achar o ID do documento pelo e-mail salvo
+    const userDocId = await ZentryUser.obterIdPorEmail();
+
+    if (!userDocId || !txId) {
+        document.getElementById('cardComprovante').innerHTML = `
+            <div style="padding:40px; text-align:center;">
+                <p>Sessão expirada ou Transação inválida.</p>
+                <button class="btn btn-back" style="margin-top:20px" onclick="window.location.href='home.html'">Voltar ao Início</button>
+            </div>`;
         return;
     }
 
-    // 2. Busca a transação usando o UID que pegamos no passo anterior
     try {
-        const snap = await getDoc(doc(db, "usuarios", uid, "transacoes", txId));
+        // 2. Busca a transação dentro da subcoleção do usuário correto
+        const snap = await getDoc(doc(db, "usuarios", userDocId, "transacoes", txId));
         
         if (!snap.exists()) {
-            document.getElementById('cardComprovante').innerHTML = "<p style='padding:40px; text-align:center;'>Transação não encontrada.</p>";
+            document.getElementById('cardComprovante').innerHTML = "<p style='padding:40px; text-align:center;'>Transação não encontrada no banco.</p>";
             return;
         }
 
         const d = snap.data();
         
-        // Define se o dinheiro saiu (Vermelho) ou entrou (Verde)
+        // Define cores (Vermelho para saída/recarga, Verde para entrada)
         const tiposSaida = ['saida', 'recarga', 'pagamento', 'cartao'];
         const isSaida = tiposSaida.includes(d.tipo);
         
-        // Título dinâmico por tipo de operação
+        // Título baseado no que foi salvo na Recarga ou Pix
         let tituloHeader = "Transação Realizada";
         if (d.tipo === 'entrada') tituloHeader = "Pix Recebido";
         if (d.tipo === 'saida')   tituloHeader = "Pix Enviado";
         if (d.tipo === 'recarga') tituloHeader = "Recarga Celular";
-        if (d.tipo === 'cartao')  tituloHeader = "Pagamento Cartão";
 
         const container = document.getElementById('cardComprovante');
         container.innerHTML = `
             <div class="top-info ${isSaida ? 'saida' : 'entrada'}">
                 <div class="status-label ${isSaida ? 'saida' : 'entrada'}">${tituloHeader}</div>
                 <div class="valor-principal ${isSaida ? 'saida' : 'entrada'}">${ZentryUI.formatarMoeda(d.valor)}</div>
-                <div class="data-hora">${ZentryUI.formatarData(d.timestamp || d.criadoEm)}</div>
+                <div class="data-hora">${ZentryUI.formatarData(d.timestamp)}</div>
             </div>
 
             <div class="section">
                 <div class="row"><span class="label">ID Transação</span><span class="value"><span class="tx-id">${txId}</span></span></div>
-                <div class="row"><span class="label">Status</span><span class="value" style="color:var(--primary)">✓ Aprovada</span></div>
+                <div class="row"><span class="label">Status</span><span class="value" style="color:var(--primary)">✓ Concluída</span></div>
             </div>
 
             <div class="section">
-                <div class="row"><span class="label">${isSaida ? 'Para' : 'De'}</span><span class="value">${isSaida ? (d.nomeDestino || 'Zentry User') : (d.nomeRemetente || 'Cliente')}</span></div>
-                ${d.chavePix ? `<div class="row"><span class="label">Chave Pix</span><span class="value">${d.chavePix}</span></div>` : ''}
-                <div class="row"><span class="label">Instituição</span><span class="value">${d.instituicao || 'ZENTRY'}</span></div>
+                <div class="row"><span class="label">${isSaida ? 'Destino' : 'Origem'}</span><span class="value">${d.descricao || (isSaida ? 'Pagamento' : 'Recebimento')}</span></div>
+                <div class="row"><span class="label">Instituição</span><span class="value">${d.instituicao || 'ZENTRY BANK'}</span></div>
             </div>
 
             ${d.tipo === 'recarga' ? `
             <div class="section">
-                <div class="row"><span class="label">Telefone</span><span class="value">${d.telefone || '-'}</span></div>
-                <div class="row"><span class="label">Operadora</span><span class="value">${d.operadora || '-'}</span></div>
+                <div class="row"><span class="label">Operadora</span><span class="value">${d.descricao.replace('Recarga ', '')}</span></div>
+                <div class="row"><span class="label">Canal</span><span class="value">App Mobile</span></div>
             </div>` : ''}
 
             <div class="footer-auth">
-                <div class="auth-text">Autenticação: ${btoa(txId).substring(0,22)}</div>
+                <div class="auth-text">Autenticação Digital: ${txId.substring(0,18).toUpperCase()}</div>
             </div>
         `;
     } catch (e) {
         console.error("Erro ao buscar comprovante:", e);
-        document.getElementById('cardComprovante').innerHTML = "<p style='padding:40px; text-align:center;'>Erro ao carregar dados.</p>";
+        document.getElementById('cardComprovante').innerHTML = "<p style='padding:40px; text-align:center;'>Erro de conexão com o banco.</p>";
     }
 }
 
@@ -182,23 +184,24 @@ renderizar();
 
 window.compartilhar = async function() {
     const btn = document.querySelector('.btn-share');
+    const textoOriginal = btn.innerHTML;
     btn.innerHTML = "Gerando Imagem...";
     
     try {
         const canvas = await html2canvas(document.getElementById("cardComprovante"), {
-            scale: 3,
+            scale: 2,
             backgroundColor: "#ffffff",
-            logging: false
+            useCORS: true
         });
         
         const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
         const file = new File([blob], "comprovante_zentry.png", { type: "image/png" });
 
-        if (navigator.share) {
+        if (navigator.share && navigator.canShare({ files: [file] })) {
             await navigator.share({
                 files: [file],
                 title: 'Comprovante Zentry',
-                text: 'Segue o comprovante da minha transação.'
+                text: 'Comprovante de transação realizada via Zentry App.'
             });
         } else {
             const link = document.createElement("a");
@@ -207,12 +210,12 @@ window.compartilhar = async function() {
             link.click();
         }
     } catch (e) {
-        alert("Erro ao compartilhar comprovante.");
+        alert("Erro ao compartilhar. Você pode tirar um print da tela!");
     }
-    btn.innerHTML = "📤 Compartilhar Comprovante";
+    btn.innerHTML = textoOriginal;
 };
   </script>
   
-
+  
 </body>
 </html>
