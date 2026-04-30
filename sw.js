@@ -3,7 +3,8 @@
 // ============================================================
 
 // MUDEI O NOME AQUI PARA FORÇAR O CELULAR A APAGAR O ANTIGO
-const CACHE_NAME = 'zentry-v-10-segundos'; 
+const CACHE_NAME = 'zentry-v-final-ajustado'; 
+
 
 const ARQUIVOS_CACHE = [
   './',
