@@ -133,22 +133,10 @@
 <div class="footer-action">
     <button class="btn-main" id="btnMain">Continuar</button>
 </div>
-
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, updateDoc, getDocs, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
-        authDomain: "zentry-app-74275.firebaseapp.com",
-        projectId: "zentry-app-74275",
-        storageBucket: "zentry-app-74275.appspot.com",
-        messagingSenderId: "571422826071",
-        appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // Importamos o seu core para manter o padrão de moeda e banco
+    import { db, ZentryUI } from './zentry-core.js';
+    import { doc, setDoc, updateDoc, getDocs, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let userEmail = localStorage.getItem("usuarioEmail");
     let userDocId = "";
@@ -166,12 +154,21 @@
 
     async function init() {
         if (!userEmail) { window.location.href = "login.html"; return; }
+        
+        // Busca o ID do documento pelo e-mail salvo
         const q = query(collection(db, "usuarios"), where("email", "==", userEmail));
         const snap = await getDocs(q);
+        
+        if (snap.empty) {
+            console.error("Usuário não encontrado no banco.");
+            return;
+        }
+
         snap.forEach(d => {
             userDocId = d.id;
             saldoAtual = d.data().saldo || 0;
-            document.getElementById('displaySaldo').innerText = `R$ ${saldoAtual.toFixed(2)}`;
+            // Usando o formatador do seu CORE
+            document.getElementById('displaySaldo').innerText = ZentryUI.formatarMoeda(saldoAtual);
         });
     }
     init();
@@ -192,13 +189,12 @@
         operadora = card.dataset.op;
     });
 
-    // Seleção de Plano (Global)
+    // Seleção de Plano (Global para o onclick do HTML funcionar)
     window.selecionarPlanoNoJS = (idx, valor, dados) => {
         planoSel = { v: valor, d: dados };
         document.querySelectorAll('.plano-card').forEach(c => c.classList.remove('active'));
-        // Encontra o card clicado
         const cards = document.querySelectorAll('.plano-card');
-        cards[idx].classList.add('active');
+        if(cards[idx]) cards[idx].classList.add('active');
     };
 
     function irPara(n) {
@@ -220,7 +216,7 @@
             const lista = document.getElementById('listaPlanos');
             lista.innerHTML = PLANOS[operadora].map((p, i) => `
                 <div class="plano-card" onclick="window.selecionarPlanoNoJS(${i}, ${p.v}, '${p.d}')">
-                    <div class="plano-valor">R$ ${p.v.toFixed(2)}</div>
+                    <div class="plano-valor">${ZentryUI.formatarMoeda(p.v)}</div>
                     <div class="plano-tag">${p.d} de Internet</div>
                 </div>
             `).join('');
@@ -233,22 +229,35 @@
             document.getElementById('confirmNum').innerText = document.getElementById('numTel').value;
             document.getElementById('confirmOp').innerText = operadora;
             document.getElementById('confirmPlano').innerText = planoSel.d;
-            document.getElementById('confirmTotal').innerText = `R$ ${planoSel.v.toFixed(2)}`;
+            document.getElementById('confirmTotal').innerText = ZentryUI.formatarMoeda(planoSel.v);
             irPara(2);
             btn.innerText = "Confirmar Pagamento";
 
         } else if (etapa === 2) {
             btn.disabled = true; btn.innerText = "Processando...";
             try {
+                // Geramos um ID único para a transação
                 const txId = "REC" + Date.now();
+                
+                // 1. Grava a transação para aparecer no EXTRATO
                 await setDoc(doc(db, "usuarios", userDocId, "transacoes", txId), {
-                    tipo: "saida", valor: planoSel.v, descricao: `Recarga ${operadora}`, timestamp: serverTimestamp()
+                    tipo: "saida", 
+                    valor: planoSel.v, 
+                    descricao: `Recarga ${operadora}`, 
+                    timestamp: serverTimestamp() // Importante: seu extrato usa esse campo!
                 });
-                await updateDoc(doc(db, "usuarios", userDocId), { saldo: saldoAtual - planoSel.v });
+
+                // 2. Atualiza o saldo do usuário
+                await updateDoc(doc(db, "usuarios", userDocId), { 
+                    saldo: saldoAtual - planoSel.v 
+                });
+
                 irPara(3);
                 btn.style.display = 'none';
+                document.getElementById('barTitle').innerText = "Sucesso";
             } catch (e) {
-                alert("Erro ao processar!");
+                console.error(e);
+                alert("Erro ao processar recarga.");
                 btn.disabled = false; btn.innerText = "Confirmar Pagamento";
             }
         }
@@ -256,14 +265,17 @@
 
     document.getElementById('btnVoltar').onclick = () => {
         if (etapa === 0) window.location.href = 'home.html';
+        else if (etapa === 3) window.location.href = 'home.html';
         else {
             document.getElementById(`tela${etapa}`).classList.remove('ativa');
             etapa--;
             document.getElementById(`tela${etapa}`).classList.add('ativa');
             document.getElementById('btnMain').innerText = "Continuar";
+            document.getElementById('btnMain').disabled = false;
         }
     };
 </script>
+    
 </body>
                 </html>
                 
