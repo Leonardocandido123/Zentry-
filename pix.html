@@ -184,35 +184,61 @@
     </div>
   </div>
 </div>
-
 <script type="module">
-  import { auth, db, ZentryAuth, ZentryUser, ZentryUI } from './zentry-core.js';
+  import { db, ZentryAuth, ZentryUser, ZentryUI } from './zentry-core.js';
+  import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   let saldoOculto = false;
   let saldoReal   = 0;
 
   async function init() {
-    const user = await ZentryAuth.exigirLogin();
+    // 1. Em vez de exigirLogin (que as vezes buga o redirecionamento), 
+    // pegamos o ID que o Extrato salvou ou buscamos pelo e-mail
+    let userDocId = localStorage.getItem("idUsuarioLogado");
 
-    // Escuta saldo em tempo real
-    ZentryUser.escutar(user.uid, (dados) => {
-      saldoReal = Number(dados.saldo || 0);
-      localStorage.setItem("saldo_atual", saldoReal);
-      if (!saldoOculto) {
-        document.getElementById('saldo-txt').innerText = ZentryUI.formatarMoeda(saldoReal);
+    if (!userDocId) {
+       userDocId = await ZentryUser.obterIdPorEmail();
+    }
+
+    if (!userDocId) {
+      console.log("Usuário não identificado, voltando ao login...");
+      window.location.href = "login.html";
+      return;
+    }
+
+    // 2. Escuta o saldo direto pelo ID correto (Ex: user_914718)
+    onSnapshot(doc(db, "usuarios", userDocId), (snap) => {
+      if (snap.exists()) {
+        const dados = snap.data();
+        saldoReal = Number(dados.saldo || 0);
+        
+        // Atualiza a interface
+        const txt = document.getElementById('saldo-txt');
+        if (!saldoOculto) {
+          txt.innerText = ZentryUI.formatarMoeda(saldoReal);
+        }
       }
     });
   }
 
+  // Inicializa a página
   init();
 
+  // Função de esconder/mostrar saldo
   window.toggleSaldo = function() {
     saldoOculto = !saldoOculto;
     const txt = document.getElementById('saldo-txt');
     const eye = document.getElementById('eye-icon');
-    txt.innerText = saldoOculto ? "••••••••" : ZentryUI.formatarMoeda(saldoReal);
-    eye.style.opacity = saldoOculto ? "0.4" : "1";
+    
+    if (saldoOculto) {
+      txt.innerText = "••••••••";
+      eye.style.stroke = "#6b7a99"; // Cor de "apagado"
+    } else {
+      txt.innerText = ZentryUI.formatarMoeda(saldoReal);
+      eye.style.stroke = "#22c55e"; // Cor de "ativo"
+    }
   };
 </script>
+  
 </body>
 </html>
