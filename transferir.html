@@ -394,7 +394,7 @@
   <button class="btn-main" id="btnMain" onclick="avancarEtapa()" disabled>Continuar</button>
   <button class="btn-sec"  id="btnSec"  onclick="irParaComprovante()" style="display:none;">Ver comprovante completo</button>
 </div>
-  <script type="module">
+ <script type="module">
   import { db, ZentryAuth, ZentryUser, ZentryUI } from './zentry-core.js';
   import { doc, setDoc, updateDoc, collection, getDocs, getDoc, onSnapshot, increment }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -404,14 +404,12 @@
   let dadosTransacao    = null;
   let buscaTimer        = null;
 
-  // ── INIT CORRIGIDO ──
+  // ── INIT ──
   async function init() {
-    // 1. Pegamos o ID que o sistema está usando (o do documento)
     userDocId = localStorage.getItem("idUsuarioLogado");
 
     if (!userDocId) {
-       // Fallback caso o localStorage suma
-       userDocId = await ZentryUser.obterIdPorEmail();
+      userDocId = await ZentryUser.obterIdPorEmail();
     }
 
     if (!userDocId) {
@@ -419,13 +417,18 @@
       return;
     }
 
-    // 2. Escuta saldo em tempo real pelo ID do Documento
     onSnapshot(doc(db, "usuarios", userDocId), (snap) => {
       if (snap.exists()) {
-        saldoAtual = Number(snap.data().saldo || 0);
+        const data = snap.data();
+        saldoAtual = Number(data.saldo || 0);
         document.getElementById('displaySaldo').innerText = ZentryUI.formatarMoeda(saldoAtual);
         document.getElementById('saldoDisp').innerText    = "Saldo disponível: " + ZentryUI.formatarMoeda(saldoAtual);
-        document.getElementById('btnMain').disabled = (etapa === 1 && parseFloat(document.getElementById('valorInput').value) <= 0);
+        
+        // Mantém o botão desabilitado se o valor for inválido na etapa 1
+        if(etapa === 1) {
+           const v = parseFloat(document.getElementById('valorInput').value.replace(',','.')) || 0;
+           document.getElementById('btnMain').disabled = (v <= 0 || v > saldoAtual);
+        }
       }
     });
 
@@ -433,7 +436,6 @@
   }
   init();
 
-  // ── DETECTAR TIPO DE CHAVE ──
   function detectarTipo(v) {
     const s = v.replace(/\D/g,'');
     if (v.includes('@')) return { tipo:'email', label:'E-mail' };
@@ -444,7 +446,6 @@
     return null;
   }
 
-  // ── MÁSCARA ──
   function aplicarMascara(val) {
     let s = val.replace(/\D/g,'');
     if (val.includes('@')) return val;
@@ -459,7 +460,6 @@
     return val;
   }
 
-  // ── INPUT DA CHAVE ──
   document.getElementById('chaveInput').addEventListener('input', function(e) {
     const raw = e.target.value;
     if (!raw.includes('@') && raw.length < 37) {
@@ -524,7 +524,6 @@
     }
   }
 
-  // ── VALOR ──
   document.getElementById('valorInput').addEventListener('input', function(e) {
     let v = e.target.value.replace(/\D/g,'');
     v = (parseInt(v||'0') / 100).toFixed(2).replace('.',',');
@@ -541,7 +540,8 @@
     for (let i=1; i<=4; i++) {
       document.getElementById(`p${i}`).className = 'pin-dot' + (i <= pin.value.length ? ' ok' : '');
     }
-    document.getElementById('btnMain').disabled = pin.value.length < 4;
+    // O botão da etapa 2 (senha) só habilita com 4 dígitos
+    if(etapa === 2) document.getElementById('btnMain').disabled = pin.value.length < 4;
   }
 
   function irPara(n) {
@@ -551,6 +551,10 @@
     atualizarDots();
     const titles = ["Transferir Pix","Valor","Confirmação","Concluído"];
     document.getElementById('barTitle').textContent = titles[n];
+    
+    // Reseta estado do botão conforme a tela
+    const btn = document.getElementById('btnMain');
+    if(n === 2) btn.disabled = document.getElementById('hiddenPin').value.length < 4;
   }
 
   function atualizarDots() {
@@ -582,20 +586,29 @@
       dadosTransacao = { valor: v, destino: destinoEncontrado, chave, desc };
       irPara(2);
       btn.textContent = "Confirmar Pix";
-      btn.disabled = true;
     } else if (etapa === 2) {
       const pin = document.getElementById('hiddenPin').value;
+      
+      // TRAVA DE SEGURANÇA NO BOTÃO
+      btn.disabled = true;
+      btn.textContent = "Validando...";
+
       const userSnap = await getDoc(doc(db, "usuarios", userDocId));
       const userData = userSnap.data();
 
-      if (pin !== String(userData?.senha || '')) {
+      // CORREÇÃO DO TRAVAMENTO: Compara como String
+      if (String(pin) !== String(userData?.senha || '')) {
         ZentryUI.toast("Senha incorreta!", "erro");
         document.getElementById('hiddenPin').value = "";
         onPin();
+        btn.textContent = "Confirmar Pix";
+        btn.disabled = false;
         return;
       }
 
       ZentryUI.loading(true);
+      btn.textContent = "Processando...";
+
       try {
         const { valor, destino, chave, desc } = dadosTransacao;
         const txId = "PIX" + Date.now();
@@ -612,7 +625,7 @@
         if (destino.uid !== 'externo') {
           await updateDoc(doc(db, "usuarios", destino.uid), { saldo: increment(valor) });
           await setDoc(doc(db, "usuarios", destino.uid, "transacoes", txId + "R"), {
-            tipo: "entrada", valor, descricao: "Pix recebido",
+            tipo: "entrada", valor, descricao: "Pix recebido de " + (userData.nome || "Zentry User"),
             nomeRemetente: userData.nome, timestamp: agora, id: txId + "R"
           });
         }
@@ -626,9 +639,13 @@
 
         irPara(3);
         btn.textContent = "Voltar ao Início";
+        btn.disabled = false;
         document.getElementById('btnSec').style.display = "block";
       } catch(e) {
+        console.error(e);
         ZentryUI.toast("Erro ao processar.", "erro");
+        btn.textContent = "Confirmar Pix";
+        btn.disabled = false;
       } finally {
         ZentryUI.loading(false);
       }
@@ -644,11 +661,10 @@
   };
 
   window.irParaComprovante = () => {
-    // Passa o ID da última transação para a tela de comprovante
-    const txId = "PIX" + (Date.now()-1000); // Aproximação ou salvar em variável global
+    const txId = "PIX" + (Date.now()-2000); 
     window.location.href = `comprovante.html?id=${txId}`;
   };
-  </script>
+      </script>
   
 </body>
 </html>
