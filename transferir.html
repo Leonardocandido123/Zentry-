@@ -493,67 +493,94 @@
     document.getElementById('barTitle').textContent = titles[n];
     for (let i=0; i<4; i++) document.getElementById(`dot${i}`).className = 'step-dot' + (i==n?' active':(i<n?' done':''));
   }
-
   window.avancarEtapa = async function() {
     const btn = document.getElementById('btnMain');
-    if (etapa === 0) irPara(1);
-    else if (etapa === 1) {
+
+    if (etapa === 0) {
+      irPara(1);
+    } else if (etapa === 1) {
+      // ... (sua lógica de pegar valores continua igual)
       dadosTransacao = { 
         valor: parseFloat(document.getElementById('valorInput').value.replace(',','.')),
         chave: document.getElementById('chaveInput').value,
         desc: document.getElementById('descInput').value || "Transferência Pix"
       };
-      document.getElementById('confirmNome').textContent = destinoEncontrado.nome;
-      document.getElementById('confirmValor').textContent = ZentryUI.formatarMoeda(dadosTransacao.valor);
-      document.getElementById('confirmChave').textContent = dadosTransacao.chave;
       irPara(2);
       btn.textContent = "Confirmar Pix";
     } else if (etapa === 2) {
+      // Bloqueia o botão para não clicar duas vezes
       btn.disabled = true;
       btn.textContent = "Validando...";
-      
-      const userSnap = await getDoc(doc(db, "usuarios", userDocId));
-      const senhaBanco = String(userSnap.data()?.senha);
-      const senhaDigitada = String(document.getElementById('hiddenPin').value);
 
-      if (senhaDigitada !== senhaBanco) {
-        ZentryUI.toast("Senha incorreta", "erro");
-        btn.disabled = false; btn.textContent = "Confirmar Pix";
-        return;
-      }
-
-      ZentryUI.loading(true);
       try {
-        const txId = "TX" + Date.now();
-        const agora = new Date();
-        
-        // Operações no Firebase
-        await updateDoc(doc(db, "usuarios", userDocId), { saldo: increment(-dadosTransacao.valor) });
-        await setDoc(doc(db, "usuarios", userDocId, "transacoes", txId), {
-          tipo: "saida", valor: dadosTransacao.valor, nomeDestino: destinoEncontrado.nome, timestamp: agora, status: "concluido"
-        });
+        const userSnap = await getDoc(doc(db, "usuarios", userDocId));
+        const userData = userSnap.data();
+        const pinDigitado = document.getElementById('hiddenPin').value;
 
-        if (destinoEncontrado.uid !== 'externo') {
-          await updateDoc(doc(db, "usuarios", destinoEncontrado.uid), { saldo: increment(dadosTransacao.valor) });
+        // Validação de senha
+        if (String(pinDigitado) !== String(userData?.senha)) {
+          ZentryUI.toast("Senha incorreta!", "erro");
+          btn.disabled = false;
+          btn.textContent = "Confirmar Pix";
+          return;
         }
 
-        // Sucesso
+        ZentryUI.loading(true);
+        btn.textContent = "Processando...";
+
+        const txId = "PIX" + Date.now();
+        const agora = new Date();
+
+        // --- A MÁGICA ESTÁ AQUI: Gravação Direta ---
+        // 1. Atualiza o saldo do remetente
+        await updateDoc(doc(db, "usuarios", userDocId), { 
+          saldo: increment(-dadosTransacao.valor) 
+        });
+
+        // 2. Cria o registro da transação (usando uma estrutura mais simples)
+        const transacaoRef = doc(db, "usuarios", userDocId, "transacoes", txId);
+        await setDoc(transacaoRef, {
+          tipo: "saida",
+          valor: dadosTransacao.valor,
+          destino: destinoEncontrado.nome,
+          chave: dadosTransacao.chave,
+          data: agora,
+          status: "concluido"
+        });
+
+        // 3. Se for usuário interno, atualiza o outro lado
+        if (destinoEncontrado.uid !== 'externo') {
+          await updateDoc(doc(db, "usuarios", destinoEncontrado.uid), { 
+            saldo: increment(dadosTransacao.valor) 
+          });
+        }
+
+        // --- FINALIZAÇÃO ---
+        // Preenche a tela de sucesso antes de mudar
         document.getElementById('sucessoSub').textContent = ZentryUI.formatarMoeda(dadosTransacao.valor) + " enviado.";
         document.getElementById('compNome').textContent = destinoEncontrado.nome;
         document.getElementById('compValor').textContent = ZentryUI.formatarMoeda(dadosTransacao.valor);
-        
+        document.getElementById('compData').textContent = agora.toLocaleString('pt-BR');
+
+        // Pula para a tela de sucesso
         irPara(3);
         btn.textContent = "Voltar ao Início";
         btn.disabled = false;
         document.getElementById('btnSec').style.display = "block";
-      } catch (e) {
-        ZentryUI.toast("Erro no processamento", "erro");
+
+      } catch (error) {
+        console.error("Erro no Pix:", error);
+        ZentryUI.toast("Erro ao processar. Tente novamente.", "erro");
         btn.disabled = false;
-      } finally { ZentryUI.loading(false); }
+        btn.textContent = "Confirmar Pix";
+      } finally {
+        ZentryUI.loading(false);
+      }
     } else {
       window.location.href = "home.html";
     }
   };
+    
 
   window.voltarEtapa = () => etapa === 0 ? window.location.href="pix.html" : irPara(etapa-1);
   window.irParaComprovante = () => window.location.href = "comprovante.html?id=TX"+Date.now();
