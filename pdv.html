@@ -12,54 +12,62 @@
   --card:#0f1623;
   --border:rgba(255,255,255,0.08);
 }
-
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:var(--bg);
-  color:#fff;
+html, body {
+  height: 100%;
+  width: 100%;
+  background: #060910;
+  color: #fff;
+  font-family: 'Sora', sans-serif;
+  overflow: hidden;
 }
 
-/* TELAS */
-.screen{display:none;padding:20px;height:100vh}
-.screen.ativa{display:block}
-
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+.screen {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  padding: 20px;
 }
 
-/* VALOR */
-.valor{
-  font-size:52px;
-  text-align:center;
-  margin:60px 0;
-  font-weight:800;
+.screen.ativa {
+  display: flex;
 }
 
-/* BOTÕES */
-.btn{
-  width:100%;
-  padding:18px;
-  border:none;
-  border-radius:16px;
-  font-weight:700;
-  margin-top:10px;
-  font-size:16px;
+/* HEADER NOVO */
+.top-bar {
+  width: 100%;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 10px;
 }
 
-.btn-green{
-  background:var(--primary);
-  color:#052e16;
+.top-bar span {
+  color: #22c55e;
 }
 
-.btn-outline{
-  background:transparent;
-  border:1px solid var(--primary);
-  color:var(--primary);
+/* VALOR CENTRAL */
+.valor-num {
+  font-size: 64px;
+  font-weight: 800;
 }
+
+/* TECLADO MAIS ALTO */
+.key {
+  height: 70px;
+  border-radius: 20px;
+  font-size: 24px;
+}
+
+/* BOTÃO FULL */
+.btn-continuar,
+.btn-sec {
+  height: 60px;
+  border-radius: 18px;
+  font-size: 18px;
+  }
 
 /* MÉTODOS */
 .metodo{
@@ -105,12 +113,13 @@ body{
 }
 
 /* QR */
-.qr{
-  background:#fff;
-  padding:20px;
-  border-radius:20px;
-  width:220px;
-  margin:20px auto;
+.qr-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
 }
 
 /* TIMER */
@@ -120,16 +129,18 @@ body{
   font-size:14px;
   color:#fbbf24;
 }
+  body {
+  display: block !important;
+  }
 </style>
 </head>
 
 <body>
 
 <!-- TELA VALOR -->
-<div id="t1" class="screen ativa">
-  <div class="header">
-    <b>ZENTAP</b>
-  </div>
+<div class="top-bar">
+  ZEN<span>TAP</span>
+</div>
 
   <div class="valor" id="valor">R$ 0,00</div>
 
@@ -184,17 +195,47 @@ function ir(n){
 }
 
 /* PIX */
-function abrirPix(){
-  ir(3)
+window.irParaPix = async function () {
+  document.getElementById('valorTopoPix').textContent = valorFmt();
 
-  const el = document.getElementById("qr")
-  el.innerHTML=""
+  try {
+    const res = await fetch("/.netlify/functions/criarPix", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ valor: parseInt(valorRaw) })
+    });
 
-  new QRCode(el,{
-    text:"PIX-"+Date.now(),
-    width:200,
-    height:200
-  })
+    const data = await res.json();
+
+    const qrContainer = document.getElementById('qrBoxContainer');
+    qrContainer.innerHTML = "";
+
+    new QRCode(qrContainer, {
+      text: data.qr,
+      width: 260,
+      height: 260
+    });
+
+    // começa verificar pagamento
+    
+function verificarPagamento(txid) {
+  const intervalo = setInterval(async () => {
+    const res = await fetch(`/.netlify/functions/statusPix?txid=${txid}`);
+    const data = await res.json();
+
+    if (data.pago) {
+      clearInterval(intervalo);
+      window.location.href = "comprovante_pdv.html?id=" + txid;
+    }
+  }, 2000);
+}
+    irPara('tela-pix');
+
+  } catch (e) {
+    alert("Erro ao gerar Pix");
+    console.error(e);
+  }
+};
 
   iniciarTimer()
 
