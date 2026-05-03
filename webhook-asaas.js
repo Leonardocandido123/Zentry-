@@ -62,6 +62,16 @@ exports.handler = async (event) => {
       statusCode: 500,
       headers,
       body: JSON.stringify({ erro: err.message })
+      case 'PAYMENT_RECEIVED':
+case 'PAYMENT_CONFIRMED':
+
+  // 🔥 AQUI É O SEGREDO DO NÍVEL BANCO
+  // você atualiza o Firebase SEM depender do app
+
+  // exemplo:
+  // await admin.firestore().collection(...)
+
+  break;
     };
   }
 };
