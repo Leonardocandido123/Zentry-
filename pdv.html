@@ -337,6 +337,8 @@
     <div class="proc-sub" id="procSub">Aguarde alguns instantes...</div>
   </div>
 </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
 <script type="module">
   // IMPORTANTE: Removi o ZentryAuth que causava o erro
   import { db } from './zentry-core.js'; 
@@ -428,12 +430,66 @@
 
   window.irParaPix = function() {
     document.getElementById('valorTopoPix').textContent = valorFmt();
-    const payload = encodeURIComponent("ZentryPay|" + valorFmt() + "|" + Date.now());
-    document.getElementById('qrImg').src =
-      `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${payload}&format=png`;
-    iniciarTimer();
-    irPara('tela-pix');
-  };
+    
+    // Texto do PIX (quando integrar Asaas, aqui vai o payload real)
+    const pixData = "ZentryPay|" + valorFmt() + "|" + Date.now();
+    
+    const qrContainer = document.querySelector('.qr-box');
+    qrContainer.innerHTML = '<canvas id="qrCanvas" style="display:block; border-radius:12px;"></canvas>';
+    
+    // Div invisível para o QRCode.js trabalhar
+    const tempDiv = document.createElement('div');
+    
+    const qr = new QRCode(tempDiv, {
+        text: pixData,
+        width: 280,
+        height: 280,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H // Nível alto permite cobrir o centro
+    });
+
+    // Aguarda o render do QR e desenha a logo
+    setTimeout(() => {
+        const qrImg = tempDiv.querySelector('img');
+        const canvas = document.getElementById('qrCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = 280;
+        canvas.height = 280;
+
+        // 1. Desenha o QR Code base
+        ctx.drawImage(qrImg, 0, 0);
+
+        // 2. Configurações da Logo Central
+        const center = canvas.width / 2;
+        const logoBgSize = 75; // Tamanho do fundo branco
+        const logoSize = 60;   // Tamanho do círculo verde
+
+        // 3. Desenha o fundo branco (para não confundir o leitor)
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(center, center, logoBgSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 4. Desenha o círculo verde Zentry
+        ctx.fillStyle = "#22c55e";
+        ctx.beginPath();
+        ctx.arc(center, center, logoSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 5. Escreve "ZT" no centro
+        ctx.fillStyle = "#052e16"; // Verde escuro para contraste
+        ctx.font = "800 22px Sora";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("ZT", center, center);
+
+        iniciarTimer();
+        irPara('tela-pix');
+    }, 150);
+};
+  
 
   window.irParaNFC = function(metodo) {
     metodoAtual = metodo;
