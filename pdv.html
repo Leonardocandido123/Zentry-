@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zentap Pro</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <style>
 :root{
   --primary:#22c55e;
@@ -12,137 +14,109 @@
   --card:#0f1623;
   --border:rgba(255,255,255,0.08);
 }
+
 html, body {
   height: 100%;
   width: 100%;
-  background: #060910;
+  background: var(--bg);
   color: #fff;
-  font-family: 'Sora', sans-serif;
+  font-family: sans-serif;
   overflow: hidden;
 }
 
 .screen {
   position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
   display: none;
   flex-direction: column;
   padding: 20px;
 }
 
-.screen.ativa {
-  display: flex;
-}
+.screen.ativa { display: flex; }
 
-/* HEADER NOVO */
 .top-bar {
-  width: 100%;
   text-align: center;
   font-size: 22px;
   font-weight: 800;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
-.top-bar span {
-  color: #22c55e;
+.top-bar span { color: var(--primary); }
+
+.valor {
+  font-size: 60px;
+  text-align: center;
+  margin-top: 40px;
 }
 
-/* VALOR CENTRAL */
-.valor-num {
-  font-size: 64px;
-  font-weight: 800;
-}
-
-/* TECLADO MAIS ALTO */
-.key {
-  height: 70px;
-  border-radius: 20px;
-  font-size: 24px;
-}
-
-/* BOTÃO FULL */
-.btn-continuar,
-.btn-sec {
+.btn {
   height: 60px;
-  border-radius: 18px;
+  border-radius: 16px;
+  border: none;
+  margin-top: 20px;
   font-size: 18px;
-  }
-
-/* MÉTODOS */
-.metodo{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  padding:18px;
-  border-radius:18px;
-  background:var(--card);
-  margin-bottom:12px;
-  border:1px solid var(--border);
 }
 
-/* STATUS PIX */
-.status{
-  text-align:center;
-  margin-top:20px;
+.btn-green {
+  background: var(--primary);
+  color: #000;
 }
 
-.status .title{
-  font-size:20px;
-  font-weight:700;
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: #fff;
 }
 
-.status .sub{
-  font-size:14px;
-  opacity:.6;
+.metodo {
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--card);
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  cursor: pointer;
 }
 
-/* LOADER */
-.loader{
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  border:4px solid var(--border);
-  border-top:4px solid var(--primary);
-  animation:spin 1s linear infinite;
-  margin:30px auto;
-}
-
-@keyframes spin{
-  to{transform:rotate(360deg)}
-}
-
-/* QR */
-.qr-wrap {
-  flex: 1;
+.qr {
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  align-items: center;
-  gap: 20px;
+  margin-top: 30px;
 }
 
-/* TIMER */
-.timer{
-  text-align:center;
-  margin-top:10px;
-  font-size:14px;
-  color:#fbbf24;
+.timer {
+  text-align: center;
+  margin-top: 10px;
+  color: #fbbf24;
 }
-  body {
-  display: block !important;
-  }
+
+.status {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.loader {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--primary);
+  animation: spin 1s linear infinite;
+  margin: 30px auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 </style>
 </head>
 
 <body>
 
 <!-- TELA VALOR -->
-<div class="top-bar">
-  ZEN<span>TAP</span>
-</div>
+<div id="t1" class="screen ativa">
+  <div class="top-bar">ZEN<span>TAP</span></div>
 
-  <div class="valor" id="valor">R$ 0,00</div>
+  <div class="valor" id="valor">R$ 10,00</div>
 
   <button class="btn btn-green" onclick="ir(2)">Continuar</button>
 </div>
@@ -152,8 +126,6 @@ html, body {
   <h2>Forma de pagamento</h2>
 
   <div class="metodo" onclick="abrirPix()">⚡ Pix</div>
-  <div class="metodo" onclick="simular()">💳 Débito</div>
-  <div class="metodo" onclick="simular()">💳 Crédito</div>
 
   <button class="btn btn-outline" onclick="ir(1)">Voltar</button>
 </div>
@@ -167,8 +139,8 @@ html, body {
   <div class="timer" id="timer">Expira em 05:00</div>
 
   <div class="status">
-    <div class="title">Aguardando pagamento</div>
-    <div class="sub">Escaneie o QR Code</div>
+    <div>Aguardando pagamento</div>
+    <div style="opacity:.6">Escaneie o QR Code</div>
   </div>
 
   <div class="loader"></div>
@@ -176,92 +148,86 @@ html, body {
   <button class="btn btn-outline" onclick="ir(2)">Voltar</button>
 </div>
 
-<!-- SUCESSO -->
-<div id="t4" class="screen">
-  <div class="status">
-    <div class="title">Pagamento recebido ✅</div>
-    <div class="sub">Valor confirmado com sucesso</div>
-  </div>
-
-  <button class="btn btn-green" onclick="ir(1)">Nova venda</button>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</body>
 
 <script>
+let valor = 10.00;
+let txid = null;
+let intervalo = null;
+
+/* NAV */
 function ir(n){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('ativa'))
   document.getElementById('t'+n).classList.add('ativa')
 }
 
-/* PIX */
-window.irParaPix = async function () {
-  document.getElementById('valorTopoPix').textContent = valorFmt();
+/* PIX REAL */
+async function abrirPix(){
+  ir(3);
 
   try {
     const res = await fetch("/.netlify/functions/criarPix", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ valor: parseInt(valorRaw) })
+      body: JSON.stringify({ valor })
     });
 
     const data = await res.json();
 
-    const qrContainer = document.getElementById('qrBoxContainer');
-    qrContainer.innerHTML = "";
+    txid = data.txid;
 
-    new QRCode(qrContainer, {
+    document.getElementById("qr").innerHTML = "";
+
+    new QRCode(document.getElementById("qr"), {
       text: data.qr,
       width: 260,
       height: 260
     });
 
-    // começa verificar pagamento
-    
-function verificarPagamento(txid) {
-  const intervalo = setInterval(async () => {
-    const res = await fetch(`/.netlify/functions/statusPix?txid=${txid}`);
-    const data = await res.json();
+    iniciarTimer();
+    verificarPagamento();
 
-    if (data.pago) {
-      clearInterval(intervalo);
-      window.location.href = "comprovante_pdv.html?id=" + txid;
-    }
-  }, 2000);
-}
-    irPara('tela-pix');
-
-  } catch (e) {
+  } catch(e){
     alert("Erro ao gerar Pix");
     console.error(e);
   }
-};
+}
 
-  iniciarTimer()
+/* POLLING (APENAS VISUAL) */
+function verificarPagamento(){
+  intervalo = setInterval(async () => {
+    const res = await fetch(`/.netlify/functions/statusPix?txid=${txid}`);
+    const data = await res.json();
 
-  // 🔥 SIMULA CONFIRMAÇÃO (depois você liga no webhook real)
-  setTimeout(()=>{
-    ir(4)
-  },6000)
+    if(data.pago){
+      clearInterval(intervalo);
+      window.location.href = "comprovante_pdv.html?id=" + txid;
+    }
+  }, 3000);
 }
 
 /* TIMER */
-let t=300
-function iniciarTimer(){
-  const el=document.getElementById("timer")
-  const i=setInterval(()=>{
-    t--
-    let m=Math.floor(t/60)
-    let s=t%60
-    el.innerText=`Expira em ${m}:${s.toString().padStart(2,'0')}`
-    if(t<=0) clearInterval(i)
-  },1000)
-}
+let t = 300;
 
-function simular(){
-  alert("Pagamento simulado")
+function iniciarTimer(){
+  const el = document.getElementById("timer");
+
+  const i = setInterval(()=>{
+    t--;
+
+    let m = Math.floor(t/60);
+    let s = t % 60;
+
+    el.innerText = `Expira em ${m}:${s.toString().padStart(2,'0')}`;
+
+    if(t <= 0){
+      clearInterval(i);
+      clearInterval(intervalo);
+      alert("Pix expirado");
+      ir(2);
+    }
+  },1000);
 }
 </script>
 
-</body>
 </html>
