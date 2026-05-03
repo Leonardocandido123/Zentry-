@@ -67,7 +67,7 @@
     font-size: 18px;
     outline: none;
     padding-right: 100px;
-    letter-spacing: 2px;
+    letter-spacing: 4px; /* Mais espaço para os pontos da senha */
     width: 100%;
   }
 
@@ -119,18 +119,17 @@
     animation: pop 0.3s ease;
   }
   @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .spinner {
+  
+  .spinner {
     width: 20px;
     height: 20px;
-    border: 3px solid rgba(0,0,0,0.2);
+    border: 3px solid rgba(0,0,0,0.1);
     border-top-color: #000;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-                                                                   
 </style>
-
 </head>
 <body>
 
@@ -144,11 +143,11 @@
   </div>
 
   <div class="title">Acesse sua conta</div>
-  <div class="subtitle">Digite sua senha ZENTRY para acessar sua conta com segurança</div>
+  <div class="subtitle">Digite sua senha ZENTRY de 6 dígitos para acessar sua conta com segurança</div>
 
   <div class="field-wrapper">
     <div class="password-container">
-      <input type="password" id="senha" placeholder="Sua senha" autocomplete="new-password" spellcheck="false">
+      <input type="password" id="senha" placeholder="••••••" inputmode="numeric" autocomplete="current-password" maxlength="6">
       
       <div class="actions">
         <svg class="eye" id="eyeIcon" onclick="window.toggleSenha()" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
@@ -170,21 +169,11 @@
       <a href="cadastro_unificado.html" class="create-acc">Criar conta</a>
     </div>
   </div>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
-  authDomain: "zentry-app-74275.firebaseapp.com",
-  projectId: "zentry-app-74275",
-  storageBucket: "zentry-app-74275.appspot.com",
-  messagingSenderId: "571422826071",
-  appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// ✅ Integrado com o seu core
+import { db, ZentryUI } from './zentry-core.js';
+import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 function showZModal(titulo, texto, icon) {
   document.getElementById('zModalGlobal').style.display = 'flex';
@@ -201,9 +190,16 @@ window.addEventListener("DOMContentLoaded", () => {
   const input = document.getElementById("senha");
   const btn = document.getElementById("btnEntrar");
 
+  // ✅ CORREÇÃO: Seta só fica verde com EXATAMENTE 6 dígitos
   input.addEventListener("input", () => {
-    if(input.value.length >= 4) btn.classList.add("active");
-    else btn.classList.remove("active");
+    // Impede digitar mais de 6
+    if (input.value.length > 6) input.value = input.value.slice(0, 6);
+
+    if(input.value.length === 6) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
   });
 
   window.toggleSenha = function(){
@@ -219,13 +215,14 @@ window.addEventListener("DOMContentLoaded", () => {
 
   window.entrar = async function(){
     const senhaDigitada = input.value;
-    const emailSalvo = localStorage.getItem("usuarioEmail");
+    const emailSalvo = localStorage.getItem("usuarioEmail"); // Certifique-se que o cadastro salva isso
     
     if(!emailSalvo){
-      showZModal("E-mail não encontrado", "Não identificamos seu e-mail. Volte e crie uma conta.", "👤");
+      showZModal("E-mail ausente", "Não encontramos seu e-mail pré-registrado. Faça o cadastro primeiro.", "👤");
       return;
     }
 
+    // Feedback visual de carregamento
     btn.innerHTML = `<div class="spinner"></div>`;
     btn.style.pointerEvents = "none";
     
@@ -241,15 +238,15 @@ window.addEventListener("DOMContentLoaded", () => {
       let dadosUsuario = null;
       let idDocumento = "";
 
-      // PEGA OS DADOS E O ID REAL (EX: user_882544)
       querySnapshot.forEach((doc) => {
         dadosUsuario = doc.data();
         idDocumento = doc.id; 
       });
 
-      if (dadosUsuario.senha === senhaDigitada) {
-        // --- AQUI ESTÁ O SEGREDO ---
-        // Salva o ID real para a Home usar no onSnapshot
+      // ✅ Validação de senha integrada
+      if (String(dadosUsuario.senha) === String(senhaDigitada)) {
+        
+        // Salva os dados essenciais para as outras telas (Home, Pix, Maquininha)
         localStorage.setItem("idUsuarioLogado", idDocumento);
         localStorage.setItem("dadosUsuario", JSON.stringify(dadosUsuario));
 
@@ -262,12 +259,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
     } catch (error) {
       console.error(error);
+      // Volta o ícone da seta se der erro
       btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
       btn.style.pointerEvents = "all";
       
-      let msg = "Erro ao acessar o banco.";
-      if(error.message === 'senha-incorreta') msg = "Senha inválida para este usuário.";
-      if(error.message === 'usuario-nao-encontrado') msg = "Usuário não encontrado no sistema.";
+      let msg = "Erro na conexão.";
+      if(error.message === 'senha-incorreta') msg = "Senha de 6 dígitos inválida.";
+      if(error.message === 'usuario-nao-encontrado') msg = "Cadastro não localizado.";
       
       showZModal("Acesso Negado", msg, "🔒");
       input.value = ""; 
@@ -276,11 +274,9 @@ window.addEventListener("DOMContentLoaded", () => {
   };
 
   input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") window.entrar();
+    if (e.key === "Enter" && input.value.length === 6) window.entrar();
   });
 });
-  </script>
-  
-
+</script>
 </body>
 </html>
