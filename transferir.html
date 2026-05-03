@@ -608,7 +608,6 @@
 
       ZentryUI.loading(true);
       btn.textContent = "Processando...";
-
       try {
         const { valor, destino, chave, desc } = dadosTransacao;
         const txId = "PIX" + Date.now();
@@ -618,37 +617,44 @@
         await updateDoc(doc(db, "usuarios", userDocId), { saldo: increment(-valor) });
         await setDoc(doc(db, "usuarios", userDocId, "transacoes", txId), {
           tipo: "saida", valor, descricao: "Pix enviado - " + destino.nome,
-          nomeDestino: destino.nome, chavePix: chave, timestamp: agora, id: txId
+          nomeDestino: destino.nome, chavePix: chave, timestamp: agora, id: txId, status: "concluido"
         });
 
         // 2. Se interno, credita e registra entrada
         if (destino.uid !== 'externo') {
           await updateDoc(doc(db, "usuarios", destino.uid), { saldo: increment(valor) });
           await setDoc(doc(db, "usuarios", destino.uid, "transacoes", txId + "R"), {
-            tipo: "entrada", valor, descricao: "Pix recebido de " + (userData.nome || "Zentry User"),
-            nomeRemetente: userData.nome, timestamp: agora, id: txId + "R"
+            tipo: "entrada", valor, descricao: "Pix recebido",
+            nomeRemetente: userData.nome, timestamp: agora, id: txId + "R", status: "concluido"
           });
         }
 
-        // Preenche sucesso
-        document.getElementById('sucessoSub').textContent = ZentryUI.formatarMoeda(valor) + " enviado.";
-        document.getElementById('compNome').textContent = destino.nome;
-        document.getElementById('compChave').textContent = chave;
-        document.getElementById('compValor').textContent = ZentryUI.formatarMoeda(valor);
-        document.getElementById('compData').textContent = agora.toLocaleString('pt-BR');
+        // === AJUSTE DE TELA ===
+        // Garante que os elementos da tela de sucesso existem antes de preencher
+        const sub = document.getElementById('sucessoSub');
+        if(sub) sub.textContent = ZentryUI.formatarMoeda(valor) + " enviado.";
+        
+        const compNome = document.getElementById('compNome');
+        if(compNome) compNome.textContent = destino.nome;
 
-        irPara(3);
+        // Tenta mudar para a tela de sucesso (Etapa 3)
+        irPara(3); 
+        
         btn.textContent = "Voltar ao Início";
         btn.disabled = false;
-        document.getElementById('btnSec').style.display = "block";
+        
+        const btnSec = document.getElementById('btnSec');
+        if(btnSec) btnSec.style.display = "block";
+
       } catch(e) {
-        console.error(e);
-        ZentryUI.toast("Erro ao processar.", "erro");
+        console.error("ERRO CRÍTICO NO PIX:", e); // Isso vai te mostrar o erro real no F12
+        ZentryUI.toast("Erro na gravação do banco.", "erro");
         btn.textContent = "Confirmar Pix";
         btn.disabled = false;
       } finally {
         ZentryUI.loading(false);
-      }
+    }
+      
     } else {
       window.location.href = "home.html";
     }
