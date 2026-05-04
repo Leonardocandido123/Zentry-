@@ -195,123 +195,159 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6"/></svg>
         </button>
         <button id="finishBtn" class="finish-btn">CRIAR MINHA CONTA</button>
-    </div>
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
-        authDomain: "zentry-app-74275.firebaseapp.com",
-        projectId: "zentry-app-74275",
-        storageBucket: "zentry-app-74275.appspot.com",
-        messagingSenderId: "571422826071",
-        appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    let currentStep = 0;
-    const totalSteps = 7;
-    const slider = document.getElementById('main-slider');
-    const pBar = document.getElementById('p-bar');
-    const nextBtn = document.getElementById('nextBtn');
-    const finishBtn = document.getElementById('finishBtn');
-
-    // --- MÁSCARAS REFORÇADAS (O CORAÇÃO DO AJUSTE) ---
+    </div> 
     
-    // Função para CPF: 000.000.000-00
-    const maskCPF = (value) => {
-        return value
-            .replace(/\D/g, "")
-            .replace(/(\d{3})(\d)/, "$1.$2")
-            .replace(/(\d{3})(\d)/, "$1.$2")
-            .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    };
+    <script type="module">
 
-    // Função para Celular: (00) 00000-0000
-    const maskTel = (value) => {
-        return value
-            .replace(/\D/g, "")
-            .replace(/^(\d{2})(\d)/g, "($1) $2")
-            .replace(/(\d)(\d{4})$/, "$1-$2");
-    };
+let currentStep = 0;
+const totalSteps = 7;
+const slider = document.getElementById('main-slider');
+const pBar = document.getElementById('p-bar');
+const nextBtn = document.getElementById('nextBtn');
+const finishBtn = document.getElementById('finishBtn');
 
-    document.getElementById('cad_cpf').addEventListener('input', (e) => {
-        e.target.value = maskCPF(e.target.value);
-        validarBotao();
+// --- MÁSCARAS ---
+
+const maskCPF = (value) => {
+    return value
+        .replace(/\D/g, "")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+};
+
+const maskTel = (value) => {
+    return value
+        .replace(/\D/g, "")
+        .replace(/^(\d{2})(\d)/g, "($1) $2")
+        .replace(/(\d)(\d{4})$/, "$1-$2");
+};
+
+document.getElementById('cad_cpf').addEventListener('input', (e) => {
+    e.target.value = maskCPF(e.target.value);
+    validarBotao();
+});
+
+document.getElementById('cad_tel').addEventListener('input', (e) => {
+    e.target.value = maskTel(e.target.value);
+    validarBotao();
+});
+
+// --- VALIDAÇÃO BOTÃO ---
+
+function validarBotao() {
+    const inputsAtuais = slider.children[currentStep].querySelectorAll('input');
+    let pronto = true;
+
+    inputsAtuais.forEach(i => { 
+        if(i.type !== 'checkbox' && i.value.length < 3) pronto = false; 
+        if(i.id === 'cad_cpf' && i.value.length < 14) pronto = false;
+        if(i.id === 'cad_tel' && i.value.length < 15) pronto = false;
     });
 
-    document.getElementById('cad_tel').addEventListener('input', (e) => {
-        e.target.value = maskTel(e.target.value);
-        validarBotao();
-    });
+    if(pronto) nextBtn.classList.add('active');
+    else nextBtn.classList.remove('active');
+}
 
-    // --- LÓGICA DE NAVEGAÇÃO ---
+// --- NAVEGAÇÃO ---
 
-    function validarBotao() {
-        const inputsAtuais = slider.children[currentStep].querySelectorAll('input');
-        let pronto = true;
-        inputsAtuais.forEach(i => { 
-            if(i.type !== 'checkbox' && i.value.length < 3) pronto = false; 
-            if(i.id === 'cad_cpf' && i.value.length < 14) pronto = false;
-            if(i.id === 'cad_tel' && i.value.length < 15) pronto = false;
-        });
-        if(pronto) nextBtn.classList.add('active'); else nextBtn.classList.remove('active');
+window.avancar = function() {
+    if (!nextBtn.classList.contains('active')) return;
+
+    if (currentStep === 3) {
+        document.getElementById('token-msg').innerText =
+            "Enviamos um código para " + document.getElementById('cad_email').value;
     }
 
-    window.avancar = async function() {
-        if (!nextBtn.classList.contains('active')) return;
+    if (currentStep < totalSteps - 1) {
+        currentStep++;
+        slider.style.transform = `translateX(-${currentStep * (100 / totalSteps)}%)`;
+        pBar.style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
 
-        if (currentStep === 3) {
-            document.getElementById('token-msg').innerText = "Enviamos um código para " + document.getElementById('cad_email').value;
+        if (currentStep === 6) {
+            nextBtn.style.display = 'none';
+            finishBtn.style.display = 'block';
         }
-        if (currentStep < totalSteps - 1) {
-            currentStep++;
-            slider.style.transform = `translateX(-${currentStep * (100 / totalSteps)}%)`;
-            pBar.style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
-            if (currentStep === 6) { nextBtn.style.display = 'none'; finishBtn.style.display = 'block'; }
-            nextBtn.classList.remove('active');
-            validarBotao();
-        }
+
+        nextBtn.classList.remove('active');
+        validarBotao();
+    }
+};
+
+nextBtn.onclick = window.avancar;
+
+// --- TOKEN INPUT ---
+
+const tokens = document.querySelectorAll('.token-input');
+tokens.forEach((t, i) => {
+    t.oninput = () => {
+        if(t.value && i < 5) tokens[i+1].focus();
+        validarBotao();
     };
-    nextBtn.onclick = window.avancar;
-
-    const tokens = document.querySelectorAll('.token-input');
-    tokens.forEach((t, i) => {
-        t.oninput = () => { if(t.value && i < 5) tokens[i+1].focus(); validarBotao(); };
-        t.onkeydown = (e) => { if(e.key === "Backspace" && !t.value && i > 0) tokens[i-1].focus(); };
-    });
-
-    document.getElementById('finishBtn').onclick = async () => {
-        if(!document.getElementById('checkTermo').checked) return;
-        const email = document.getElementById('cad_email').value;
-        const dados = {
-            nome: document.getElementById('cad_nome').value,
-            cpf: document.getElementById('cad_cpf').value,
-            tel: document.getElementById('cad_tel').value,
-            email: email,
-            senha: document.getElementById('cad_senha').value,
-            status_verificacao: "pendente",
-            saldo: 0,
-            data: new Date().toISOString()
-        };
-        try {
-            await setDoc(doc(db, "usuarios", email), dados);
-            localStorage.setItem("usuarioEmail", email);
-            window.location.href = "login.html";
-        } catch (e) { console.error(e); }
+    t.onkeydown = (e) => {
+        if(e.key === "Backspace" && !t.value && i > 0) tokens[i-1].focus();
     };
+});
 
-    document.querySelectorAll('.input-container input').forEach(i => {
-        if(i.id !== 'cad_cpf' && i.id !== 'cad_tel') {
-            i.addEventListener('input', validarBotao);
+// --- CADASTRO BACKEND (CORRIGIDO) ---
+
+document.getElementById('finishBtn').onclick = async () => {
+    if(!document.getElementById('checkTermo').checked) return;
+
+    const nome = document.getElementById('cad_nome').value.trim();
+    const cpf = document.getElementById('cad_cpf').value.trim();
+    const tel = document.getElementById('cad_tel').value.trim();
+    const email = document.getElementById('cad_email').value.trim();
+    const senha = document.getElementById('cad_senha').value.trim();
+
+    try {
+        const res = await fetch("/.netlify/functions/registrar", {
+            method: "POST",
+            body: JSON.stringify({
+                nome,
+                cpf,
+                tel,
+                email,
+                senha
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error);
         }
-    });
 
-    document.getElementById('zBtnClose').onclick = () => document.getElementById('zModalGlobal').style.display = 'none';
-</script>
-    
+        // salva email pro login
+        localStorage.setItem("usuarioEmail", email);
+
+        // redireciona
+        window.location.href = "login.html";
+
+    } catch (e) {
+        console.error("Erro cadastro:", e);
+
+        let msg = "Erro ao criar conta.";
+        if(e.message === "usuario-ja-existe") msg = "Este e-mail já está cadastrado.";
+        if(e.message === "senha-invalida") msg = "Senha deve ter 6 dígitos.";
+        if(e.message === "dados-incompletos") msg = "Preencha todos os campos.";
+
+        showZModal("Erro no Cadastro", msg, "⚠️");
+    }
+};
+
+// --- INPUTS PADRÃO ---
+
+document.querySelectorAll('.input-container input').forEach(i => {
+    if(i.id !== 'cad_cpf' && i.id !== 'cad_tel') {
+        i.addEventListener('input', validarBotao);
+    }
+});
+
+// modal
+document.getElementById('zBtnClose').onclick = () =>
+    document.getElementById('zModalGlobal').style.display = 'none';
+
+    </script>
 </body>
 </html>
