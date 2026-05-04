@@ -31,11 +31,11 @@
         /* Barra de Progresso Sutil */
         .top-nav { position: fixed; top: 0; width: 100%; padding: 25px; z-index: 100; }
         .progress-container { width: 100%; height: 3px; background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .progress-bar { width: 14.28%; height: 100%; background: var(--accent); border-radius: 10px; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px var(--accent); }
+        .progress-bar { width: 16.66%; height: 100%; background: var(--accent); border-radius: 10px; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px var(--accent); }
 
         #main-slider {
             display: flex;
-            width: 700%; /* 7 passos */
+            width: 600%; /* 6 passos */
             height: 100vh;
             transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
@@ -162,19 +162,6 @@
         </div>
 
         <div class="step-page">
-            <div class="title">Verificação</div>
-            <div class="subtitle" id="token-msg">Aguardando código de 6 dígitos...</div>
-            <div class="token-group">
-                <input type="tel" class="token-input" maxlength="1">
-                <input type="tel" class="token-input" maxlength="1">
-                <input type="tel" class="token-input" maxlength="1">
-                <input type="tel" class="token-input" maxlength="1">
-                <input type="tel" class="token-input" maxlength="1">
-                <input type="tel" class="token-input" maxlength="1">
-            </div>
-        </div>
-
-        <div class="step-page">
             <div class="title">Senha de acesso</div>
             <div class="subtitle">Crie uma senha numérica de 6 dígitos.</div>
             <div class="input-container"><input type="password" id="cad_senha" style="letter-spacing: 8px;" maxlength="6" placeholder="••••••"></div>
@@ -200,7 +187,7 @@
     <script type="module">
 
 let currentStep = 0;
-const totalSteps = 7;
+const totalSteps = 6;
 const slider = document.getElementById('main-slider');
 const pBar = document.getElementById('p-bar');
 const nextBtn = document.getElementById('nextBtn');
@@ -254,11 +241,6 @@ function validarBotao() {
 window.avancar = function() {
     if (!nextBtn.classList.contains('active')) return;
 
-    if (currentStep === 3) {
-        document.getElementById('token-msg').innerText =
-            "Enviamos um código para " + document.getElementById('cad_email').value;
-    }
-
     if (currentStep < totalSteps - 1) {
         currentStep++;
         slider.style.transform = `translateX(-${currentStep * (100 / totalSteps)}%)`;
@@ -278,16 +260,6 @@ nextBtn.onclick = window.avancar;
 
 // --- TOKEN INPUT ---
 
-const tokens = document.querySelectorAll('.token-input');
-tokens.forEach((t, i) => {
-    t.oninput = () => {
-        if(t.value && i < 5) tokens[i+1].focus();
-        validarBotao();
-    };
-    t.onkeydown = (e) => {
-        if(e.key === "Backspace" && !t.value && i > 0) tokens[i-1].focus();
-    };
-});
 
 // --- CADASTRO BACKEND (CORRIGIDO) ---
 
