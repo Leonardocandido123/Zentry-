@@ -227,10 +227,22 @@ window.addEventListener("DOMContentLoaded", () => {
     btn.style.pointerEvents = "none";
     
     try {
-      const usuariosRef = collection(db, "usuarios");
-      const q = query(usuariosRef, where("email", "==", emailSalvo));
-      const querySnapshot = await getDocs(q);
+      const res = await fetch("/.netlify/functions/login", {
+  method: "POST",
+  body: JSON.stringify({
+    email: emailSalvo,
+    senha: senhaDigitada
+  })
+});
 
+if (!res.ok) {
+  throw new Error("senha-incorreta");
+}
+
+const data = await res.json();
+
+localStorage.setItem("idUsuarioLogado", data.id);
+window.location.href = "home.html";
       if (querySnapshot.empty) {
         throw new Error("usuario-nao-encontrado");
       }
