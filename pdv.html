@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zentap Pro - PDV</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #22c55e;
-            --bg: #F6F7F9;
-            --card: #FFFFFF;
+            --bg: #F8F9FB;
+            --card-dark: #1A1D23;
             --text-main: #1A1D23;
             --text-sec: #717680;
             --border: #E5E7EB;
@@ -20,90 +20,120 @@
 
         .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; position: absolute; top: 0; left: 0; background: var(--bg); z-index: 10; }
         .screen.active { display: flex; animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* HEADER */
-        .sub-header { 
-            padding: 10px 20px; display: grid; grid-template-columns: 44px 1fr 44px; 
-            align-items: center; background: #fff; border-bottom: 1px solid var(--border); height: 55px;
-        }
-        .back-btn { color: var(--primary); cursor: pointer; border: none; background: none; display: flex; align-items: center; }
-        .back-btn svg { stroke: var(--primary); }
+        /* HEADER HOME */
+        .dash-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; }
+        .user-box { display: flex; align-items: center; gap: 10px; }
+        .avatar-circle { width: 40px; height: 40px; background: #EEE; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #666; }
+        .user-name { font-size: 14px; font-weight: 700; color: #333; }
 
-        /* VALORES */
-        .display-valor { flex: 1; display: flex; align-items: flex-start; justify-content: center; font-size: 64px; font-weight: 800; color: var(--text-main); letter-spacing: -2px; padding-top: 5vh; }
-        .valor-gigante { font-size: 50px; font-weight: 800; text-align: center; padding: 15px 20px; color: var(--text-main); letter-spacing: -1px; }
+        /* CARD DE SALDO ESTILO MÁQUINA */
+        .balance-container { background: var(--card-dark); margin: 0 20px 20px; padding: 25px; border-radius: 24px; color: #fff; position: relative; }
+        .balance-label { font-size: 13px; opacity: 0.7; margin-bottom: 5px; font-weight: 500; }
+        .balance-value { font-size: 28px; font-weight: 800; }
+        .btn-eye { position: absolute; top: 25px; right: 25px; font-size: 18px; }
 
-        /* TECLADO */
-        .bottom-container { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
-        .teclado-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 8px; }
-        .key { height: 52px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; border-radius: 12px; }
-        .btn-confirm { width: 100%; height: 58px; background: var(--primary); color: #000; border-radius: 16px; display: flex; align-items: center; justify-content: center; opacity: 0.15; pointer-events: none; border: none; font-weight: 800; font-size: 16px; }
-        .btn-confirm.active { opacity: 1; pointer-events: all; }
-
-        /* MODALIDADES */
-        .center-container { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 0 25px; }
-        .item-modalidade { 
-            background: #fff; padding: 20px; border-radius: 18px; margin-bottom: 12px; 
-            border: 2px solid var(--primary); 
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 17px; text-transform: uppercase;
-        }
+        /* ATALHOS REDONDOS */
+        .quick-nav { display: flex; justify-content: space-around; padding: 0 10px 25px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .nav-icon { width: 55px; height: 55px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .nav-text { font-size: 11px; font-weight: 700; color: var(--text-sec); text-transform: uppercase; }
 
         /* SEÇÃO DESTAQUE */
-        .destaque-header { margin: 20px 20px 10px; }
-        .destaque-label { font-size: 14px; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
-        .destaque-line { height: 2px; background: var(--primary); width: 100%; margin-top: 5px; border-radius: 2px; }
+        .destaque-section { padding: 0 20px; }
+        .destaque-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .destaque-header span { font-weight: 800; font-size: 13px; color: var(--primary); letter-spacing: 1px; }
+        .destaque-line { flex: 1; height: 2px; background: var(--primary); border-radius: 2px; }
 
-        /* TELA APROXIMAÇÃO (AJUSTADA) */
-        .tap-instruction { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; text-align: center; }
-        .maquininha-svg { width: 110px; height: 110px; margin: 10px 0; }
-        .aproximar-resumo { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .service-card { background: #fff; border: 2px solid var(--primary); border-radius: 18px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; }
+        .service-card div { font-size: 24px; }
+        .service-card span { font-size: 10px; font-weight: 800; line-height: 1.2; }
 
-        /* SUCESSO */
-        .success-box { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
-        .success-icon { width: 75px; height: 75px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; font-size: 35px; color: #000; }
+        /* TECLADO */
+        .sub-header { padding: 10px 20px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; background: #fff; border-bottom: 1px solid var(--border); height: 55px; }
+        .display-valor { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 56px; font-weight: 800; }
+        .bottom-container { position: fixed; bottom: 0; width: 100%; background: #fff; padding: 15px; border-top: 1px solid var(--border); }
+        .teclado-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .key { height: 50px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; }
+        .btn-confirm { width: 100%; height: 55px; background: var(--primary); border: none; border-radius: 14px; font-weight: 800; font-size: 16px; opacity: 0.2; pointer-events: none; color: #000; }
+        .btn-confirm.active { opacity: 1; pointer-events: all; }
+
+        /* BARRA INFERIOR */
+        .tab-bar { display: flex; justify-content: space-around; padding: 12px; background: #fff; border-top: 1px solid var(--border); position: fixed; bottom: 0; width: 100%; }
+        .tab-item { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-sec); }
+        .tab-item.active { color: var(--primary); }
     </style>
 </head>
 <body>
 
     <div id="screen-dash" class="screen active">
-        <header class="sub-header" style="justify-content: space-between; display: flex;">
-            <div style="font-weight: 800; color: var(--primary);">ZENTAP PRO</div>
-            <div style="font-size: 20px;">⚙️</div>
-        </header>
-        
-        <div style="padding: 25px 20px;">
-            <button onclick="nav('screen-teclado')" style="width: 100%; height: 110px; background: #fff; border: 2px solid var(--primary); border-radius: 24px; font-size: 22px; font-weight: 800; color: var(--text-main); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);">💸 VENDA RÁPIDA</button>
+        <div class="dash-header">
+            <div class="user-box">
+                <div class="avatar-circle">L</div>
+                <span class="user-name">Leonardo Candido...</span>
+            </div>
+            <div style="font-size: 20px;">🔔</div>
         </div>
 
-        <div class="destaque-header">
-            <span class="destaque-label">DESTAQUE</span>
-            <div class="destaque-line"></div>
+        <div class="balance-container">
+            <div class="balance-label">Saldo disponível</div>
+            <div class="balance-value">R$ 1.250,00</div>
+            <div class="btn-eye">👁️</div>
         </div>
 
-        <div class="services-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 20px;">
-            <div class="service-card" style="background: #fff; border: 2px solid var(--primary); border-radius: 16px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                <div style="font-size: 22px;">🔗</div>
-                <span style="font-size: 10px; font-weight: 700; text-align: center;">LINK DE<br>PAGAMENTO</span>
+        <div class="quick-nav">
+            <div class="nav-item">
+                <div class="nav-icon">📊</div>
+                <span class="nav-text">Extrato</span>
             </div>
-            <div class="service-card" style="background: #fff; border: 2px solid var(--primary); border-radius: 16px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                <div style="font-size: 22px;">👤</div>
-                <span style="font-size: 10px; font-weight: 700; text-align: center;">NOVO<br>CLIENTE</span>
+            <div class="nav-item" onclick="nav('screen-teclado')">
+                <div class="nav-icon" style="background: var(--primary); color: #000;">💸</div>
+                <span class="nav-text" style="color: var(--primary);">Venda</span>
             </div>
-            <div class="service-card" style="background: #fff; border: 2px solid var(--primary); border-radius: 16px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                <div style="font-size: 22px;">📊</div>
-                <span style="font-size: 10px; font-weight: 700; text-align: center;">EXTRATO<br>VENDAS</span>
+            <div class="nav-item">
+                <div class="nav-icon">💳</div>
+                <span class="nav-text">Cartões</span>
             </div>
+            <div class="nav-item">
+                <div class="nav-icon">➕</div>
+                <span class="nav-text">Mais</span>
+            </div>
+        </div>
+
+        <div class="destaque-section">
+            <div class="destaque-header">
+                <span>DESTAQUE</span>
+                <div class="destaque-line"></div>
+            </div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div>🔗</div>
+                    <span>LINK DE<br>PAGAMENTO</span>
+                </div>
+                <div class="service-item service-card">
+                    <div>👤</div>
+                    <span>NOVO<br>CLIENTE</span>
+                </div>
+                <div class="service-card">
+                    <div>⚙️</div>
+                    <span>AJUSTES DO<br>SISTEMA</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <div class="tab-item active">🏠<br>Início</div>
+            <div class="tab-item">📉<br>Vendas</div>
+            <div class="tab-item">👤<br>Perfil</div>
         </div>
     </div>
 
     <div id="screen-teclado" class="screen">
         <div class="sub-header">
-            <button class="back-btn" onclick="nav('screen-dash')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
-            <span style="font-weight:700; text-align:center;">VALOR</span>
+            <button style="border:none; background:none; color:var(--primary); font-size:20px;" onclick="nav('screen-dash')">←</button>
+            <span style="font-weight:700;">VALOR</span>
             <div></div>
         </div>
         <div class="display-valor" id="display">R$ 0,00</div>
@@ -120,85 +150,27 @@
 
     <div id="screen-modal" class="screen">
         <div class="sub-header">
-            <button class="back-btn" onclick="nav('screen-teclado')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
+            <button style="border:none; background:none; color:var(--primary); font-size:20px;" onclick="nav('screen-teclado')">←</button>
             <span style="font-weight:700;">MÉTODO</span>
             <div></div>
         </div>
-        <div class="valor-gigante" id="valorFinal">R$ 0,00</div>
-        <div class="center-container">
-            <div class="item-modalidade" onclick="prepararVenda('Pix')">Pix</div>
-            <div class="item-modalidade" onclick="prepararVenda('Débito')">Débito</div>
-            <div class="item-modalidade" onclick="nav('screen-credito-tipo')">Crédito</div>
+        <div style="text-align: center; padding: 40px; font-size: 42px; font-weight: 800;" id="valorFinal">R$ 0,00</div>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+            <div onclick="finalizar()" style="background: #fff; padding: 25px; border-radius: 20px; border: 2px solid var(--primary); font-weight: 800; display: flex; justify-content: space-between;">PIX <span>❯</span></div>
+            <div onclick="finalizar()" style="background: #fff; padding: 25px; border-radius: 20px; border: 2px solid var(--primary); font-weight: 800; display: flex; justify-content: space-between;">DÉBITO <span>❯</span></div>
+            <div onclick="finalizar()" style="background: #fff; padding: 25px; border-radius: 20px; border: 2px solid var(--primary); font-weight: 800; display: flex; justify-content: space-between;">CRÉDITO <span>❯</span></div>
         </div>
     </div>
 
-    <div id="screen-credito-tipo" class="screen">
-        <div class="sub-header">
-            <button class="back-btn" onclick="nav('screen-modal')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
-            <span style="font-weight:700;">CRÉDITO</span>
-            <div></div>
-        </div>
-        <div class="valor-gigante" id="valorCreditoTipo">R$ 0,00</div>
-        <div class="center-container">
-            <div class="item-modalidade" onclick="prepararVenda('Crédito à Vista')">À Vista</div>
-            <div class="item-modalidade" onclick="gerarParcelas()">Parcelado</div>
-        </div>
-    </div>
-
-    <div id="screen-parcelas" class="screen">
-        <div class="sub-header">
-            <button class="back-btn" onclick="nav('screen-credito-tipo')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
-            <span style="font-weight:700;">PARCELAS</span>
-            <div></div>
-        </div>
-        <div id="lista-parcelas" style="flex:1; overflow-y:auto; padding: 20px 25px;"></div>
-    </div>
-
-    <div id="screen-aproximar" class="screen">
-        <div class="sub-header">
-            <button class="back-btn" onclick="nav('screen-modal')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
-            <span style="font-weight:700;">PAGAMENTO</span>
-            <div></div>
-        </div>
-        <div class="tap-instruction">
-            <div id="valorAproximar" class="aproximar-resumo">R$ 0,00</div>
-            <svg class="maquininha-svg" viewBox="0 0 200 200">
-                <rect x="60" y="70" width="80" height="110" rx="10" fill="#E5E7EB"/>
-                <rect x="70" y="80" width="60" height="35" rx="4" fill="#1A1D23"/>
-                <g>
-                    <path d="M130 50 L170 30 L180 50 L140 70 Z" fill="#22c55e" /> 
-                    <path d="M150 40 Q 180 30, 190 60" stroke="#1A1D23" stroke-width="8" stroke-linecap="round" fill="none"/> 
-                    <animateTransform attributeName="transform" type="translate" values="0,0; -15,15; 0,0" dur="1.2s" repeatCount="indefinite" />
-                </g>
-            </svg>
-            <p style="font-weight: 700;">Aproxime o cartão</p>
-        </div>
-        <div style="padding: 20px;">
-            <button class="btn-confirm active" onclick="finalizarVenda()">SIMULAR LEITURA</button>
-        </div>
-    </div>
-
-    <div id="screen-sucesso" class="screen">
-        <div class="success-box">
-            <div class="success-icon">✓</div>
-            <h2 style="font-weight: 800;">APROVADO!</h2>
-            <div class="valor-gigante" id="valorSucesso">R$ 0,00</div>
-            <button class="btn-confirm active" style="margin-top: 20px;" onclick="location.reload()">NOVA VENDA</button>
-            <button class="btn-confirm active" style="margin-top: 12px; background: #fff; border: 1px solid var(--border);" onclick="nav('screen-dash')">IR PARA O INÍCIO</button>
-        </div>
+    <div id="screen-sucesso" class="screen" style="align-items: center; justify-content: center; text-align: center; padding: 20px;">
+        <div style="width: 80px; height: 80px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px;">✓</div>
+        <h2 style="font-weight: 800; margin-bottom: 10px;">APROVADO!</h2>
+        <div id="valorSucesso" style="font-size: 40px; font-weight: 800; margin-bottom: 40px;">R$ 0,00</div>
+        <button onclick="location.reload()" style="width: 100%; height: 60px; background: var(--primary); border: none; border-radius: 18px; font-weight: 800;">NOVA VENDA</button>
     </div>
 
     <script>
         let valorString = "";
-        let metodoSelecionado = "";
 
         function nav(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -208,57 +180,33 @@
         function press(n) {
             if (valorString.length >= 8) return;
             valorString += n;
-            atualizarDisplay();
+            atualizar();
         }
 
         function limpar() {
             valorString = valorString.slice(0, -1);
-            atualizarDisplay();
+            atualizar();
         }
 
-        function atualizarDisplay() {
+        function atualizar() {
             let num = parseFloat(valorString || 0) / 100;
-            let formatado = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
-            document.getElementById('display').innerText = formatado;
+            let fmt = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
+            document.getElementById('display').innerText = fmt;
             document.getElementById('btnProximo').classList.toggle('active', num > 0);
         }
 
         function confirmarValor() {
             let num = parseFloat(valorString) / 100;
-            let formatado = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
-            document.getElementById('valorFinal').innerText = formatado;
-            document.getElementById('valorCreditoTipo').innerText = formatado;
-            document.getElementById('valorAproximar').innerText = formatado;
-            document.getElementById('valorSucesso').innerText = formatado;
+            let fmt = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
+            document.getElementById('valorFinal').innerText = fmt;
+            document.getElementById('valorSucesso').innerText = fmt;
             nav('screen-modal');
         }
 
-        function gerarParcelas() {
-            const num = parseFloat(valorString) / 100;
-            const lista = document.getElementById('lista-parcelas');
-            lista.innerHTML = "";
-            for (let i = 2; i <= 12; i++) {
-                let valorParc = (num / i).toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
-                let div = document.createElement('div');
-                div.className = 'item-modalidade';
-                div.style.justifyContent = 'space-between';
-                div.innerHTML = `<span>${i}x de ${valorParc}</span> <span style="color:#22c55e">></span>`;
-                div.onclick = () => prepararVenda(`Crédito ${i}x`);
-                lista.appendChild(div);
-            }
-            nav('screen-parcelas');
-        }
-
-        function prepararVenda(metodo) {
-            metodoSelecionado = metodo;
-            if(metodo === 'Pix') finalizarVenda();
-            else nav('screen-aproximar');
-        }
-
-        function finalizarVenda() {
+        function finalizar() {
             nav('screen-sucesso');
         }
     </script>
 </body>
-                    </html>
-                
+    </html>
+    
