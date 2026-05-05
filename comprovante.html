@@ -102,7 +102,6 @@
   <button class="btn btn-share" id="btnCompartilhar" onclick="compartilhar()">📤 Compartilhar Comprovante</button>
   <button class="btn btn-back" onclick="window.history.back()">Voltar</button>
 </div>
-
 <script type="module">
 import { db, ZentryUI, ZentryUser } from "./zentry-core.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -115,18 +114,15 @@ async function renderizar() {
         const txId = params.get("id");
 
         if (!txId) {
-            container.innerHTML = "<div style='padding:40px; text-align:center; color:red'>URL sem ?id= — verifique o link</div>";
+            container.innerHTML = "<div style='padding:40px; text-align:center; color:red'>URL sem ?id=</div>";
             return;
         }
 
         let userDocId = localStorage.getItem("idUsuarioLogado");
+        if (!userDocId) userDocId = await ZentryUser.obterIdPorEmail();
 
         if (!userDocId) {
-            userDocId = await ZentryUser.obterIdPorEmail();
-        }
-
-        if (!userDocId) {
-            container.innerHTML = "<div style='padding:40px; text-align:center;'>Utilizador não identificado. Faça login novamente.</div>";
+            container.innerHTML = "<div style='padding:40px; text-align:center;'>Faça login novamente.</div>";
             return;
         }
 
@@ -134,98 +130,118 @@ async function renderizar() {
         const snap = await getDoc(docRef);
         
         if (!snap.exists()) {
-            container.innerHTML = `
-                <div style='padding:40px; text-align:center;'>
-                    <p>Transação não encontrada.</p>
-                    <small style="color:gray">ID: ${txId}</small>
-                </div>`;
+            container.innerHTML = `<div style='padding:40px; text-align:center;'>Transação não encontrada</div>`;
             return;
         }
 
         const d = snap.data();
-        const isSaida = d.tipo !== 'entrada';
-        const dataTxt = d.timestamp ? ZentryUI.formatarData(d.timestamp) : "Data pendente";
-// ... dentro do renderizar() do comprovante
-container.innerHTML = `
-    <div class="top-info ${isSaida ? 'saida' : 'entrada'}">
-        <div class="status-label ${isSaida ? 'saida' : 'entrada'}">${d.descricao || 'Transação'}</div>
-        <div class="valor-principal ${isSaida ? 'saida' : 'entrada'}">${ZentryUI.formatarMoeda(d.valor)}</div>
-        <div class="data-hora">${dataTxt}</div>
-    </div>
 
-    <div class="section">
-        <div class="row"><span class="label">Método de Captura</span><span class="value" style="color:var(--primary); font-weight:800;">ZENTAP NFC</span></div>
-        <div class="row"><span class="label">ID Transação</span><span class="value"><span class="tx-id">${txId}</span></span></div>
-        <div class="row"><span class="label">Status</span><span class="value" style="color:var(--primary)">✓ Concluída</span></div>
-    </div>
-    `;
+        const isSaida = d.tipo !== 'entrada';
+        const valor = ZentryUI.formatarMoeda(d.valor || 0);
+        const dataTxt = d.timestamp ? ZentryUI.formatarData(d.timestamp) : "—";
+
+        const nomeDestino = d.nomeDestino || "Destinatário";
+        const nomeOrigem = d.nomeRemetente || "Você";
+
+        container.innerHTML = `
+        
+        <div class="top-info ${isSaida ? 'saida' : 'entrada'}">
+            <div class="status-label ${isSaida ? 'saida' : 'entrada'}">
+                ${isSaida ? 'Pagamento realizado' : 'Recebimento'}
+            </div>
+            <div class="valor-principal ${isSaida ? 'saida' : 'entrada'}">${valor}</div>
+            <div class="data-hora">${dataTxt}</div>
+        </div>
+
+        <!-- 🔻 QUEM RECEBE -->
+        <div class="section">
+            <div class="row"><span class="label"><b>Quem recebeu</b></span></div>
+            <div class="row"><span class="label">Nome</span><span class="value">${nomeDestino}</span></div>
+            <div class="row"><span class="label">Banco</span><span class="value">Zentry</span></div>
+        </div>
+
+        <!-- 🔻 QUEM PAGOU -->
+        <div class="section">
+            <div class="row"><span class="label"><b>Quem pagou</b></span></div>
+            <div class="row"><span class="label">Nome</span><span class="value">${nomeOrigem}</span></div>
+            <div class="row"><span class="label">Banco</span><span class="value">Zentry</span></div>
+        </div>
+
+        <!-- 🔻 DADOS -->
+        <div class="section">
+            <div class="row"><span class="label">Valor</span><span class="value">${valor}</span></div>
+            <div class="row"><span class="label">Data/Hora</span><span class="value">${dataTxt}</span></div>
+            <div class="row"><span class="label">ID Transação</span><span class="value"><span class="tx-id">${txId}</span></span></div>
+            <div class="row"><span class="label">Método</span><span class="value">PIX</span></div>
+            <div class="row"><span class="label">Status</span><span class="value" style="color:var(--primary)">✓ Concluída</span></div>
+        </div>
+
+        <!-- 🔻 RODAPÉ BANCO -->
+        <div class="footer-auth">
+            <div class="auth-text">
+                Este comprovante é válido como documento oficial.<br>
+                Dúvidas? suporte@zentry.com.br<br>
+                SAC: 0800-000-000
+            </div>
+        </div>
+        `;
       
 
     } catch (e) {
         container.innerHTML = `
             <div style='padding:40px; text-align:center;'>
-                <p style="font-weight:bold; color:red">Erro:</p>
-                <p style="font-size:12px; word-break:break-all; margin-top:10px">${e.message}</p>
+                <p style="color:red">Erro</p>
+                <p style="font-size:12px">${e.message}</p>
             </div>`;
     }
 }
 
-// ✅ FUNÇÃO DE COMPARTILHAR — abre galeria de apps do Android
+// 📤 COMPARTILHAR (MANTIDO)
 window.compartilhar = async function() {
     const btn = document.getElementById('btnCompartilhar');
     const card = document.getElementById('cardComprovante');
 
     btn.disabled = true;
-    btn.innerText = '⏳ Gerando imagem...';
+    btn.innerText = '⏳ Gerando...';
 
     try {
-        // Gera imagem do comprovante com html2canvas
         const canvas = await html2canvas(card, {
             scale: 2,
             useCORS: true,
             backgroundColor: '#ffffff'
         });
 
-        // Converte para blob
         canvas.toBlob(async (blob) => {
-            const file = new File([blob], 'comprovante-zentry.png', { type: 'image/png' });
+            const file = new File([blob], 'comprovante.png', { type: 'image/png' });
 
-            // Tenta usar Web Share API (abre galeria de apps no Android)
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     title: 'Comprovante Zentry',
-                    text: 'Segue o comprovante da transação.',
                     files: [file]
                 });
-            } else if (navigator.share) {
-                // Fallback: compartilha só o texto se não suportar arquivo
-                await navigator.share({
-                    title: 'Comprovante Zentry',
-                    text: 'Comprovante de transação Zentry Bank.'
-                });
             } else {
-                // Fallback final: baixa a imagem
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'comprovante-zentry.png';
+                a.download = 'comprovante.png';
                 a.click();
                 URL.revokeObjectURL(url);
             }
 
             btn.disabled = false;
             btn.innerText = '📤 Compartilhar Comprovante';
-        }, 'image/png');
+        });
 
     } catch (e) {
-        console.error('Erro ao compartilhar:', e);
+        console.error(e);
         btn.disabled = false;
         btn.innerText = '📤 Compartilhar Comprovante';
     }
 }
 
 renderizar();
-</script>
+      </script>
+
 
 </body>
 </html>
