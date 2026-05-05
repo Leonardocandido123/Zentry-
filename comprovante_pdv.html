@@ -187,48 +187,7 @@ body {
     <p>Dúvidas? <b>suporte@zentry.com.br</b><br>ou pelo chat no app Zentry</p>
   </div>
 </div>
-
 <script>
-const dados = JSON.parse(localStorage.getItem("comprovante_pdv")) || {};
-
-function init() {
-  if (!dados || !dados.valor) {
-    document.body.innerHTML = `
-      <div style="padding:60px 20px;text-align:center;font-family:Sora,sans-serif;color:#fff;">
-        <div style="font-size:48px;margin-bottom:16px;">📭</div>
-        <h2 style="margin-bottom:12px;">Comprovante não encontrado</h2>
-        <button onclick="window.location.href='pdv.html'"
-          style="background:#22c55e;color:#052e16;border:none;padding:14px 28px;border-radius:14px;font-weight:700;font-size:15px;cursor:pointer;">
-          Voltar ao PDV
-        </button>
-      </div>`;
-    return;
-  }
-
-  const v    = dados.valorFmt || "R$ " + Number(dados.valor).toFixed(2).replace('.',',');
-  const data = dados.data || new Date().toLocaleString('pt-BR');
-  const txid = (dados.id || 'ZNT'+Date.now()).toUpperCase().substring(0,16);
-  const vend = dados.vendedor || "Zentry";
-  const met  = dados.metodo  || "Pix";
-  const metIcon = met.toLowerCase().includes('pix') ? '⚡ ' : met.toLowerCase().includes('créd') ? '💜 ' : '💳 ';
-
-  // UI escura
-  document.getElementById('uiValor').textContent     = v;
-  document.getElementById('uiData').textContent      = data;
-  document.getElementById('uiMetodo').textContent    = metIcon + met;
-  document.getElementById('uiDataLinha').textContent = data;
-  document.getElementById('uiTxId').textContent      = txid;
-  document.getElementById('uiVendedor').textContent  = vend;
-
-  // Card branco
-  document.getElementById('expValor').textContent     = v;
-  document.getElementById('expData').textContent      = data;
-  document.getElementById('expMetodo').textContent    = met;
-  document.getElementById('expDataLinha').textContent = data;
-  document.getElementById('expTxId').textContent      = txid;
-  document.getElementById('expVendedor').textContent  = vend;
-}
-
 async function compartilhar() {
   const btn = document.querySelector('.btn-primary');
   btn.textContent = "Gerando imagem...";
@@ -236,12 +195,8 @@ async function compartilhar() {
 
   try {
     await document.fonts.ready;
-    await new Promise(r => setTimeout(r, 200));
-
     const canvas = await html2canvas(document.getElementById('cardExport'), {
-      scale: 3, backgroundColor: "#ffffff",
-      useCORS: true, logging: false,
-      width: 420, windowWidth: 420
+      scale: 3, backgroundColor: "#ffffff", useCORS: true, width: 420
     });
 
     const blob = await new Promise(r => canvas.toBlob(r, 'image/png', 1.0));
@@ -249,36 +204,21 @@ async function compartilhar() {
 
     if (navigator.canShare && navigator.canShare({ files:[file] })) {
       await navigator.share({ files:[file], title:'Comprovante Zentap' });
-    } else if (navigator.share) {
-      await navigator.share({
-        title: 'Comprovante Zentap',
-        text: `Pagamento de ${dados.valorFmt} via ${dados.metodo} aprovado! ✓`
-      });
     } else {
       const link = document.createElement("a");
       link.download = "comprovante_zentap.png";
       link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
+      alert("Comprovante salvo na galeria!");
     }
   } catch(err) {
-    try {
-      const txt = `✓ Pagamento Aprovado - Zentap\nValor: ${dados.valorFmt}\nMétodo: ${dados.metodo}\nData: ${dados.data}\nID: ${dados.id}`;
-      await navigator.clipboard.writeText(txt);
-      alert("Comprovante copiado!");
-    } catch(e) {}
+    alert("Erro ao compartilhar. A imagem foi copiada!");
   }
-
   btn.textContent = "📤 Compartilhar Comprovante";
   btn.disabled = false;
 }
-
-function novaVenda() {
-  localStorage.removeItem("comprovante_pdv");
-  window.location.href = "pdv.html";
-}
-
-init();
-</script>
+  </script>
+  
 </body>
     </html>
     
