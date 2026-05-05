@@ -1,287 +1,300 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zentap Pro - PDV</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #22c55e;
-            --bg: #F6F7F9;
-            --card: #FFFFFF;
-            --text-main: #1A1D23;
-            --text-sec: #717680;
-            --border: #E5E7EB;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zentap Pro PDV</title>
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-        body { background-color: var(--bg); color: var(--text-main); overflow: hidden; height: 100vh; width: 100vw; }
+<style>
+:root{
+--primary:#22c55e;
+--bg:#F6F7F9;
+--card:#fff;
+--text:#1A1D23;
+--sec:#717680;
+--border:#E5E7EB;
+}
 
-        /* CONTROLE DE TELAS */
-        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; position: absolute; top: 0; left: 0; background: var(--bg); z-index: 10; }
-        .screen.active { display: flex; animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter;}
+body{background:var(--bg);overflow:hidden;height:100vh;}
 
-        /* HEADER */
-        .sub-header { 
-            padding: 10px 20px; 
-            display: grid; 
-            grid-template-columns: 44px 1fr 44px; 
-            align-items: center; 
-            background: #fff; 
-            border-bottom: 1px solid var(--border); 
-            height: 55px;
-        }
-        .back-btn { color: var(--primary); cursor: pointer; border: none; background: none; display: flex; justify-content: flex-start; align-items: center; }
-        .sub-title { font-size: 16px; font-weight: 700; text-align: center; color: var(--text-main); }
+.screen{display:none;position:absolute;width:100%;height:100%;flex-direction:column;background:var(--bg);}
+.screen.active{display:flex;}
 
-        /* DASHBOARD */
-        .header-main { padding: 25px 20px; display: flex; align-items: center; justify-content: space-between; }
-        .avatar { width: 45px; height: 45px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #000; }
-        .dashboard-card { background: var(--card); margin: 0 20px 20px; padding: 20px; border-radius: 24px; border: 1px solid var(--border); }
-        .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
-        .grid-btn { background: var(--card); border: 1px solid var(--border); height: 100px; border-radius: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.sub-header{
+height:55px;
+background:#fff;
+display:grid;
+grid-template-columns:50px 1fr 50px;
+align-items:center;
+border-bottom:1px solid var(--border);
+padding:0 10px;
+}
 
-        /* TECLADO - ESTRATÉGIA FIXA PARA O BOTÃO NÃO SUMIR */
-        .display-valor { 
-            height: calc(100vh - 430px); /* Ocupa o que sobra */
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 48px; 
-            font-weight: 800; 
-            color: var(--text-main); 
-        }
+.back-btn{background:none;border:none;font-size:18px;color:var(--primary)}
 
-        .bottom-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #fff;
-            padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-            border-top: 1px solid var(--border);
-            z-index: 20;
-        }
+.title{text-align:center;font-weight:700}
 
-        .teclado-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 4px; 
-            margin-bottom: 8px;
-        }
+.display{
+flex:1;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:48px;
+font-weight:800;
+}
 
-        .key { 
-            height: 52px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 22px; 
-            font-weight: 600; 
-            border-radius: 12px; 
-        }
-        .key:active { background: #f0f0f0; }
+.bottom{
+position:fixed;
+bottom:0;
+width:100%;
+background:#fff;
+padding:10px;
+border-top:1px solid var(--border);
+}
 
-        .btn-confirm { 
-            width: 100%;
-            height: 58px; 
-            background: var(--primary); 
-            color: #000; 
-            border-radius: 16px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            opacity: 0.15; 
-            pointer-events: none; 
-            transition: 0.3s;
-            border: none;
-        }
-        .btn-confirm.active { opacity: 1; pointer-events: all; }
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:5px;
+margin-bottom:10px;
+}
 
-        /* MODALIDADES */
-        .valor-resumo { padding: 25px 20px; text-align: center; font-size: 38px; font-weight: 800; }
-        .list-modalidades { padding: 0 20px; }
-        .item-modalidade { 
-            background: #fff; padding: 18px; border-radius: 20px; margin-bottom: 12px; 
-            border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
-            font-weight: 700;
-        }
-        .arrow-bank { width: 10px; height: 10px; border-top: 2.5px solid var(--primary); border-right: 2.5px solid var(--primary); transform: rotate(45deg); }
+.key{
+height:50px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:20px;
+font-weight:600;
+}
 
-        /* DÉBITO / PAGAMENTO */
-        .modalidade-tag { background: var(--primary); color: #000; font-size: 10px; font-weight: 800; padding: 4px 14px; border-radius: 20px; margin-bottom: 8px; display: inline-block; }
-        .pagamento-placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .maquininha-icon { width: 140px; margin-bottom: 15px; }
-        .instrucao-texto { font-size: 15px; color: var(--text-sec); line-height: 1.4; max-width: 260px; font-weight: 500; }
+.btn{
+width:100%;
+height:55px;
+background:var(--primary);
+border:none;
+border-radius:12px;
+font-weight:700;
+opacity:.3;
+}
 
-        /* SUCESSO */
-        .success-icon { width: 70px; height: 70px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; color: #000; font-size: 35px; }
-    </style>
+.btn.active{opacity:1;}
+
+.item{
+background:#fff;
+padding:15px;
+margin:10px;
+border-radius:12px;
+border:1px solid var(--border);
+font-weight:600;
+}
+
+.success{
+text-align:center;
+padding:40px;
+}
+
+.qr{
+width:150px;
+height:150px;
+background:#ddd;
+margin:20px auto;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+</style>
 </head>
+
 <body>
 
-    <div id="screen-dash" class="screen active">
-        <header class="header-main">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="avatar" id="userInitial">L</div>
-                <div style="font-weight: 600;">Olá, <span id="userName">Leonardo</span></div>
-            </div>
-            <div>🔔</div>
-        </header>
-        <div class="dashboard-card">
-            <div style="color: var(--text-sec); font-size: 13px; margin-bottom: 4px;">Vendas de hoje</div>
-            <div style="font-size: 26px; font-weight: 800; display: flex; justify-content: space-between; align-items: center;">
-                R$ 1.250,00
-                <span style="color: var(--primary); font-size: 11px; font-weight: 800;">VER MAIS</span>
-            </div>
-        </div>
-        <div class="grid-menu">
-            <div class="grid-btn"><span>📊 Extrato</span></div>
-            <div class="grid-btn" onclick="nav('screen-teclado')" style="border-color: var(--primary);"><span>💰 Receber Pagamento</span></div>
-        </div>
-    </div>
+<!-- DASH -->
+<div id="dash" class="screen active">
+<div class="sub-header">
+<div></div>
+<div class="title">Dashboard</div>
+<div></div>
+</div>
 
-    <div id="screen-teclado" class="screen">
-        <div class="sub-header">
-            <button class="back-btn" onclick="nav('screen-dash')">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
-            <span class="sub-title">Valor</span>
-            <div></div>
-        </div>
-        
-        <div class="display-valor" id="display">R$ 0,00</div>
-        
-        <div class="bottom-container">
-            <div class="teclado-grid">
-                <div class="key" onclick="press(1)">1</div><div class="key" onclick="press(2)">2</div><div class="key" onclick="press(3)">3</div>
-                <div class="key" onclick="press(4)">4</div><div class="key" onclick="press(5)">5</div><div class="key" onclick="press(6)">6</div>
-                <div class="key" onclick="press(7)">7</div><div class="key" onclick="press(8)">8</div><div class="key" onclick="press(9)">9</div>
-                <div class="key" onclick="press('00')">00</div><div class="key" onclick="press(0)">0</div><div class="key" onclick="limpar()">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM18 9l-6 6M12 9l6 6"/></svg>
-                </div>
-            </div>
-            <button class="btn-confirm" id="btnProximo" onclick="confirmarValor()">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="4"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
-        </div>
-    </div>
+<div class="item" onclick="nav('valor')">💰 Receber Pagamento</div>
+</div>
 
-    <div id="screen-modal" class="screen">
-        <div class="sub-header">
-            <button class="back-btn" onclick="nav('screen-teclado')">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
-            <span class="sub-title">Modalidade</span>
-            <div></div>
-        </div>
-        <div class="valor-resumo" id="valorFinal">R$ 0,00</div>
-        <div class="list-modalidades">
-            <div class="item-modalidade">
-                <div style="display:flex; align-items:center; gap:12px;">⚡ <span>Pix Zentry</span></div>
-                <div class="arrow-bank"></div>
-            </div>
-            <div class="item-modalidade" onclick="nav('screen-debito')">
-                <div style="display:flex; align-items:center; gap:12px;">💳 <span>Débito</span></div>
-                <div class="arrow-bank"></div>
-            </div>
-            <div class="item-modalidade">
-                <div style="display:flex; align-items:center; gap:12px;">💳 <span>Crédito</span></div>
-                <div class="arrow-bank"></div>
-            </div>
-        </div>
-    </div>
+<!-- VALOR -->
+<div id="valor" class="screen">
+<div class="sub-header">
+<button class="back-btn" onclick="nav('dash')">←</button>
+<div class="title">Valor</div>
+<div></div>
+</div>
 
-    <div id="screen-debito" class="screen">
-        <div class="sub-header">
-            <button class="back-btn" onclick="nav('screen-modal')">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
-            <span class="sub-title">Pagamento</span>
-            <div></div>
-        </div>
-        <div style="text-align: center; padding-top: 30px;">
-            <div class="modalidade-tag">DÉBITO</div>
-            <div style="color: var(--text-sec); font-size: 13px;">Valor</div>
-            <div class="valor-resumo" id="valorDebito" style="padding: 5px 0;">R$ 0,00</div>
-        </div>
-        <div class="pagamento-placeholder">
-            <svg class="maquininha-icon" viewBox="0 0 200 200" fill="none">
-                <rect x="60" y="80" width="80" height="100" rx="10" fill="#E5E7EB"/>
-                <rect x="70" y="90" width="60" height="35" rx="4" fill="#1A1D23"/>
-                <path d="M100 40 C 125 40, 135 55, 135 75" stroke="#22c55e" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 8"/>
-                <rect x="80" y="25" width="35" height="55" rx="5" transform="rotate(-30 80 25)" fill="#22c55e"/>
-            </svg>
-            <p class="instrucao-texto">Aproxime, passe ou insira o cartão na parte superior da maquininha</p>
-        </div>
-        <div style="padding: 20px;">
-            <button class="btn-confirm active" style="opacity:1; pointer-events:all; background: #eee;" onclick="nav('screen-sucesso')">SIMULAR SUCESSO</button>
-        </div>
-    </div>
+<div class="display" id="display">R$ 0,00</div>
 
-    <div id="screen-sucesso" class="screen">
-        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px;">
-            <div class="success-icon">✓</div>
-            <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 8px;">Venda Concluída!</h2>
-            <div class="dashboard-card" style="width: 100%; text-align: center; margin: 20px 0; padding: 25px;">
-                <div style="font-size: 32px; font-weight: 800;" id="valorSucesso">R$ 0,00</div>
-            </div>
-            <button class="btn-confirm active" style="opacity: 1; pointer-events: all; margin:0;" onclick="zerarEVoldar()">Nova Venda</button>
-            <button class="grid-btn" style="width: 100%; height: 58px; margin-top: 15px; border-radius: 16px; font-weight: 700;">📄 Ver Comprovante</button>
-        </div>
-    </div>
+<div class="bottom">
+<div class="grid">
+<div class="key" onclick="add(1)">1</div>
+<div class="key" onclick="add(2)">2</div>
+<div class="key" onclick="add(3)">3</div>
+<div class="key" onclick="add(4)">4</div>
+<div class="key" onclick="add(5)">5</div>
+<div class="key" onclick="add(6)">6</div>
+<div class="key" onclick="add(7)">7</div>
+<div class="key" onclick="add(8)">8</div>
+<div class="key" onclick="add(9)">9</div>
+</div>
 
-    <script>
-        let valorString = "";
+<button class="btn" id="btn" onclick="irMetodo()">PRÓXIMO</button>
+</div>
+</div>
 
-        function nav(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
+<!-- METODO -->
+<div id="metodo" class="screen">
+<div class="sub-header">
+<button class="back-btn" onclick="nav('valor')">←</button>
+<div class="title">Pagamento</div>
+<div></div>
+</div>
 
-        function press(n) {
-            if (valorString.length >= 8) return;
-            valorString += n;
-            atualizarDisplay();
-        }
+<div class="item" onclick="pix()">PIX</div>
+<div class="item" onclick="debito()">DÉBITO</div>
+<div class="item" onclick="credito()">CRÉDITO</div>
+</div>
 
-        function limpar() {
-            valorString = valorString.slice(0, -1);
-            atualizarDisplay();
-        }
+<!-- PIX -->
+<div id="pix" class="screen">
+<div class="sub-header">
+<button class="back-btn" onclick="nav('metodo')">←</button>
+<div class="title">PIX</div>
+<div></div>
+</div>
 
-        function atualizarDisplay() {
-            let num = parseFloat(valorString || 0) / 100;
-            let formatado = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
-            document.getElementById('display').innerText = formatado;
-            const btn = document.getElementById('btnProximo');
-            if (num > 0) btn.classList.add('active');
-            else btn.classList.remove('active');
-        }
+<div class="display" id="pixVal"></div>
 
-        function confirmarValor() {
-            let num = parseFloat(valorString || 0) / 100;
-            let formatado = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
-            document.getElementById('valorFinal').innerText = formatado;
-            document.getElementById('valorDebito').innerText = formatado;
-            document.getElementById('valorSucesso').innerText = formatado;
-            nav('screen-modal');
-        }
+<div class="qr">QR CODE</div>
 
-        function zerarEVoldar() {
-            valorString = "";
-            atualizarDisplay();
-            nav('screen-dash');
-        }
+<div class="item" onclick="processar()">Confirmar pagamento</div>
+</div>
 
-        window.onload = () => {
-            const name = localStorage.getItem("usuarioNome") || "Leonardo";
-            document.getElementById('userName').innerText = name;
-            document.getElementById('userInitial').innerText = name.charAt(0).toUpperCase();
-        };
-    </script>
+<!-- CREDITO -->
+<div id="credito" class="screen">
+<div class="sub-header">
+<button class="back-btn" onclick="nav('metodo')">←</button>
+<div class="title">Crédito</div>
+<div></div>
+</div>
+
+<div class="display" id="credVal"></div>
+
+<div id="parcelas"></div>
+</div>
+
+<!-- DEBITO -->
+<div id="debito" class="screen">
+<div class="sub-header">
+<button class="back-btn" onclick="nav('metodo')">←</button>
+<div class="title">Débito</div>
+<div></div>
+</div>
+
+<div class="display" id="debVal"></div>
+
+<div class="item" onclick="processar()">Aproximar cartão</div>
+</div>
+
+<!-- PROCESSANDO -->
+<div id="process" class="screen">
+<div class="success">
+<h2>Processando pagamento...</h2>
+</div>
+</div>
+
+<!-- SUCESSO -->
+<div id="ok" class="screen">
+<div class="success">
+<h2>APROVADO ✔</h2>
+<div id="res"></div>
+
+<div class="item" onclick="nav('dash')">Nova venda</div>
+<div class="item" onclick="alert('Compartilhar comprovante')">Compartilhar</div>
+<div class="item" onclick="nav('recibo')">Ver comprovante</div>
+</div>
+</div>
+
+<!-- RECIBO -->
+<div id="recibo" class="screen">
+<div class="sub-header">
+<button class="back-btn" onclick="nav('ok')">←</button>
+<div class="title">Comprovante</div>
+<div></div>
+</div>
+
+<div class="item" id="comp"></div>
+</div>
+
+<script>
+let valor="";
+
+function nav(id){
+document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+
+function add(n){
+valor+=n;
+update();
+}
+
+function update(){
+let v=parseFloat(valor||0)/100;
+document.getElementById('display').innerText=v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+document.getElementById('btn').classList.toggle('active',v>0);
+}
+
+function irMetodo(){
+nav('metodo');
+}
+
+function setVals(){
+let v=parseFloat(valor||0)/100;
+pixVal.innerText=credVal.innerText=debVal.innerText=v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+function pix(){setVals();nav('pix');}
+function debito(){setVals();nav('debito');processar();}
+function credito(){
+setVals();
+nav('credito');
+
+let v=parseFloat(valor||0)/100;
+let html="";
+for(let i=1;i<=12;i++){
+html+=`<div class="item" onclick="parcelar(${i})">${i}x de ${(v/i).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</div>`;
+}
+parcelas.innerHTML=html;
+}
+
+function parcelar(i){
+processar();
+}
+
+function processar(){
+nav('process');
+
+setTimeout(()=>{
+nav('ok');
+let v=parseFloat(valor||0)/100;
+res.innerText=v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+comp.innerHTML=`
+Valor: ${v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}<br>
+Método: pagamento<br>
+ID: ZT${Math.floor(Math.random()*999999)}<br>
+Status: aprovado
+`;
+},2000);
+}
+</script>
+
 </body>
-                    </html>
-                    
+</html>
