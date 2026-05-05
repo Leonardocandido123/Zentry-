@@ -72,121 +72,181 @@
         Carregando...
     </div>
 </div>
-
 <script type="module">
-    import { db, ZentryUI, ZentryUser } from './zentry-core.js';
-    import { collection, onSnapshot, query, orderBy, doc, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { db, ZentryUI, ZentryAuth } from './zentry-core.js';
+import {
+    collection,
+    onSnapshot,
+    query,
+    orderBy,
+    doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    let uidAtual = "";
-    let transacoesCache = [];
+let uidAtual = "";
+let transacoesCache = [];
+let unsubUser = null;
+let unsubTx = null;
 
-    async function init() {
-        const emailLogado = localStorage.getItem("usuarioEmail");
-        
-        if (!emailLogado) {
-            console.log("Sem e-mail salvo. Redirecionando...");
+// 🚀 INIT
+async function init() {
+    try {
+        const user = await ZentryAuth.exigirLogin();
+
+        if (!user) {
             window.location.href = "login.html";
             return;
         }
 
-        try {
-            const qUser = query(collection(db, "usuarios"), where("email", "==", emailLogado), limit(1));
-            const userSnap = await getDocs(qUser);
+        uidAtual = user.uid;
 
-            if (userSnap.empty) {
-                console.log("Usuário não encontrado no banco.");
-                return;
-            }
+        // salva ID (pra comprovante funcionar)
+        localStorage.setItem("idUsuarioLogado", uidAtual);
 
-            // Pega o ID do documento
-            uidAtual = userSnap.docs[0].id;
+        iniciarListenerSaldo();
+        iniciarListenerTransacoes();
 
-            // ✅ CORREÇÃO: salva o ID aqui dentro do try, logo após pegar
-            localStorage.setItem("idUsuarioLogado", uidAtual);
-            localStorage.setItem("usuarioEmail", emailLogado);
-            console.log("ID salvo para comprovante:", uidAtual);
+    } catch (e) {
+        console.error("Erro ao iniciar extrato:", e);
+        window.location.href = "login.html";
+    }
+}
 
-            // Escuta o saldo em tempo real
-            onSnapshot(doc(db, "usuarios", uidAtual), (ds) => {
-                if (ds.exists()) {
-                    document.getElementById('txtSaldo').innerText = ZentryUI.formatarMoeda(ds.data().saldo || 0);
-                }
-            });
+// 💰 SALDO TEMPO REAL
+function iniciarListenerSaldo() {
 
-            // Escuta as transações em tempo real
-            const qTx = query(
-                collection(db, "usuarios", uidAtual, "transacoes"), 
-                orderBy("timestamp", "desc")
+    if (unsubUser) unsubUser();
+
+    unsubUser = onSnapshot(doc(db, "usuarios", uidAtual), (ds) => {
+        if (!ds.exists()) return;
+
+        const saldo = Number(ds.data().saldo || 0);
+
+        const el = document.getElementById('txtSaldo');
+        if (el) {
+            el.innerText = ZentryUI.formatarMoeda(
+                isNaN(saldo) ? 0 : saldo
             );
+        }
+    });
+}
 
-            onSnapshot(qTx, (snap) => {
-                transacoesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderizar("todos");
+// 📊 TRANSAÇÕES TEMPO REAL
+function iniciarListenerTransacoes() {
+
+    if (unsubTx) unsubTx();
+
+    const qTx = query(
+        collection(db, "usuarios", uidAtual, "transacoes"),
+        orderBy("timestamp", "desc")
+    );
+
+    unsubTx = onSnapshot(qTx, (snap) => {
+        transacoesCache = snap.docs.map(d => ({
+            id: d.id,
+            ...d.data()
+        }));
+
+        renderizar("todos");
+    }, (err) => {
+        console.error("Erro ao buscar transações:", err);
+    });
+}
+
+// 🎯 RENDER
+function renderizar(filtro) {
+    const lista = document.getElementById('listaExtrato');
+    if (!lista) return;
+
+    let filtradas = transacoesCache.filter(t => {
+        if (filtro === "entrada") return t.tipo === "entrada";
+        if (filtro === "saida") return t.tipo === "saida";
+        return true;
+    });
+
+    if (filtradas.length === 0) {
+        lista.innerHTML = `
+            <div style="text-align:center; padding:40px; color:#6b7a99;">
+                Nenhuma movimentação.
+            </div>`;
+        return;
+    }
+
+    lista.innerHTML = "";
+
+    filtradas.forEach(t => {
+
+        const ehEntrada = t.tipo === "entrada";
+
+        let dataFinal = "Agora";
+        let horaFinal = "";
+
+        if (t.timestamp?.toDate) {
+            const d = t.timestamp.toDate();
+            dataFinal = d.toLocaleDateString('pt-BR');
+            horaFinal = d.toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
             });
-
-        } catch (error) {
-            console.error("Erro no carregamento:", error);
-        }
-    }
-
-    function renderizar(filtro) {
-        const lista = document.getElementById('listaExtrato');
-        
-        let filtradas = transacoesCache.filter(t => {
-            if (filtro === "entrada") return t.tipo === "entrada";
-            if (filtro === "saida") return t.tipo === "saida";
-            return true;
-        });
-
-        if (filtradas.length === 0) {
-            lista.innerHTML = `<div style="text-align:center; padding:40px; color:#6b7a99;">Nenhuma movimentação.</div>`;
-            return;
         }
 
-        lista.innerHTML = "";
-        filtradas.forEach(t => {
-            const ehEntrada = t.tipo === "entrada";
-            
-            let dataFinal = "Recentemente";
-            let horaFinal = "";
-            
-            if (t.timestamp && t.timestamp.toDate) {
-                const d = t.timestamp.toDate();
-                dataFinal = d.toLocaleDateString('pt-BR');
-                horaFinal = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-            }
+        const valor = Number(t.valor) || 0;
 
-            lista.innerHTML += `
-                <div class="item" onclick="window.location.href='comprovante.html?id=${t.id}'">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div class="icon-box" style="background: ${ehEntrada ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'};">
-                            ${ehEntrada ? '💚' : '💸'}
-                        </div>
-                        <div class="info">
-                            <b>${t.descricao || 'Transação'}</b>
-                            <span>${dataFinal} • ${horaFinal}</span>
-                        </div>
+        lista.innerHTML += `
+            <div class="item" onclick="abrirComprovante('${t.id}')">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    
+                    <div class="icon-box" style="background: ${
+                        ehEntrada ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'
+                    };">
+                        ${ehEntrada ? '💚' : '💸'}
                     </div>
-                    <div style="text-align:right;">
-                        <div class="val ${ehEntrada ? 'pos' : 'neg'}">
-                            ${ehEntrada ? '+' : '-'} ${ZentryUI.formatarMoeda(t.valor)}
-                        </div>
+
+                    <div class="info">
+                        <b>${t.descricao || 'Transação'}</b>
+                        <span>${dataFinal} • ${horaFinal}</span>
                     </div>
-                </div>`;
-        });
-    }
 
-    // Inicializa
-    init();
+                </div>
 
-    // Filtros
+                <div style="text-align:right;">
+                    <div class="val ${ehEntrada ? 'pos' : 'neg'}">
+                        ${ehEntrada ? '+' : '-'} ${ZentryUI.formatarMoeda(valor)}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// 🔎 ABRIR COMPROVANTE
+window.abrirComprovante = (id) => {
+    window.location.href = `comprovante.html?id=${id}`;
+};
+
+// 🎛️ FILTROS
+function initFiltros() {
     document.querySelectorAll('.filter').forEach(btn => {
         btn.onclick = () => {
-            document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.filter')
+                .forEach(b => b.classList.remove('active'));
+
             btn.classList.add('active');
+
             renderizar(btn.dataset.type);
         };
     });
+}
+
+// 🔄 LIMPA LISTENERS
+window.addEventListener("beforeunload", () => {
+    if (unsubUser) unsubUser();
+    if (unsubTx) unsubTx();
+});
+
+// 🚀 START
+init();
+initFiltros();
+
 </script>
 
 </body>
