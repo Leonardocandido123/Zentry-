@@ -1,233 +1,190 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zentap Pro</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zentap Pro - PDV</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #22c55e;
+            --bg: #F6F7F9;
+            --card: #FFFFFF;
+            --text-main: #1A1D23;
+            --text-sec: #717680;
+            --border: #E5E7EB;
+        }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
 
-<style>
-:root{
-  --primary:#22c55e;
-  --bg:#060910;
-  --card:#0f1623;
-  --border:rgba(255,255,255,0.08);
-}
+        body { background-color: var(--bg); color: var(--text-main); overflow: hidden; height: 100vh; }
 
-html, body {
-  height: 100%;
-  width: 100%;
-  background: var(--bg);
-  color: #fff;
-  font-family: sans-serif;
-  overflow: hidden;
-}
+        /* CONTROLE DE TELAS */
+        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; position: absolute; top: 0; left: 0; background: var(--bg); }
+        .screen.active { display: flex; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-.screen {
-  position: fixed;
-  inset: 0;
-  display: none;
-  flex-direction: column;
-  padding: 20px;
-}
+        /* CABEÇALHO PADRÃO TELAS SECUNDÁRIAS */
+        .sub-header { padding: 20px; display: flex; align-items: center; gap: 20px; background: #fff; border-bottom: 1px solid var(--border); }
+        .back-btn { color: var(--primary); font-size: 24px; cursor: pointer; border: none; background: none; font-weight: bold; }
+        .sub-title { font-size: 18px; font-weight: 700; }
 
-.screen.ativa { display: flex; }
+        /* TELA 1: DASHBOARD */
+        .header-main { padding: 25px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .avatar { width: 45px; height: 45px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #000; }
+        .dashboard-card { background: var(--card); margin: 0 20px 25px; padding: 20px; border-radius: 24px; border: 1px solid var(--border); }
+        .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; margin-bottom: 30px; }
+        .grid-btn { background: var(--card); border: 1px solid var(--border); height: 120px; border-radius: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; }
+        .grid-btn span { font-weight: 700; font-size: 14px; }
 
-.top-bar {
-  text-align: center;
-  font-size: 22px;
-  font-weight: 800;
-  margin-bottom: 20px;
-}
+        /* TELA 2: TECLADO (VENDA RÁPIDA) */
+        .display-valor { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 56px; font-weight: 800; color: var(--text-main); }
+        .teclado-container { background: #fff; padding: 10px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border-top: 1px solid var(--border); }
+        .key { height: 70px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; cursor: pointer; border-radius: 12px; transition: 0.1s; }
+        .key:active { background: #f0f0f0; }
+        .btn-confirm { 
+            grid-column: span 3; height: 65px; background: var(--primary); color: #000; 
+            border-radius: 16px; display: flex; align-items: center; justify-content: center; 
+            font-size: 28px; margin-top: 5px; opacity: 0.3; pointer-events: none; transition: 0.3s;
+        }
+        .btn-confirm.active { opacity: 1; pointer-events: all; }
 
-.top-bar span { color: var(--primary); }
+        /* TELA 3: MODALIDADES */
+        .valor-resumo { padding: 40px 20px; text-align: center; font-size: 36px; font-weight: 800; }
+        .list-modalidades { padding: 0 20px; }
+        .item-modalidade { 
+            background: #fff; padding: 20px; border-radius: 18px; margin-bottom: 12px; 
+            border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
+            font-weight: 700; cursor: pointer;
+        }
+        .item-modalidade .icon-box { display: flex; align-items: center; gap: 15px; }
+        .item-modalidade .arrow { color: var(--primary); font-weight: bold; }
 
-.valor {
-  font-size: 60px;
-  text-align: center;
-  margin-top: 40px;
-}
-
-.btn {
-  height: 60px;
-  border-radius: 16px;
-  border: none;
-  margin-top: 20px;
-  font-size: 18px;
-}
-
-.btn-green {
-  background: var(--primary);
-  color: #000;
-}
-
-.btn-outline {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: #fff;
-}
-
-.metodo {
-  padding: 18px;
-  border-radius: 16px;
-  background: var(--card);
-  margin-bottom: 12px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-}
-
-.qr {
-  display: flex;
-  justify-content: center;
-  margin-top: 30px;
-}
-
-.timer {
-  text-align: center;
-  margin-top: 10px;
-  color: #fbbf24;
-}
-
-.status {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.loader {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: 4px solid var(--border);
-  border-top: 4px solid var(--primary);
-  animation: spin 1s linear infinite;
-  margin: 30px auto;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-</style>
+        /* COMPLEMENTOS */
+        .quick-actions { padding: 0 20px; }
+        .actions-row { display: flex; justify-content: space-between; gap: 10px; }
+        .action-item { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
+        .action-circle { width: 55px; height: 55px; background: var(--card); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    </style>
 </head>
-
 <body>
 
-<!-- TELA VALOR -->
-<div id="t1" class="screen ativa">
-  <div class="top-bar">ZEN<span>TAP</span></div>
+    <div id="screen-dash" class="screen active">
+        <header class="header-main">
+            <div class="user-info" style="display: flex; align-items: center; gap: 12px;">
+                <div class="avatar" id="userInitial">L</div>
+                <div class="user-name" style="font-weight: 600;">Olá, <span id="userName">Leonardo</span></div>
+            </div>
+            <div class="notif">🔔</div>
+        </header>
 
-  <div class="valor" id="valor">R$ 10,00</div>
+        <div class="dashboard-card">
+            <div style="color: var(--text-sec); font-size: 13px; margin-bottom: 5px;">Vendas de hoje</div>
+            <div style="font-size: 28px; font-weight: 800; display: flex; justify-content: space-between; align-items: center;">
+                R$ 1.250,00
+                <span style="color: var(--primary); font-size: 12px;">VER MAIS</span>
+            </div>
+        </div>
 
-  <button class="btn btn-green" onclick="ir(2)">Continuar</button>
-</div>
+        <div class="grid-menu">
+            <div class="grid-btn"><span>📊 Extrato</span></div>
+            <div class="grid-btn" onclick="nav('screen-teclado')" style="border-color: var(--primary);"><span>💸 Venda Rápida</span></div>
+        </div>
 
-<!-- MÉTODO -->
-<div id="t2" class="screen">
-  <h2>Forma de pagamento</h2>
+        <div class="quick-actions">
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-sec); margin-bottom: 15px;">Serviços</div>
+            <div class="actions-row">
+                <div class="action-item"><div class="action-circle">🔗</div><span style="font-size:11px">Link</span></div>
+                <div class="action-item"><div class="action-circle">📄</div><span style="font-size:11px">Boleto</span></div>
+                <div class="action-item"><div class="action-circle">👤</div><span style="font-size:11px">Cliente</span></div>
+                <div class="action-item"><div class="action-circle">⚙️</div><span style="font-size:11px">Ajustes</span></div>
+            </div>
+        </div>
+    </div>
 
-  <div class="metodo" onclick="abrirPix()">⚡ Pix</div>
+    <div id="screen-teclado" class="screen">
+        <div class="sub-header">
+            <button class="back-btn" onclick="nav('screen-dash')">←</button>
+            <span class="sub-title">Valor</span>
+        </div>
+        <div class="display-valor" id="display">R$ 0,00</div>
+        <div class="teclado-container">
+            <div class="key" onclick="press(1)">1</div><div class="key" onclick="press(2)">2</div><div class="key" onclick="press(3)">3</div>
+            <div class="key" onclick="press(4)">4</div><div class="key" onclick="press(5)">5</div><div class="key" onclick="press(6)">6</div>
+            <div class="key" onclick="press(7)">7</div><div class="key" onclick="press(8)">8</div><div class="key" onclick="press(9)">9</div>
+            <div class="key" onclick="press('00')">00</div><div class="key" onclick="press(0)">0</div><div class="key" onclick="limpar()">⌫</div>
+            <div class="btn-confirm" id="btnProximo" onclick="confirmarValor()">➜</div>
+        </div>
+    </div>
 
-  <button class="btn btn-outline" onclick="ir(1)">Voltar</button>
-</div>
+    <div id="screen-modal" class="screen">
+        <div class="sub-header">
+            <button class="back-btn" onclick="nav('screen-teclado')">←</button>
+            <span class="sub-title">Modalidade</span>
+        </div>
+        <div class="valor-resumo" id="valorFinal">R$ 0,00</div>
+        <div class="list-modalidades">
+            <div class="item-modalidade" onclick="alert('Iniciando Pix...')">
+                <div class="icon-box">⚡ <span>Pix Zentry</span></div>
+                <span class="arrow">→</span>
+            </div>
+            <div class="item-modalidade">
+                <div class="icon-box">💳 <span>Cartão de Crédito</span></div>
+                <span class="arrow">→</span>
+            </div>
+            <div class="item-modalidade">
+                <div class="icon-box">🏦 <span>Transferência</span></div>
+                <span class="arrow">→</span>
+            </div>
+        </div>
+    </div>
 
-<!-- PIX -->
-<div id="t3" class="screen">
-  <h2>Pix</h2>
+    <script>
+        let valorString = "";
 
-  <div class="qr" id="qr"></div>
+        // NAVEGAÇÃO
+        function nav(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
 
-  <div class="timer" id="timer">Expira em 05:00</div>
+        // LÓGICA DO TECLADO
+        function press(n) {
+            if (valorString.length >= 8) return;
+            valorString += n;
+            atualizarDisplay();
+        }
 
-  <div class="status">
-    <div>Aguardando pagamento</div>
-    <div style="opacity:.6">Escaneie o QR Code</div>
-  </div>
+        function limpar() {
+            valorString = valorString.slice(0, -1);
+            atualizarDisplay();
+        }
 
-  <div class="loader"></div>
+        function atualizarDisplay() {
+            let num = parseFloat(valorString || 0) / 100;
+            let formatado = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
+            document.getElementById('display').innerText = formatado;
+            
+            const btn = document.getElementById('btnProximo');
+            if (num > 0) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
 
-  <button class="btn btn-outline" onclick="ir(2)">Voltar</button>
-</div>
+        function confirmarValor() {
+            let num = parseFloat(valorString || 0) / 100;
+            document.getElementById('valorFinal').innerText = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
+            nav('screen-modal');
+        }
 
+        // INIT
+        window.onload = () => {
+            const name = localStorage.getItem("usuarioNome") || "Leonardo";
+            document.getElementById('userName').innerText = name;
+            document.getElementById('userInitial').innerText = name.charAt(0).toUpperCase();
+        };
+    </script>
 </body>
-
-<script>
-let valor = 10.00;
-let txid = null;
-let intervalo = null;
-
-/* NAV */
-function ir(n){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('ativa'))
-  document.getElementById('t'+n).classList.add('ativa')
-}
-
-/* PIX REAL */
-async function abrirPix(){
-  ir(3);
-
-  try {
-    const res = await fetch("/.netlify/functions/criarPix", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ valor })
-    });
-
-    const data = await res.json();
-
-    txid = data.txid;
-
-    document.getElementById("qr").innerHTML = "";
-
-    new QRCode(document.getElementById("qr"), {
-      text: data.qr,
-      width: 260,
-      height: 260
-    });
-
-    iniciarTimer();
-    verificarPagamento();
-
-  } catch(e){
-    alert("Erro ao gerar Pix");
-    console.error(e);
-  }
-}
-
-/* POLLING (APENAS VISUAL) */
-function verificarPagamento(){
-  intervalo = setInterval(async () => {
-    const res = await fetch(`/.netlify/functions/statusPix?txid=${txid}`);
-    const data = await res.json();
-
-    if(data.pago){
-      clearInterval(intervalo);
-      window.location.href = "comprovante_pdv.html?id=" + txid;
-    }
-  }, 3000);
-}
-
-/* TIMER */
-let t = 300;
-
-function iniciarTimer(){
-  const el = document.getElementById("timer");
-
-  const i = setInterval(()=>{
-    t--;
-
-    let m = Math.floor(t/60);
-    let s = t % 60;
-
-    el.innerText = `Expira em ${m}:${s.toString().padStart(2,'0')}`;
-
-    if(t <= 0){
-      clearInterval(i);
-      clearInterval(intervalo);
-      alert("Pix expirado");
-      ir(2);
-    }
-  },1000);
-}
-</script>
-
 </html>
