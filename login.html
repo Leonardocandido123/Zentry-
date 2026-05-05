@@ -10,11 +10,11 @@
 <style>
   :root { 
     --accent: #22c55e; 
-    --bg: #05070A;
+    --bg: #000;
     --border: #2A3441;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
 
   html, body {
     width: 100vw;
@@ -24,51 +24,70 @@
   }
 
   body { 
-    background: radial-gradient(circle at top, #0f172a, #000); 
+    /* NOVO FUNDO RADIAL PREMIUM */
+    background: radial-gradient(circle at top, #0f172a 0%, #000000 70%); 
     display: flex; 
     flex-direction: column; 
-    justify-content: center; 
-    padding: 30px; 
+    justify-content: flex-start; /* Alinhado ao topo para respiro */
+    padding: 60px 30px; 
     color: #fff;
   }
 
   .title {
-    font-size: 26px;
+    font-size: 32px;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     background: linear-gradient(to right, #fff, #9CA3AF);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .subtitle {
-    font-size: 15px;
+    font-size: 16px;
     color: #9CA3AF;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
     line-height: 1.4;
+  }
+
+  /* E-MAIL MASCARADO 22PX */
+  .user-display {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 40px;
+    display: none; /* Aparece via JS */
   }
 
   .password-container {
     position: relative;
-    border-bottom: 1.5px solid var(--border);
+    border-bottom: 1.5px solid var(--border); /* Só o traço */
     display: flex;
     align-items: center;
     height: 60px;
     transition: 0.3s;
+    margin-bottom: 10px;
   }
 
   .password-container:focus-within { border-bottom-color: var(--accent); }
+
+  .label-senha {
+    font-size: 12px;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
 
   input {
     flex: 1;
     background: none;
     border: none;
     color: #fff;
-    font-size: 18px;
+    font-size: 24px;
     outline: none;
-    padding-right: 100px;
-    letter-spacing: 4px; /* Mais espaço para os pontos da senha */
+    letter-spacing: 12px; /* Senha com cara de PIN */
     width: 100%;
+    padding-bottom: 5px;
   }
 
   .actions {
@@ -76,15 +95,15 @@
     right: 0;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
   }
 
-  .eye { width: 24px; height: 24px; opacity: 0.4; cursor: pointer; }
+  .eye { width: 24px; height: 24px; opacity: 0.6; cursor: pointer; }
 
   .enter-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
     background: var(--accent);
     display: flex;
     align-items: center;
@@ -93,6 +112,7 @@
     transform: scale(0.8);
     pointer-events: none;
     transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
   }
 
   .enter-btn.active { opacity: 1; transform: scale(1); pointer-events: all; }
@@ -101,28 +121,26 @@
     display: flex;
     justify-content: space-between;
     width: 100%;
-    padding-top: 20px;
+    padding-top: 25px;
   }
 
-  .links a { color: #9CA3AF; text-decoration: none; font-size: 13px; }
+  .links a { color: #9CA3AF; text-decoration: none; font-size: 14px; }
   .links .create-acc { color: var(--accent); font-weight: 700; }
 
-  /* MODAL DE BLINDAGEM */
+  /* MODAL */
   #zModalGlobal { 
     display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); 
     z-index:9999; align-items:center; justify-content:center; padding:20px; 
-    backdrop-filter: blur(6px); 
+    backdrop-filter: blur(8px); 
   }
   .modal-content { 
     background:#121826; border:1px solid #2A3441; border-radius:28px; 
     width:100%; max-width:340px; padding:30px; text-align:center; 
-    animation: pop 0.3s ease;
   }
-  @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   
   .spinner {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border: 3px solid rgba(0,0,0,0.1);
     border-top-color: #000;
     border-radius: 50%;
@@ -136,18 +154,21 @@
   <div id="zModalGlobal">
     <div class="modal-content">
       <div id="zIcon" style="font-size:45px; margin-bottom:15px;">🔒</div>
-      <h3 id="zTitle" style="margin-bottom:10px; font-size:18px;">Erro de Acesso</h3>
+      <h3 id="zTitle" style="margin-bottom:10px; font-size:18px;">Erro</h3>
       <p id="zText" style="color:#9CA3AF; font-size:14px; margin-bottom:25px; line-height:1.5;"></p>
-      <button id="zBtnClose" style="width:100%; padding:16px; border-radius:14px; background:var(--accent); border:none; color:#000; font-weight:700; font-size:15px;">Entendido</button>
+      <button id="zBtnClose" style="width:100%; padding:16px; border-radius:14px; background:var(--accent); border:none; color:#000; font-weight:700;">Entendido</button>
     </div>
   </div>
 
   <div class="title">Acesse sua conta</div>
-  <div class="subtitle">Digite sua senha ZENTRY de 6 dígitos para acessar sua conta com segurança</div>
+  <div class="subtitle">Digite sua senha de 6 dígitos.</div>
+
+  <div id="maskedEmail" class="user-display"></div>
 
   <div class="field-wrapper">
+    <div class="label-senha">Senha</div>
     <div class="password-container">
-      <input type="password" id="senha" placeholder="••••••" inputmode="numeric" autocomplete="current-password" maxlength="6">
+      <input type="password" id="senha" placeholder="••••••" inputmode="numeric" maxlength="6">
       
       <div class="actions">
         <svg class="eye" id="eyeIcon" onclick="window.toggleSenha()" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
@@ -169,116 +190,84 @@
       <a href="cadastro_unificado.html" class="create-acc">Criar conta</a>
     </div>
   </div>
+
   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  getAuth, 
-  signInWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
+      authDomain: "zentry-app-74275.firebaseapp.com",
+      projectId: "zentry-app-74275",
+    };
 
-// 🔥 CONFIG FIREBASE (usa a SUA que você mandou)
-const firebaseConfig = {
-  apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
-  authDomain: "zentry-app-74275.firebaseapp.com",
-  projectId: "zentry-app-74275",
-};
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// MODAL
-function showZModal(titulo, texto, icon) {
-  document.getElementById('zModalGlobal').style.display = 'flex';
-  document.getElementById('zTitle').innerText = titulo;
-  document.getElementById('zText').innerText = texto;
-  document.getElementById('zIcon').innerText = icon;
-}
-
-document.getElementById('zBtnClose').onclick = () => {
-  document.getElementById('zModalGlobal').style.display = 'none';
-};
-
-window.addEventListener("DOMContentLoaded", () => {
-  const input = document.getElementById("senha");
-  const btn = document.getElementById("btnEntrar");
-
-  // ativa botão
-  input.addEventListener("input", () => {
-    if (input.value.length > 6) input.value = input.value.slice(0, 6);
-
-    if(input.value.length === 6) {
-      btn.classList.add("active");
-    } else {
-      btn.classList.remove("active");
-    }
-  });
-
-  window.toggleSenha = function(){
-    const slash = document.getElementById("eyeSlash");
-    if(input.type === "password"){
-      input.type = "text";
-      slash.style.opacity = "0";
-    } else {
-      input.type = "password";
-      slash.style.opacity = "1";
-    }
-  };
-
-  window.entrar = async function(){
-    const senhaDigitada = input.value.trim();
-    const emailSalvo = localStorage.getItem("usuarioEmail");
-
-    if(!emailSalvo){
-      showZModal("E-mail ausente", "Faça o cadastro primeiro.", "👤");
-      return;
+    function showZModal(titulo, texto, icon) {
+      document.getElementById('zModalGlobal').style.display = 'flex';
+      document.getElementById('zTitle').innerText = titulo;
+      document.getElementById('zText').innerText = texto;
+      document.getElementById('zIcon').innerText = icon;
     }
 
-    btn.innerHTML = `<div class="spinner"></div>`;
-    btn.style.pointerEvents = "none";
+    document.getElementById('zBtnClose').onclick = () => document.getElementById('zModalGlobal').style.display = 'none';
 
-    try {
-      // 🔐 LOGIN FIREBASE
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        emailSalvo,
-        senhaDigitada
-      );
+    window.addEventListener("DOMContentLoaded", () => {
+      const input = document.getElementById("senha");
+      const btn = document.getElementById("btnEntrar");
+      const emailBox = document.getElementById("maskedEmail");
 
-      const user = userCredential.user;
+      // Máscara de e-mail e exibição
+      const emailSalvo = localStorage.getItem("usuarioEmail");
+      if (emailSalvo) {
+        let [user, domain] = emailSalvo.split("@");
+        let masked = user.substring(0, 2) + "*****@" + domain;
+        emailBox.innerText = masked;
+        emailBox.style.display = "block";
+      }
 
-      // salva sessão
-      localStorage.setItem("uid", user.uid);
+      input.addEventListener("input", () => {
+        if (input.value.length > 6) input.value = input.value.slice(0, 6);
+        input.value.length === 6 ? btn.classList.add("active") : btn.classList.remove("active");
+      });
 
-      // ✅ sucesso
-      window.location.href = "home.html";
+      window.toggleSenha = function(){
+        const slash = document.getElementById("eyeSlash");
+        if(input.type === "password"){
+          input.type = "text";
+          slash.style.opacity = "0";
+        } else {
+          input.type = "password";
+          slash.style.opacity = "1";
+        }
+      };
 
-    } catch (error) {
-      console.error(error);
+      window.entrar = async function(){
+        const senhaDigitada = input.value.trim();
+        const emailReal = localStorage.getItem("usuarioEmail");
 
-      btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
-      btn.style.pointerEvents = "all";
+        if(!emailReal){
+          showZModal("👤", "E-mail não encontrado", "Por favor, faça o cadastro.");
+          return;
+        }
 
-      let msg = "Erro ao entrar";
+        btn.innerHTML = `<div class="spinner"></div>`;
+        btn.style.pointerEvents = "none";
 
-      if(error.code === "auth/wrong-password") msg = "Senha incorreta";
-      if(error.code === "auth/user-not-found") msg = "Usuário não encontrado";
-      if(error.code === "auth/invalid-credential") msg = "Dados inválidos";
-
-      showZModal("Acesso Negado", msg, "🔒");
-
-      input.value = "";
-      btn.classList.remove("active");
-    }
-  };
-
-  input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter" && input.value.length === 6) {
-      window.entrar();
-    }
-  });
-});
-
-      </script>
+        try {
+          await signInWithEmailAndPassword(auth, emailReal, senhaDigitada);
+          window.location.href = "home.html";
+        } catch (error) {
+          btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+          btn.style.pointerEvents = "all";
+          showZModal("🔒", "Acesso Negado", "Senha incorreta ou usuário inválido.");
+          input.value = "";
+          btn.classList.remove("active");
+        }
+      };
+    });
+  </script>
 </body>
-</html>
+  </html>
+  
