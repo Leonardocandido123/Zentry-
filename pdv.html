@@ -28,27 +28,32 @@
         }
         .back-btn { color: var(--primary); cursor: pointer; border: none; background: none; display: flex; align-items: center; }
         
-        .display-valor { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: 800; color: var(--text-main); letter-spacing: -2px; }
-        .valor-gigante { font-size: 56px; font-weight: 800; text-align: center; padding: 30px 20px 10px; color: var(--text-main); letter-spacing: -2px; }
+        /* CORREÇÃO DO VALOR: Subindo R$ 0,00 */
+        .display-valor { flex: 1; display: flex; align-items: flex-start; justify-content: center; font-size: 64px; font-weight: 800; color: var(--text-main); letter-spacing: -2px; padding-top: 5vh; }
+        .valor-gigante { font-size: 56px; font-weight: 800; text-align: center; padding: 20px 20px 10px; color: var(--text-main); letter-spacing: -2px; }
 
+        /* TECLADO */
         .bottom-container { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
         .teclado-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 8px; }
         .key { height: 55px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; border-radius: 12px; }
         .btn-confirm { width: 100%; height: 60px; background: var(--primary); color: #000; border-radius: 16px; display: flex; align-items: center; justify-content: center; opacity: 0.15; pointer-events: none; border: none; font-weight: 800; }
         .btn-confirm.active { opacity: 1; pointer-events: all; }
 
+        /* LISTA CENTRALIZADA COM BORDA VERDE */
         .center-container { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 0 25px; }
         .scroll-container { flex: 1; overflow-y: auto; padding: 0 25px 100px; }
         
         .item-modalidade { 
-            background: #fff; padding: 22px; border-radius: 18px; margin-bottom: 12px; 
-            border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+            background: #card; padding: 22px; border-radius: 18px; margin-bottom: 12px; 
+            border: 2px solid var(--primary); /* CORREÇÃO 2: Risco verde nas bordas */
+            display: flex; align-items: center; justify-content: center;
             font-weight: 700; font-size: 18px; text-transform: uppercase;
         }
 
-        /* TELA APROXIMAÇÃO */
-        .tap-instruction { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .maquininha-svg { width: 180px; height: 180px; margin-bottom: 30px; }
+        /* CORREÇÃO 3: TELA APROXIMAÇÃO MAIS COMPACTA PARA O BOTÃO APARECER */
+        .tap-instruction { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 10px; text-align: center; }
+        .maquininha-svg { width: 120px; height: 120px; margin-bottom: 15px; } /* Imagem menor */
+        .aproximar-resumo { font-size: 32px; font-weight: 800; margin-bottom: 15px; }
 
         /* SUCESSO */
         .success-box { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; }
@@ -119,8 +124,8 @@
             <div></div>
         </div>
         <div class="tap-instruction">
-            <div style="font-size: 14px; font-weight: 700; color: var(--text-sec); margin-bottom: 5px;">VALOR A PAGAR</div>
-            <div id="valorAproximar" style="font-size: 42px; font-weight: 800; margin-bottom: 30px;">R$ 0,00</div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--text-sec);">VALOR A PAGAR</div>
+            <div id="valorAproximar" class="aproximar-resumo">R$ 0,00</div>
             
             <svg class="maquininha-svg" viewBox="0 0 200 200">
                 <rect x="60" y="70" width="80" height="110" rx="10" fill="#E5E7EB"/>
@@ -179,7 +184,8 @@
         }
 
         function confirmarValor() {
-            let formatado = (parseFloat(valorString)/100).toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
+            let num = parseFloat(valorString) / 100;
+            let formatado = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
             document.getElementById('valorFinal').innerText = formatado;
             document.getElementById('valorCreditoTipo').innerText = formatado;
             document.getElementById('valorAproximar').innerText = formatado;
@@ -227,5 +233,5 @@
         }
     </script>
 </body>
-                </html>
-                
+    </html>
+    
