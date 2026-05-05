@@ -174,6 +174,16 @@
         <button id="finishBtn" class="finish-btn">CRIAR MINHA CONTA</button>
     </div> 
 <script type="module">
+    async function hashSenha(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin);
+
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+    }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
 import { 
@@ -296,17 +306,21 @@ finishBtn.onclick = async () => {
     const senha = cad_senha.value.trim();
 
     try {
-        // 🔐 cria usuário
+        // 🔐 CRIA USUÁRIO NO AUTH
         const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
         const uid = userCredential.user.uid;
 
-        // 💾 salva dados
+        // 🔐 GERA HASH DA SENHA
+        const senhaHash = await hashSenha(senha);
+
+        // 💾 SALVA NO FIRESTORE
         await setDoc(doc(db, "usuarios", uid), {
             nome,
             cpf,
             tel,
             email,
             saldo: 0,
+            senhaHash, // 🔥 AGORA É HASH
             criadoEm: new Date()
         });
 
