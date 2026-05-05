@@ -34,14 +34,7 @@
             position: relative;
         }
 
-        /* Status Bar */
-        .status-bar {
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
+
 
         /* Top Bar de Navegação (Só aparece no fluxo de pagamento) */
         #top-navigation {
@@ -157,7 +150,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
+            font-size: 40px;
             font-weight: 600;
             cursor: pointer;
         }
@@ -175,8 +168,12 @@
             justify-content: space-between;
             font-weight: 600;
             cursor: pointer;
+        .method-item span { 
+    color: var(--primary); 
+    font-size: 40px; /* AUMENTE AQUI: Tamanho da seta lateral */
+    font-weight: bold; /* Deixa a seta mais "grossa" */
         }
-        .method-item span { color: var(--primary); }
+            
 
         /* Nav Bar Android */
         .nav-bar { height: 60px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); }
@@ -189,8 +186,8 @@
 
     <div class="screen">
         <div class="status-bar">
-            <span id="pdm-ver">7.9.8 PDM</span>
-            <span>4G 📶 🔋 10:38</span>
+            <span id="pdm-ver"></span>
+            <span></span>
         </div>
 
         <div id="top-navigation">
