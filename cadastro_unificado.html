@@ -175,14 +175,13 @@
     </div> 
 <script type="module">
 import { db, ZentryUser, ZentryUI } from './zentry-core.js';
-import { doc, setDoc, updateDoc, collection, getDocs, getDoc, onSnapshot, increment }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { doc, setDoc, updateDoc, getDoc, onSnapshot, increment }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 🔐 HASH
+// 🔐 HASH (mantido compatível)
 async function hashSenha(pin) {
   const encoder = new TextEncoder();
   const data = encoder.encode(pin);
-
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
 
   return Array.from(new Uint8Array(hashBuffer))
@@ -192,12 +191,14 @@ async function hashSenha(pin) {
 
 const SENHA_DIGITS = 6;
 
-let userDocId = "", saldoAtual = 0, etapa = 0;
+let userDocId = "";
+let saldoAtual = 0;
+let etapa = 0;
 let destinoEncontrado = null;
 let dadosTransacao = null;
 let ultimoTxId = null;
 
-// UI
+// ---------------- UI ----------------
 function toast(msg, tipo = 'erro') {
   const el = document.createElement('div');
   el.className = `toast ${tipo}`;
@@ -207,149 +208,182 @@ function toast(msg, tipo = 'erro') {
 }
 
 function loading(show) {
-  document.getElementById('loadingOverlay').classList.toggle('visivel', show);
+  const el = document.getElementById('loadingOverlay');
+  if (el) el.classList.toggle('visivel', show);
 }
 
-// INIT
+// ---------------- INIT ----------------
 async function init() {
   userDocId = localStorage.getItem("idUsuarioLogado");
-  if (!userDocId) userDocId = await ZentryUser.obterIdPorEmail();
-  if (!userDocId) { window.location.href = "login.html"; return; }
 
+  if (!userDocId) {
+    userDocId = await ZentryUser.obterIdPorEmail();
+  }
+
+  if (!userDocId) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  // 🔥 Atualiza saldo em tempo real
   onSnapshot(doc(db, "usuarios", userDocId), (snap) => {
     if (snap.exists()) {
       saldoAtual = Number(snap.data().saldo || 0);
-      document.getElementById('displaySaldo').innerText = ZentryUI.formatarMoeda(saldoAtual);
-      document.getElementById('saldoDisp').innerText =
-        "Saldo disponível: " + ZentryUI.formatarMoeda(saldoAtual);
+
+      const d1 = document.getElementById('displaySaldo');
+      const d2 = document.getElementById('saldoDisp');
+
+      if (d1) d1.innerText = ZentryUI.formatarMoeda(saldoAtual);
+      if (d2) d2.innerText = "Saldo disponível: " + ZentryUI.formatarMoeda(saldoAtual);
     }
   });
 
-  document.getElementById('hiddenPin').addEventListener('input', onPin);
+  const pin = document.getElementById('hiddenPin');
+  if (pin) pin.addEventListener('input', onPin);
 }
 init();
 
-// PIN UI
+// ---------------- PIN UI ----------------
 function onPin() {
   const pin = document.getElementById('hiddenPin');
-  if (pin.value.length > SENHA_DIGITS) pin.value = pin.value.slice(0, SENHA_DIGITS);
 
-  for (let i = 1; i <= SENHA_DIGITS; i++) {
-    document.getElementById(`p${i}`).className =
-      'pin-dot' + (i <= pin.value.length ? ' ok' : '');
+  if (pin.value.length > SENHA_DIGITS) {
+    pin.value = pin.value.slice(0, SENHA_DIGITS);
   }
 
-  document.getElementById('btnMain').disabled =
-    pin.value.length < SENHA_DIGITS;
+  for (let i = 1; i <= SENHA_DIGITS; i++) {
+    const dot = document.getElementById(`p${i}`);
+    if (dot) {
+      dot.className = 'pin-dot' + (i <= pin.value.length ? ' ok' : '');
+    }
+  }
+
+  const btn = document.getElementById('btnMain');
+  if (btn) btn.disabled = pin.value.length < SENHA_DIGITS;
 }
 
-// ETAPAS
+// ---------------- ETAPAS ----------------
 function irPara(n) {
   document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-  document.getElementById(`tela${n}`).classList.add('ativa');
+  const tela = document.getElementById(`tela${n}`);
+  if (tela) tela.classList.add('ativa');
   etapa = n;
 }
 
-// 🔥 PRINCIPAL
+// ---------------- PIX ----------------
 window.avancarEtapa = async function () {
   const btn = document.getElementById('btnMain');
 
-  if (etapa === 2) {
-    const senhaDigitada = document.getElementById('hiddenPin').value;
+  if (etapa !== 2) return;
 
-    btn.disabled = true;
-    btn.textContent = "Validando...";
+  const senhaDigitada = document.getElementById('hiddenPin').value;
 
-    try {
-      const userSnap = await getDoc(doc(db, "usuarios", userDocId));
-      const userData = userSnap.data();
+  btn.disabled = true;
+  btn.textContent = "Validando...";
 
-      let senhaValida = false;
+  try {
+    const userSnap = await getDoc(doc(db, "usuarios", userDocId));
+    const userData = userSnap.data();
 
-      // 🔐 HASH
-      if (userData?.senhaHash) {
-        const senhaHashDigitada = await hashSenha(senhaDigitada);
-        senhaValida = senhaHashDigitada === userData.senhaHash;
+    let senhaValida = false;
+
+    // 🔐 NOVO (hash)
+    if (userData?.senhaHash) {
+      const senhaHashDigitada = await hashSenha(senhaDigitada);
+      senhaValida = senhaHashDigitada === userData.senhaHash;
+    }
+
+    // 🔓 ANTIGO (fallback)
+    else if (userData?.senha) {
+      senhaValida = senhaDigitada === userData.senha;
+    }
+
+    if (!senhaValida) {
+      for (let i = 1; i <= 6; i++) {
+        const dot = document.getElementById(`p${i}`);
+        if (dot) dot.className = 'pin-dot err';
       }
 
-      // 🔓 ANTIGO
-      else if (userData?.senha) {
-        senhaValida = senhaDigitada === userData.senha;
-      }
+      setTimeout(() => {
+        document.getElementById('hiddenPin').value = '';
+        onPin();
+      }, 600);
 
-      if (!senhaValida) {
-        for (let i = 1; i <= 6; i++) {
-          document.getElementById(`p${i}`).className = 'pin-dot err';
-        }
-
-        setTimeout(() => {
-          document.getElementById('hiddenPin').value = '';
-          onPin();
-        }, 600);
-
-        toast("Senha incorreta!", "erro");
-
-        btn.disabled = false;
-        btn.textContent = "Confirmar Pix";
-        return;
-      }
-
-      // 🚀 PIX
-      loading(true);
-      btn.textContent = "Processando...";
-
-      ultimoTxId = "PIX" + Date.now();
-      const agora = new Date();
-      const { valor, chave, desc } = dadosTransacao;
-
-      await updateDoc(doc(db, "usuarios", userDocId), {
-        saldo: increment(-valor)
-      });
-
-      await setDoc(doc(db, "usuarios", userDocId, "transacoes", ultimoTxId), {
-        tipo: "saida",
-        valor,
-        descricao: "Pix enviado - " + destinoEncontrado.nome,
-        nomeDestino: destinoEncontrado.nome,
-        chavePix: chave,
-        mensagem: desc,
-        timestamp: agora,
-        status: "concluido",
-        id: ultimoTxId
-      });
-
-      if (destinoEncontrado.uid !== 'externo') {
-        await updateDoc(doc(db, "usuarios", destinoEncontrado.uid), {
-          saldo: increment(valor)
-        });
-
-        await setDoc(doc(db, "usuarios", destinoEncontrado.uid, "transacoes", ultimoTxId + "R"), {
-          tipo: "entrada",
-          valor,
-          descricao: "Pix recebido",
-          nomeRemetente: userData.nome,
-          timestamp: agora,
-          status: "concluido",
-          id: ultimoTxId + "R"
-        });
-      }
-
-      document.getElementById('sucessoSub').textContent =
-        ZentryUI.formatarMoeda(valor) + " enviado com sucesso.";
-
-      irPara(3);
-
-      btn.textContent = "Voltar";
-      btn.disabled = false;
-
-    } catch (e) {
-      console.error(e);
-      toast("Erro ao processar", "erro");
+      toast("Senha incorreta!");
       btn.disabled = false;
       btn.textContent = "Confirmar Pix";
-    } finally {
-      loading(false);
+      return;
     }
+
+    // 🚀 EXECUTA PIX
+    loading(true);
+    btn.textContent = "Processando...";
+
+    ultimoTxId = "PIX" + Date.now();
+    const agora = new Date();
+
+    const { valor, chave, desc } = dadosTransacao;
+
+    // ❗ PROTEÇÃO BÁSICA
+    if (valor <= 0 || valor > saldoAtual) {
+      toast("Saldo insuficiente");
+      btn.disabled = false;
+      btn.textContent = "Confirmar Pix";
+      loading(false);
+      return;
+    }
+
+    // 🔻 Debita
+    await updateDoc(doc(db, "usuarios", userDocId), {
+      saldo: increment(-valor)
+    });
+
+    // 🧾 Salva transação
+    await setDoc(doc(db, "usuarios", userDocId, "transacoes", ultimoTxId), {
+      tipo: "saida",
+      valor,
+      descricao: "Pix enviado",
+      chavePix: chave,
+      mensagem: desc,
+      timestamp: agora,
+      status: "concluido",
+      id: ultimoTxId
+    });
+
+    // 🔺 Crédito (se interno)
+    if (destinoEncontrado && destinoEncontrado.uid !== 'externo') {
+
+      await updateDoc(doc(db, "usuarios", destinoEncontrado.uid), {
+        saldo: increment(valor)
+      });
+
+      await setDoc(doc(db, "usuarios", destinoEncontrado.uid, "transacoes", ultimoTxId + "R"), {
+        tipo: "entrada",
+        valor,
+        descricao: "Pix recebido",
+        timestamp: agora,
+        status: "concluido",
+        id: ultimoTxId + "R"
+      });
+    }
+
+    const sucesso = document.getElementById('sucessoSub');
+    if (sucesso) {
+      sucesso.textContent = ZentryUI.formatarMoeda(valor) + " enviado com sucesso.";
+    }
+
+    irPara(3);
+
+    btn.textContent = "Voltar";
+    btn.disabled = false;
+
+  } catch (e) {
+    console.error(e);
+    toast("Erro ao processar");
+    btn.disabled = false;
+    btn.textContent = "Confirmar Pix";
+  } finally {
+    loading(false);
   }
 };
 </script>
