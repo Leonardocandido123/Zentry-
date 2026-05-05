@@ -382,309 +382,213 @@
 <div class="flash-ok" id="flashOk"></div>
 
 <input type="file" id="file-input" accept="image/*">
-
 <script type="module">
-  import { auth, db, ZentryAuth, ZentryUser, ZentryUI } from './zentry-core.js';
-  import { doc, setDoc, updateDoc, collection, query, where, getDocs, limit }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { auth, db, ZentryAuth, ZentryUser, ZentryUI } from './zentry-core.js';
+import { doc, setDoc, updateDoc, collection, query, where, getDocs, limit }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  let scanner      = null;
-  let ativo        = false;
-  let processando  = false;
-  let flashOn      = false;
-  let trackAtual   = null;
-  let dadosQR      = null;
-  let userUid      = "";
-  let saldoAtual   = 0;
+let scanner = null;
+let ativo = false;
+let processando = false;
+let dadosQR = null;
+let userUid = "";
+let saldoAtual = 0;
 
-  // ── INIT ──
-  async function init() {
+// INIT
+async function init() {
+  try {
     const user = await ZentryAuth.exigirLogin();
     userUid = user.uid;
+
     const dados = await ZentryUser.buscar(userUid);
-    if (dados) saldoAtual = Number(dados.saldo || 0);
+    saldoAtual = Number(dados?.saldo || 0);
+  } catch (e) {
+    console.error("Erro init:", e);
   }
-  init();
+}
+init();
 
-  // ── HELPERS ──
-  function mostrarCameraUI() {
-    document.getElementById('overlay').style.display   = 'block';
-    document.getElementById('scanFrame').style.display = 'block';
-    document.getElementById('topBar').style.display    = 'flex';
-    document.getElementById('hint').style.display      = 'block';
-    document.getElementById('bottomBar').style.display = 'flex';
-  }
+// UI helpers
+function mostrarCameraUI() {
+  overlay.style.display = 'block';
+  scanFrame.style.display = 'block';
+  topBar.style.display = 'flex';
+  hint.style.display = 'block';
+  bottomBar.style.display = 'flex';
+}
 
-  function setHint(txt, sub, tipo) {
-    const h = document.getElementById('hint');
-    h.className = 'hint' + (tipo ? ' ' + tipo : '');
-    h.innerHTML = txt + (sub ? `<small>${sub}</small>` : '');
-  }
+function setHint(txt, sub = "", tipo = "") {
+  hint.className = "hint " + tipo;
+  hint.innerHTML = txt + (sub ? `<small>${sub}</small>` : "");
+}
 
-  function flashSucesso() {
-    const f = document.getElementById('flashOk');
-    f.classList.add('show');
-    setTimeout(() => f.classList.remove('show'), 300);
-  }
+// EXTRAIR PIX
+function extrairPix(codigo) {
+  try {
+    let valor = 0;
+    const v = codigo.match(/54\d{2}(\d+(?:\.\d+)?)/);
+    if (v) valor = parseFloat(v[1]);
 
-  // ── EXTRAIR DADOS DO PIX ──
-  function extrairPix(codigo) {
-    try {
-      let valor = 0;
-      const m54 = codigo.match(/5405(\d+(?:\.\d+)?)/);
-      const m54b = codigo.match(/5404(\d+(?:\.\d+)?)/);
-      if (m54)  valor = parseFloat(m54[1]);
-      else if (m54b) valor = parseFloat(m54b[1]);
+    let nome = "Recebedor";
+    const n = codigo.match(/59\d{2}(.+?)60/);
+    if (n) nome = n[1].trim();
 
-      let nome = "Recebedor Externo";
-      const m59 = codigo.match(/59(\d{2})(.+?)60/);
-      if (m59) {
-        const tam = parseInt(m59[1]);
-        nome = m59[2].substring(0, tam).trim();
-      }
-
-      let chave = "";
-      const m00 = codigo.match(/00(\d{2})(.+?)01/);
-      if (m00) chave = m00[2].substring(0, parseInt(m00[1]));
-
-      return { valor, nome, chave };
-    } catch(e) { return null; }
-  }
-
-  // ── BUSCAR USUÁRIO ──
-  async function buscarUsuario(nome) {
-    try {
-      const q = query(collection(db, "usuarios"), where("nome", "==", nome), limit(1));
-      const snap = await getDocs(q);
-      if (!snap.empty) return { uid: snap.docs[0].id, ...snap.docs[0].data() };
-    } catch(e) {}
+    return { valor, nome };
+  } catch {
     return null;
   }
+}
 
-  // ── PROCESSAR QR CODE ──
-  async function processarQR(texto) {
-    if (processando) return;
-    processando = true;
-
-    if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
-    flashSucesso();
-    document.getElementById('scanFrame').classList.add('sucesso');
-
-    setHint("QR detectado!", "Carregando dados do pagamento...", "ok");
-    if (scanner && ativo) { try { await scanner.stop(); } catch(e) {} ativo = false; }
-
-    const pix = extrairPix(texto);
-    if (!pix || pix.valor <= 0) {
-      document.getElementById('scanFrame').classList.remove('sucesso');
-      document.getElementById('scanFrame').classList.add('erro');
-      setHint("QR Code inválido", "Este QR Code não é um Pix válido. Tente outro.", "erro");
-      setTimeout(() => {
-        document.getElementById('scanFrame').classList.remove('erro');
-        processando = false;
-        iniciarScanner();
-      }, 2000);
-      return;
+// BUSCAR USUÁRIO
+async function buscarUsuario(nome) {
+  try {
+    const q = query(collection(db, "usuarios"), where("nome", "==", nome), limit(1));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      return { uid: snap.docs[0].id, ...snap.docs[0].data() };
     }
+  } catch {}
+  return null;
+}
 
-    // Valida saldo
-    if (pix.valor > saldoAtual) {
-      document.getElementById('scanFrame').classList.add('erro');
-        setHint("Saldo insuficiente", ZentryUI.formatarMoeda(pix.valor) + " · Saldo: " + ZentryUI.formatarMoeda(saldoAtual), "erro");
-      setTimeout(() => {
-        document.getElementById('scanFrame').classList.remove('erro');
-        processando = false;
-        iniciarScanner();
-      }, 2500);
-      return;
-    }
+// PROCESSAR QR
+async function processarQR(texto) {
+  if (processando) return;
+  processando = true;
 
-    const usuario = await buscarUsuario(pix.nome);
-    dadosQR = {
-      valor:      pix.valor,
-      nome:       usuario ? usuario.nome : pix.nome,
-      banco:      usuario ? "Zentry"    : "Banco Externo",
-      uidDestino: usuario ? usuario.uid : "externo",
-      chave:      pix.chave || "QR Code",
-    };
+  if (navigator.vibrate) navigator.vibrate(100);
 
-    // Preenche modal
-    document.getElementById('modalValor').textContent = ZentryUI.formatarMoeda(pix.valor);
-    document.getElementById('modalPara').textContent  = "Para: " + dadosQR.nome;
-    document.getElementById('modalNome').textContent  = dadosQR.nome;
-    document.getElementById('modalBanco').textContent = dadosQR.banco;
-    document.getElementById('modalOverlay').classList.add('aberto');
+  setHint("QR detectado", "Processando...", "ok");
+
+  try {
+    await scanner.stop();
+  } catch {}
+
+  const pix = extrairPix(texto);
+
+  if (!pix || pix.valor <= 0) {
+    setHint("QR inválido", "Tente outro", "erro");
+    processando = false;
+    iniciarScanner();
+    return;
   }
 
-  // ── CONFIRMAR PAGAMENTO ──
-  window.confirmarPagamento = async function() {
-    if (!dadosQR) return;
-    const btn = document.querySelector('.btn-confirmar');
-    btn.disabled = true;
-    btn.textContent = "Processando...";
+  if (pix.valor > saldoAtual) {
+    setHint("Saldo insuficiente", ZentryUI.formatarMoeda(saldoAtual), "erro");
+    processando = false;
+    iniciarScanner();
+    return;
+  }
+
+  const usuario = await buscarUsuario(pix.nome);
+
+  dadosQR = {
+    valor: pix.valor,
+    nome: usuario?.nome || pix.nome,
+    banco: usuario ? "Zentry" : "Externo",
+    uidDestino: usuario?.uid || "externo"
+  };
+
+  modalValor.textContent = ZentryUI.formatarMoeda(pix.valor);
+  modalPara.textContent = "Para: " + dadosQR.nome;
+  modalNome.textContent = dadosQR.nome;
+  modalBanco.textContent = dadosQR.banco;
+
+  modalOverlay.classList.add("aberto");
+}
+
+// CONFIRMAR PAGAMENTO
+window.confirmarPagamento = async function () {
+  if (!dadosQR) return;
+
+  try {
     ZentryUI.loading(true);
 
-    try {
-      const txId = "PIX" + Date.now();
-      await setDoc(doc(db, "usuarios", userUid, "transacoes", txId), {
-        tipo:         "saida",
-        valor:        dadosQR.valor,
-        descricao:    "Pix QR Code - " + dadosQR.nome,
-        nomeDestino:  dadosQR.nome,
-        bancoDestino: dadosQR.banco,
-        uidDestino:   dadosQR.uidDestino,
-        chavePix:     dadosQR.chave,
-        data:         new Date().toISOString().split('T')[0],
-        timestamp:    new Date(),
-        id:           txId
-      });
+    const txId = "PIX" + Date.now();
 
-      await updateDoc(doc(db, "usuarios", userUid), {
-        saldo: saldoAtual - dadosQR.valor
-      });
+    await setDoc(doc(db, "usuarios", userUid, "transacoes", txId), {
+      tipo: "saida",
+      valor: dadosQR.valor,
+      descricao: "Pix QR Code",
+      nomeDestino: dadosQR.nome,
+      bancoDestino: dadosQR.banco,
+      timestamp: new Date(),
+      id: txId
+    });
 
-      ZentryUI.loading(false);
+    await updateDoc(doc(db, "usuarios", userUid), {
+      saldo: saldoAtual - dadosQR.valor
+    });
 
-      // Salva para o comprovante
-      localStorage.setItem("comprovante_final", JSON.stringify({
-        tipo:         "saida",
-        valor:        dadosQR.valor,
-        descricao:    "Pix QR Code",
-        nomeDestino:  dadosQR.nome,
-        bancoDestino: dadosQR.banco,
-        uidDestino:   dadosQR.uidDestino,
-        chavePix:     dadosQR.chave,
-        data:         new Date().toLocaleString('pt-BR'),
-        id:           txId
-      }));
+    window.location.href = "comprovante.html";
 
-      window.location.href = "comprovante.html";
-
-    } catch(e) {
-      ZentryUI.loading(false);
-      ZentryUI.toast("Erro ao processar. Tente novamente.", "erro");
-      btn.disabled = false;
-      btn.textContent = "Confirmar Pagamento";
-    }
-  };
-
-  // ── CANCELAR MODAL ──
-  window.cancelarModal = function() {
-    document.getElementById('modalOverlay').classList.remove('aberto');
-    dadosQR = null;
-    processando = false;
-    document.getElementById('scanFrame').classList.remove('sucesso','erro');
-    setHint("Aponte para o QR Code", "Mantenha o código dentro do quadro verde");
-    iniciarScanner();
-  };
-
-  // ── SOLICITAR PERMISSÃO ──
-  window.solicitarPermissao = async function() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      stream.getTracks().forEach(t => t.stop()); // Para o stream de teste
-      document.getElementById('permScreen').classList.add('oculto');
-      mostrarCameraUI();
-      iniciarScanner();
-    } catch(err) {
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        document.getElementById('permScreen').classList.add('oculto');
-        document.getElementById('erroScreen').classList.add('visivel');
-      } else {
-        document.getElementById('permScreen').classList.add('oculto');
-        mostrarCameraUI();
-        iniciarScanner();
-      }
-    }
-  };
-
-  window.tentarNovamente = function() {
-    document.getElementById('erroScreen').classList.remove('visivel');
-    document.getElementById('permScreen').classList.remove('oculto');
-  };
-
-  // ── INICIAR SCANNER ──
-  async function iniciarScanner() {
-    if (ativo) return;
-    ativo = true;
-
-    try {
-      scanner = new Html5Qrcode("reader", { verbose: false });
-      const cfg = {
-        fps: 15,
-        qrbox: { width: 270, height: 270 },
-        aspectRatio: window.innerHeight / window.innerWidth
-      };
-
-      try {
-        await scanner.start({ facingMode: { exact: "environment" } }, cfg, processarQR, () => {});
-      } catch(e1) {
-        await scanner.start({ facingMode: "environment" }, cfg, processarQR, () => {});
-      }
-
-      // Pega track para flash
-      setTimeout(() => {
-        const v = document.querySelector("#reader video");
-        if (v && v.srcObject) trackAtual = v.srcObject.getVideoTracks()[0];
-      }, 800);
-
-      setHint("Aponte para o QR Code", "Mantenha o código dentro do quadro verde");
-
-    } catch(err) {
-      ativo = false;
-      document.getElementById('scanFrame').classList.add('erro');
-      if (err.name === 'NotAllowedError') {
-        document.getElementById('erroScreen').classList.add('visivel');
-      } else {
-        setHint("Erro na câmera", err?.message || "Tente novamente", "erro");
-      }
-    }
+  } catch (e) {
+    console.error(e);
+    alert("Erro no pagamento");
   }
 
-  // ── FLASH/LANTERNA ──
-  window.toggleFlash = async function() {
-    if (!trackAtual) {
-      const v = document.querySelector("#reader video");
-      if (v && v.srcObject) trackAtual = v.srcObject.getVideoTracks()[0];
-    }
-    if (!trackAtual) return;
-    const caps = trackAtual.getCapabilities ? trackAtual.getCapabilities() : {};
-    if (!caps.torch) { ZentryUI.toast("Lanterna não disponível neste dispositivo", "info"); return; }
-    try {
-      flashOn = !flashOn;
-      await trackAtual.applyConstraints({ advanced: [{ torch: flashOn }] });
-      document.getElementById('flashBtn').classList.toggle('on', flashOn);
-    } catch(e) {}
-  };
+  ZentryUI.loading(false);
+};
 
-  // ── VOLTAR ──
-  window.voltar = function() {
-    if (scanner && ativo) scanner.stop().catch(() => {});
-    window.location.href = "pix.html";
-  };
+// CANCELAR
+window.cancelarModal = function () {
+  modalOverlay.classList.remove("aberto");
+  processando = false;
+  iniciarScanner();
+};
 
-  // ── GALERIA ──
-  document.getElementById('file-input').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    document.getElementById('permScreen').classList.add('oculto');
-    document.getElementById('erroScreen').classList.remove('visivel');
+// PERMISSÃO
+window.solicitarPermissao = async function () {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: true });
+
+    permScreen.classList.add("oculto");
     mostrarCameraUI();
 
-    if (scanner && ativo) { try { await scanner.stop(); } catch(_) {} ativo = false; }
-    const tmp = new Html5Qrcode("reader", { verbose: false });
-    try {
-      const result = await tmp.scanFile(file, false);
-      processarQR(result);
-    } catch(err) {
-      setHint("QR não encontrado", "Tente outra imagem", "erro");
-      setTimeout(() => { processando = false; iniciarScanner(); }, 2000);
-    }
-    e.target.value = "";
-  });
+    iniciarScanner();
 
-  window.addEventListener('beforeunload', () => {
-    if (scanner && ativo) scanner.stop().catch(() => {});
-  });
-</script>
+  } catch (e) {
+    console.error(e);
+    erroScreen.classList.add("visivel");
+  }
+};
+
+// INICIAR SCANNER (🔥 CORRIGIDO PRA WEBVIEW)
+async function iniciarScanner() {
+  if (ativo) return;
+  ativo = true;
+
+  try {
+    scanner = new Html5Qrcode("reader");
+
+    await scanner.start(
+      { facingMode: "environment" }, // 🔥 importante
+      {
+        fps: 10,
+        qrbox: 250
+      },
+      processarQR
+    );
+
+    setHint("Aponte para o QR Code");
+
+  } catch (e) {
+    console.error("Erro scanner:", e);
+    setHint("Erro na câmera", "Verifique permissões", "erro");
+    ativo = false;
+  }
+}
+
+// VOLTAR
+window.voltar = function () {
+  if (scanner) scanner.stop().catch(()=>{});
+  window.location.href = "pix.html";
+};
+
+// LIMPAR AO SAIR
+window.addEventListener("beforeunload", () => {
+  if (scanner) scanner.stop().catch(()=>{});
+});
+    </script>
 </body>
 </html>
