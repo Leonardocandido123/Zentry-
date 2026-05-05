@@ -174,7 +174,12 @@
         <button id="finishBtn" class="finish-btn">CRIAR MINHA CONTA</button>
     </div> 
 <script type="module">
-    async function hashSenha(pin) {
+import { db, ZentryUser, ZentryUI } from './zentry-core.js';
+import { doc, setDoc, updateDoc, collection, getDocs, getDoc, onSnapshot, increment }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// 🔐 HASH
+async function hashSenha(pin) {
   const encoder = new TextEncoder();
   const data = encoder.encode(pin);
 
@@ -183,179 +188,170 @@
   return Array.from(new Uint8Array(hashBuffer))
     .map(b => b.toString(16).padStart(2, "0"))
     .join("");
-    }
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import { 
-  getFirestore, 
-  doc, 
-  setDoc 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// 🔥 CONFIG REAL
-const firebaseConfig = {
-  apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
-  authDomain: "zentry-app-74275.firebaseapp.com",
-  projectId: "zentry-app-74275",
-  storageBucket: "zentry-app-74275.firebasestorage.app",
-  messagingSenderId: "571422826071",
-  appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// ---------------- UI ----------------
-let currentStep = 0;
-const totalSteps = 6;
-const slider = document.getElementById('main-slider');
-const pBar = document.getElementById('p-bar');
-const nextBtn = document.getElementById('nextBtn');
-const finishBtn = document.getElementById('finishBtn');
-
-// MODAL
-function showZModal(title, text, icon = "🛡️") {
-    document.getElementById('zTitle').innerText = title;
-    document.getElementById('zText').innerText = text;
-    document.getElementById('zIcon').innerText = icon;
-    document.getElementById('zModalGlobal').style.display = 'flex';
 }
 
-// MÁSCARAS
-const maskCPF = (v) => v.replace(/\D/g,"")
-.replace(/(\d{3})(\d)/,"$1.$2")
-.replace(/(\d{3})(\d)/,"$1.$2")
-.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+const SENHA_DIGITS = 6;
 
-const maskTel = (v) => v.replace(/\D/g,"")
-.replace(/^(\d{2})(\d)/g,"($1) $2")
-.replace(/(\d)(\d{4})$/,"$1-$2");
+let userDocId = "", saldoAtual = 0, etapa = 0;
+let destinoEncontrado = null;
+let dadosTransacao = null;
+let ultimoTxId = null;
 
-cad_cpf.addEventListener('input', e => {
-    e.target.value = maskCPF(e.target.value);
-    validarBotao();
-});
-
-cad_tel.addEventListener('input', e => {
-    e.target.value = maskTel(e.target.value);
-    validarBotao();
-});
-
-// VALIDAÇÃO
-function validarBotao() {
-    const inputs = slider.children[currentStep].querySelectorAll('input');
-    let pronto = true;
-
-    inputs.forEach(i => {
-        if(i.type === 'checkbox') {
-            if(!i.checked) pronto = false;
-        } else {
-            if(i.value.length < 3) pronto = false;
-            if(i.id === 'cad_cpf' && i.value.length < 14) pronto = false;
-            if(i.id === 'cad_tel' && i.value.length < 15) pronto = false;
-            if(i.id === 'cad_senha' && i.value.length < 6) pronto = false;
-        }
-    });
-
-    pronto ? nextBtn.classList.add('active') : nextBtn.classList.remove('active');
+// UI
+function toast(msg, tipo = 'erro') {
+  const el = document.createElement('div');
+  el.className = `toast ${tipo}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
 }
 
-// NAVEGAÇÃO
-window.avancar = function() {
-    if (!nextBtn.classList.contains('active')) return;
+function loading(show) {
+  document.getElementById('loadingOverlay').classList.toggle('visivel', show);
+}
 
-    if (currentStep < totalSteps - 1) {
-        currentStep++;
+// INIT
+async function init() {
+  userDocId = localStorage.getItem("idUsuarioLogado");
+  if (!userDocId) userDocId = await ZentryUser.obterIdPorEmail();
+  if (!userDocId) { window.location.href = "login.html"; return; }
 
-        slider.style.transform = `translateX(-${currentStep * 100}%)`;
-        pBar.style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
-
-        if (currentStep === totalSteps - 1) {
-            nextBtn.style.display = 'none';
-            finishBtn.style.display = 'block';
-        }
-
-        nextBtn.classList.remove('active');
-        validarBotao();
+  onSnapshot(doc(db, "usuarios", userDocId), (snap) => {
+    if (snap.exists()) {
+      saldoAtual = Number(snap.data().saldo || 0);
+      document.getElementById('displaySaldo').innerText = ZentryUI.formatarMoeda(saldoAtual);
+      document.getElementById('saldoDisp').innerText =
+        "Saldo disponível: " + ZentryUI.formatarMoeda(saldoAtual);
     }
-};
+  });
 
-nextBtn.onclick = window.avancar;
+  document.getElementById('hiddenPin').addEventListener('input', onPin);
+}
+init();
 
-// INPUT LISTENERS
-document.querySelectorAll('input').forEach(i => {
-    i.addEventListener('input', validarBotao);
-    if(i.type === 'checkbox') i.addEventListener('change', validarBotao);
-});
+// PIN UI
+function onPin() {
+  const pin = document.getElementById('hiddenPin');
+  if (pin.value.length > SENHA_DIGITS) pin.value = pin.value.slice(0, SENHA_DIGITS);
 
-// ---------------- CADASTRO ----------------
-finishBtn.onclick = async () => {
-    finishBtn.disabled = true;
-    finishBtn.innerText = "PROCESSANDO...";
+  for (let i = 1; i <= SENHA_DIGITS; i++) {
+    document.getElementById(`p${i}`).className =
+      'pin-dot' + (i <= pin.value.length ? ' ok' : '');
+  }
 
-    const nome = cad_nome.value.trim();
-    const cpf = cad_cpf.value.trim();
-    const tel = cad_tel.value.trim();
-    const email = cad_email.value.trim();
-    const senha = cad_senha.value.trim();
+  document.getElementById('btnMain').disabled =
+    pin.value.length < SENHA_DIGITS;
+}
+
+// ETAPAS
+function irPara(n) {
+  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+  document.getElementById(`tela${n}`).classList.add('ativa');
+  etapa = n;
+}
+
+// 🔥 PRINCIPAL
+window.avancarEtapa = async function () {
+  const btn = document.getElementById('btnMain');
+
+  if (etapa === 2) {
+    const senhaDigitada = document.getElementById('hiddenPin').value;
+
+    btn.disabled = true;
+    btn.textContent = "Validando...";
 
     try {
-        // 🔐 CRIA USUÁRIO NO AUTH
-        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-        const uid = userCredential.user.uid;
+      const userSnap = await getDoc(doc(db, "usuarios", userDocId));
+      const userData = userSnap.data();
 
-        // 🔐 GERA HASH DA SENHA
-        const senhaHash = await hashSenha(senha);
+      let senhaValida = false;
 
-        // 💾 SALVA NO FIRESTORE
-        await setDoc(doc(db, "usuarios", uid), {
-            nome,
-            cpf,
-            tel,
-            email,
-            saldo: 0,
-            senhaHash, // 🔥 AGORA É HASH
-            criadoEm: new Date()
-        });
+      // 🔐 HASH
+      if (userData?.senhaHash) {
+        const senhaHashDigitada = await hashSenha(senhaDigitada);
+        senhaValida = senhaHashDigitada === userData.senhaHash;
+      }
 
-        localStorage.setItem("usuarioEmail", email);
+      // 🔓 ANTIGO
+      else if (userData?.senha) {
+        senhaValida = senhaDigitada === userData.senha;
+      }
 
-        showZModal(
-            "Conta criada com sucesso",
-            "Sua conta ZENTRY foi configurada com segurança.",
-            "✅"
-        );
+      if (!senhaValida) {
+        for (let i = 1; i <= 6; i++) {
+          document.getElementById(`p${i}`).className = 'pin-dot err';
+        }
 
         setTimeout(() => {
-            window.location.href = "login.html";
-        }, 2000);
+          document.getElementById('hiddenPin').value = '';
+          onPin();
+        }, 600);
+
+        toast("Senha incorreta!", "erro");
+
+        btn.disabled = false;
+        btn.textContent = "Confirmar Pix";
+        return;
+      }
+
+      // 🚀 PIX
+      loading(true);
+      btn.textContent = "Processando...";
+
+      ultimoTxId = "PIX" + Date.now();
+      const agora = new Date();
+      const { valor, chave, desc } = dadosTransacao;
+
+      await updateDoc(doc(db, "usuarios", userDocId), {
+        saldo: increment(-valor)
+      });
+
+      await setDoc(doc(db, "usuarios", userDocId, "transacoes", ultimoTxId), {
+        tipo: "saida",
+        valor,
+        descricao: "Pix enviado - " + destinoEncontrado.nome,
+        nomeDestino: destinoEncontrado.nome,
+        chavePix: chave,
+        mensagem: desc,
+        timestamp: agora,
+        status: "concluido",
+        id: ultimoTxId
+      });
+
+      if (destinoEncontrado.uid !== 'externo') {
+        await updateDoc(doc(db, "usuarios", destinoEncontrado.uid), {
+          saldo: increment(valor)
+        });
+
+        await setDoc(doc(db, "usuarios", destinoEncontrado.uid, "transacoes", ultimoTxId + "R"), {
+          tipo: "entrada",
+          valor,
+          descricao: "Pix recebido",
+          nomeRemetente: userData.nome,
+          timestamp: agora,
+          status: "concluido",
+          id: ultimoTxId + "R"
+        });
+      }
+
+      document.getElementById('sucessoSub').textContent =
+        ZentryUI.formatarMoeda(valor) + " enviado com sucesso.";
+
+      irPara(3);
+
+      btn.textContent = "Voltar";
+      btn.disabled = false;
 
     } catch (e) {
-        console.error(e);
-
-        finishBtn.disabled = false;
-        finishBtn.innerText = "CRIAR MINHA CONTA";
-
-        let msg = "Erro ao criar conta";
-
-        if (e.code === "auth/email-already-in-use") msg = "E-mail já cadastrado";
-        if (e.code === "auth/invalid-email") msg = "E-mail inválido";
-        if (e.code === "auth/weak-password") msg = "Senha deve ter no mínimo 6 caracteres";
-
-        showZModal("Erro no Cadastro", msg, "⚠️");
+      console.error(e);
+      toast("Erro ao processar", "erro");
+      btn.disabled = false;
+      btn.textContent = "Confirmar Pix";
+    } finally {
+      loading(false);
     }
+  }
 };
-
-// FECHAR MODAL
-zBtnClose.onclick = () => {
-    zModalGlobal.style.display = 'none';
-};
-            </script>
+</script>
 </body>
 </html>
