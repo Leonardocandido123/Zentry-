@@ -173,9 +173,8 @@
         </button>
         <button id="finishBtn" class="finish-btn">CRIAR MINHA CONTA</button>
     </div> 
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
 import { 
   getAuth, 
@@ -187,79 +186,106 @@ import {
   doc, 
   setDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-        const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_AUTH_DOMAIN",
-  projectId: "SEU_PROJECT_ID",
+
+// 🔥 CONFIG REAL
+const firebaseConfig = {
+  apiKey: "AIzaSyB4U7iIO3OVrrwyWPPI057jTqZWF6V1osU",
+  authDomain: "zentry-app-74275.firebaseapp.com",
+  projectId: "zentry-app-74275",
+  storageBucket: "zentry-app-74275.firebasestorage.app",
+  messagingSenderId: "571422826071",
+  appId: "1:571422826071:web:ba1ca6fea76e360bb80d12"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-        let currentStep = 0;
-        const totalSteps = 6;
-        const slider = document.getElementById('main-slider');
-        const pBar = document.getElementById('p-bar');
-        const nextBtn = document.getElementById('nextBtn');
-        const finishBtn = document.getElementById('finishBtn');
 
-        // FUNÇÃO SHOW MODAL PROFISSIONAL
-        function showZModal(title, text, icon = "🛡️") {
-            document.getElementById('zTitle').innerText = title;
-            document.getElementById('zText').innerText = text;
-            document.getElementById('zIcon').innerText = icon;
-            document.getElementById('zModalGlobal').style.display = 'flex';
+// ---------------- UI ----------------
+let currentStep = 0;
+const totalSteps = 6;
+const slider = document.getElementById('main-slider');
+const pBar = document.getElementById('p-bar');
+const nextBtn = document.getElementById('nextBtn');
+const finishBtn = document.getElementById('finishBtn');
+
+// MODAL
+function showZModal(title, text, icon = "🛡️") {
+    document.getElementById('zTitle').innerText = title;
+    document.getElementById('zText').innerText = text;
+    document.getElementById('zIcon').innerText = icon;
+    document.getElementById('zModalGlobal').style.display = 'flex';
+}
+
+// MÁSCARAS
+const maskCPF = (v) => v.replace(/\D/g,"")
+.replace(/(\d{3})(\d)/,"$1.$2")
+.replace(/(\d{3})(\d)/,"$1.$2")
+.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+
+const maskTel = (v) => v.replace(/\D/g,"")
+.replace(/^(\d{2})(\d)/g,"($1) $2")
+.replace(/(\d)(\d{4})$/,"$1-$2");
+
+cad_cpf.addEventListener('input', e => {
+    e.target.value = maskCPF(e.target.value);
+    validarBotao();
+});
+
+cad_tel.addEventListener('input', e => {
+    e.target.value = maskTel(e.target.value);
+    validarBotao();
+});
+
+// VALIDAÇÃO
+function validarBotao() {
+    const inputs = slider.children[currentStep].querySelectorAll('input');
+    let pronto = true;
+
+    inputs.forEach(i => {
+        if(i.type === 'checkbox') {
+            if(!i.checked) pronto = false;
+        } else {
+            if(i.value.length < 3) pronto = false;
+            if(i.id === 'cad_cpf' && i.value.length < 14) pronto = false;
+            if(i.id === 'cad_tel' && i.value.length < 15) pronto = false;
+            if(i.id === 'cad_senha' && i.value.length < 6) pronto = false;
+        }
+    });
+
+    pronto ? nextBtn.classList.add('active') : nextBtn.classList.remove('active');
+}
+
+// NAVEGAÇÃO
+window.avancar = function() {
+    if (!nextBtn.classList.contains('active')) return;
+
+    if (currentStep < totalSteps - 1) {
+        currentStep++;
+
+        slider.style.transform = `translateX(-${currentStep * 100}%)`;
+        pBar.style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
+
+        if (currentStep === totalSteps - 1) {
+            nextBtn.style.display = 'none';
+            finishBtn.style.display = 'block';
         }
 
-        // MÁSCARAS
-        const maskCPF = (v) => v.replace(/\D/g,"").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d{1,2})$/,"$1-$2");
-        const maskTel = (v) => v.replace(/\D/g,"").replace(/^(\d{2})(\d)/g,"($1) $2").replace(/(\d)(\d{4})$/,"$1-$2");
+        nextBtn.classList.remove('active');
+        validarBotao();
+    }
+};
 
-        document.getElementById('cad_cpf').addEventListener('input', e => { e.target.value = maskCPF(e.target.value); validarBotao(); });
-        document.getElementById('cad_tel').addEventListener('input', e => { e.target.value = maskTel(e.target.value); validarBotao(); });
+nextBtn.onclick = window.avancar;
 
-        function validarBotao() {
-            const inputs = slider.children[currentStep].querySelectorAll('input');
-            let pronto = true;
-            inputs.forEach(i => {
-                if(i.type === 'checkbox') { if(!i.checked) pronto = false; }
-                else {
-                    if(i.value.length < 3) pronto = false;
-                    if(i.id === 'cad_cpf' && i.value.length < 14) pronto = false;
-                    if(i.id === 'cad_tel' && i.value.length < 15) pronto = false;
-                    if(i.id === 'cad_senha' && i.value.length < 6) pronto = false;
-                }
-            });
-            pronto ? nextBtn.classList.add('active') : nextBtn.classList.remove('active');
-        }
+// INPUT LISTENERS
+document.querySelectorAll('input').forEach(i => {
+    i.addEventListener('input', validarBotao);
+    if(i.type === 'checkbox') i.addEventListener('change', validarBotao);
+});
 
-        window.avancar = function() {
-            if (!nextBtn.classList.contains('active')) return;
-            if (currentStep < totalSteps - 1) {
-                currentStep++;
-                slider.style.transform = `translateX(-${currentStep * 100}%)`;
-                pBar.style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
-                if (currentStep === totalSteps - 1) {
-                    nextBtn.style.display = 'none';
-                    finishBtn.style.display = 'block';
-                }
-                nextBtn.classList.remove('active');
-                validarBotao();
-            }
-        };
-
-        nextBtn.onclick = window.avancar;
-
-        document.querySelectorAll('input').forEach(i => {
-            i.addEventListener('input', validarBotao);
-            if(i.type === 'checkbox') i.addEventListener('change', validarBotao);
-        });
-
-        // FINALIZAÇÃO COM MODAL PROFISSIONAL
-        finishBtn.onclick = async () => {
-            finishBtn.disabled = true;
-            finishBtn.innerText = "PROCESSANDO...";
-            finishBtn.onclick = async () => {
+// ---------------- CADASTRO ----------------
+finishBtn.onclick = async () => {
     finishBtn.disabled = true;
     finishBtn.innerText = "PROCESSANDO...";
 
@@ -270,11 +296,11 @@ const db = getFirestore(app);
     const senha = cad_senha.value.trim();
 
     try {
-        // 🔐 cria usuário no Firebase Auth
+        // 🔐 cria usuário
         const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
         const uid = userCredential.user.uid;
 
-        // 💾 salva dados no Firestore
+        // 💾 salva dados
         await setDoc(doc(db, "usuarios", uid), {
             nome,
             cpf,
@@ -284,10 +310,8 @@ const db = getFirestore(app);
             criadoEm: new Date()
         });
 
-        // salva local
         localStorage.setItem("usuarioEmail", email);
 
-        // ✅ sucesso
         showZModal(
             "Conta criada com sucesso",
             "Sua conta ZENTRY foi configurada com segurança.",
@@ -308,12 +332,16 @@ const db = getFirestore(app);
 
         if (e.code === "auth/email-already-in-use") msg = "E-mail já cadastrado";
         if (e.code === "auth/invalid-email") msg = "E-mail inválido";
-        if (e.code === "auth/weak-password") msg = "Senha deve ter 6 dígitos";
+        if (e.code === "auth/weak-password") msg = "Senha deve ter no mínimo 6 caracteres";
 
         showZModal("Erro no Cadastro", msg, "⚠️");
     }
 };
-document.getElementById('zBtnClose').onclick = () => document.getElementById('zModalGlobal').style.display = 'none';
-    </script>
+
+// FECHAR MODAL
+zBtnClose.onclick = () => {
+    zModalGlobal.style.display = 'none';
+};
+            </script>
 </body>
 </html>
