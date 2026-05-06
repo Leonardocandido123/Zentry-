@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZENTRY - PDV</title>
+    <title>ZENTRY - PDV Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -26,288 +26,74 @@
             overflow: hidden;
         }
 
-        .screen {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+        .screen { width: 100%; max-width: 400px; display: flex; flex-direction: column; position: relative; }
 
-        /* Top Bar de Navegação */
-        #top-navigation {
-            display: none;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        /* Seta Voltar Padrão Fintech */
-        .back-icon { 
-            font-size: 32px; 
-            cursor: pointer; 
-            color: #fff; 
-            margin-right: 15px;
-            display: flex;
-            align-items: center;
-        }
-        
+        /* Navegação */
+        #top-navigation { display: none; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border); }
+        .back-icon { font-size: 32px; cursor: pointer; color: #fff; margin-right: 15px; display: flex; align-items: center; }
         .top-title { font-size: 16px; font-weight: 600; }
 
-        /* ========================================= */
-        /* SEÇÃO 1: HOME DO PDV (Vertical)           */
-        /* ========================================= */
-        #view-pdv-home {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding: 20px;
-        }
-
-        .header-owner {
-            text-align: center;
-            padding: 40px 0;
-        }
-
-        .owner-name {
-            font-size: 24px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px; /* Espaço entre os botões verticais */
-            justify-content: center;
-        }
-
-        .btn-vertical {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 25px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            font-size: 18px;
-            font-weight: 600;
-            color: #fff;
-            cursor: pointer;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
+        /* Home PDV */
+        #view-pdv-home { display: flex; flex-direction: column; height: 100%; padding: 20px; }
+        .header-owner { text-align: center; padding: 40px 0; }
+        .owner-name { font-size: 24px; font-weight: 700; text-transform: uppercase; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; gap: 15px; justify-content: center; }
+        .btn-vertical { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; font-size: 18px; font-weight: 600; color: #fff; cursor: pointer; width: 100%; box-sizing: border-box; }
         .btn-vertical span { font-size: 28px; }
-        .btn-vertical:active { background: #1f2937; transform: scale(0.98); }
 
-        /* ========================================= */
-        /* SEÇÃO 2: FLUXO DE PAGAMENTO               */
-        /* ========================================= */
-        #view-payment-flow {
-            display: none;
-            flex-direction: column;
-            flex-grow: 1;
-            padding: 0 20px;
-        }
-
-        /* Removido o texto "Valor" daqui */
-        .value-display { 
-            padding: 40px 0; 
-            text-align: left;
-        }
-
+        /* Teclado e Valor */
+        #view-payment-flow { display: none; flex-direction: column; flex-grow: 1; padding: 0 20px; }
+        .value-display { padding: 40px 0; }
         .value-raw { font-size: 56px; font-weight: 700; display: flex; align-items: baseline; }
         .currency { font-size: 28px; margin-right: 10px; color: var(--text-secondary); }
+        #sub-view-keyboard { display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 80px; flex-grow: 1; }
+        .keyboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .key { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 500; cursor: pointer; }
+        .key-confirm { background: var(--primary); color: #000; border: none; }
 
-        /* Teclado Subido e Ajustado */
-        #sub-view-keyboard { 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-end;
-            padding-bottom: 80px; /* Sobe o teclado para não cortar na nav bar */
-            flex-grow: 1;
-        }
-
-        .keyboard-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        .key {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px; /* Estilo mais moderno que círculo total */
-            height: 75px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .key:active { background: #374151; }
-        .key-confirm { background: var(--primary); color: #000; border: none; font-size: 40px; }
-
-        /* Modalidades */
-        #sub-view-methods { display: none; flex-direction: column; gap: 12px; padding-top: 20px; }
-        .method-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-        }
+        /* Parcelas e Métodos */
+        #sub-view-methods, #view-credit-installments { display: none; flex-direction: column; gap: 12px; padding-top: 20px; overflow-y: auto; }
+        .method-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 25px; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 600; cursor: pointer; }
         .method-item span { color: var(--primary); font-size: 24px; }
 
-        /* Nav Bar Android */
-        .nav-bar { 
-            height: 60px; 
-            display: flex; 
-            justify-content: space-around; 
-            align-items: center; 
-            border-top: 1px solid var(--border);
-            background: #000;
-        }
-        .nav-shape-back { width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 12px solid #555; }
-        .nav-shape-circle { width: 16px; height: 16px; border: 2px solid #555; border-radius: 50%; }
-        .nav-shape-square { width: 14px; height: 14px; border: 2px solid #555; border-radius: 2px; }
-        /* Tela de Processamento de Cartão */
-#view-card-processing {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    flex-grow: 1;
-    padding: 20px;
-}
+        /* Animação NFC e Senha */
+        #view-card-processing { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex-grow: 1; padding: 20px; }
+        .nfc-animation { width: 120px; height: 120px; border-radius: 50%; background: rgba(34, 197, 94, 0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 30px; animation: pulse-nfc 2s infinite; }
+        @keyframes pulse-nfc { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+        .pin-dots { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .dot { width: 15px; height: 15px; border: 2px solid var(--primary); border-radius: 50%; }
+        .dot.filled { background: var(--primary); }
 
-.nfc-animation {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: rgba(34, 197, 94, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 30px;
-    position: relative;
-    animation: pulse-nfc 2s infinite;
-}
-
-@keyframes pulse-nfc {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-}
-
-.card-icon { font-size: 50px; }
-
-/* Teclado de Senha (Pinpad) */
-#pinpad-container {
-    display: none;
-    width: 100%;
-    margin-top: 20px;
-}
-
-.pin-dots {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 30px;
-}
-
-.dot {
-    width: 15px;
-    height: 15px;
-    border: 2px solid var(--primary);
-    border-radius: 50%;
-}
-
-.dot.filled {
-    background: var(--primary);
-}
-        
+        .nav-bar { height: 60px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); background: #000; }
     </style>
 </head>
 <body>
 
     <div class="screen">
         <div id="top-navigation">
-            <div class="back-icon" onclick="backAction()">&#10094;</div> <div class="top-title" id="top-title-text">Valor</div>
+            <div class="back-icon" onclick="backAction()">&#10094;</div>
+            <div class="top-title" id="top-title-text">Valor</div>
         </div>
 
         <div id="view-pdv-home">
-            <div class="header-owner">
-                <div class="owner-name" id="display-dono">CARREGANDO...</div>
-            </div>
-            
+            <div class="header-owner"><div class="owner-name" id="display-dono">CARREGANDO...</div></div>
             <div class="main-content">
-                <button class="btn-vertical" style="border-color: var(--primary);" onclick="startPayment()">
-                    <span>💳</span> Pagamento
-                </button>
-                <button class="btn-vertical" onclick="location.href='extrato.html'">
-                    <span>📄</span> Extrato
-                </button>
+                <button class="btn-vertical" style="border-color: var(--primary);" onclick="startPayment()"><span>💳</span> Pagamento</button>
+                <button class="btn-vertical" onclick="location.href='extrato.html'"><span>📄</span> Extrato</button>
             </div>
         </div>
 
         <div id="view-payment-flow">
             <div class="value-display">
-                <div class="value-raw">
-                    <span class="currency">R$</span>
-                    <span id="display-amount">0,00</span>
-                </div>
+                <div class="value-raw"><span class="currency">R$</span><span id="display-amount">0,00</span></div>
             </div>
-            <div id="view-card-processing">
-    <div id="nfc-step">
-        <div class="nfc-animation">
-            <span class="card-icon">🛜</span>
-        </div>
-        <h2 style="margin-bottom: 10px;">Aproxime o cartão</h2>
-        <p style="color: var(--text-secondary);">O pagamento será processado via tecnologia NFC</p>
-    </div>
-
-    <div id="pinpad-container">
-        <h2 style="margin-bottom: 10px;">Digite sua senha</h2>
-        <div class="pin-dots">
-            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        </div>
-        <div class="keyboard-grid" style="margin-bottom: 0;">
-            <div class="key" onclick="typePin(1)">1</div><div class="key" onclick="typePin(2)">2</div><div class="key" onclick="typePin(3)">3</div>
-            <div class="key" onclick="typePin(4)">4</div><div class="key" onclick="typePin(5)">5</div><div class="key" onclick="typePin(6)">6</div>
-            <div class="key" onclick="typePin(7)">7</div><div class="key" onclick="typePin(8)">8</div><div class="key" onclick="typePin(9)">9</div>
-            <div class="key" style="background:transparent; border:none;"></div>
-            <div class="key" onclick="typePin(0)">0</div>
-            <div class="key key-confirm" onclick="confirmPin()">&rarr;</div>
-        </div>
-    </div>
-
-    <div id="success-step" style="display: none;">
-        <div style="font-size: 80px; color: var(--primary); margin-bottom: 20px;">✓</div>
-        <h2 style="margin-bottom: 10px;">Pagamento Aprovado!</h2>
-        <p id="final-amount" style="font-size: 24px; font-weight: 700;"></p>
-        <button class="btn-vertical" style="margin-top: 30px; justify-content: center;" onclick="location.reload()">Concluir</button>
-    </div>
-            </div>
-            
 
             <div id="sub-view-keyboard">
                 <div class="keyboard-grid">
                     <div class="key" onclick="press(1)">1</div><div class="key" onclick="press(2)">2</div><div class="key" onclick="press(3)">3</div>
                     <div class="key" onclick="press(4)">4</div><div class="key" onclick="press(5)">5</div><div class="key" onclick="press(6)">6</div>
                     <div class="key" onclick="press(7)">7</div><div class="key" onclick="press(8)">8</div><div class="key" onclick="press(9)">9</div>
-                    <div class="key" style="font-size:18px; color:var(--text-secondary)" onclick="press('00')">00</div>
-                    <div class="key" onclick="press(0)">0</div>
+                    <div class="key" style="font-size:18px;" onclick="press('00')">00</div><div class="key" onclick="press(0)">0</div>
                     <div class="key key-confirm" onclick="goToMethods()">&rarr;</div>
                 </div>
             </div>
@@ -317,13 +103,41 @@
                 <div class="method-item" onclick="finish('Crédito')">Crédito <span>&rarr;</span></div>
                 <div class="method-item" onclick="finish('PIX')">PIX <span>&rarr;</span></div>
             </div>
+
+            <div id="view-credit-installments">
+                <h2 style="text-align: center;">Parcelas</h2>
+                <div id="installments-list"></div>
+            </div>
         </div>
 
-        <div class="nav-bar">
-            <div class="nav-shape-back"></div>
-            <div class="nav-shape-circle"></div>
-            <div class="nav-shape-square"></div>
+        <div id="view-card-processing">
+            <div id="nfc-step">
+                <div class="nfc-animation"><span style="font-size: 50px;">🛜</span></div>
+                <h2>Aproxime o cartão</h2>
+                <p id="card-detail-text" style="color: var(--text-secondary);">Processando...</p>
+            </div>
+
+            <div id="pinpad-container" style="display: none; width: 100%;">
+                <h2>Digite a senha</h2>
+                <div class="pin-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                <div class="keyboard-grid">
+                    <div class="key" onclick="typePin(1)">1</div><div class="key" onclick="typePin(2)">2</div><div class="key" onclick="typePin(3)">3</div>
+                    <div class="key" onclick="typePin(4)">4</div><div class="key" onclick="typePin(5)">5</div><div class="key" onclick="typePin(6)">6</div>
+                    <div class="key" onclick="typePin(7)">7</div><div class="key" onclick="typePin(8)">8</div><div class="key" onclick="typePin(9)">9</div>
+                    <div class="key" style="background:transparent; border:none;"></div><div class="key" onclick="typePin(0)">0</div>
+                    <div class="key key-confirm" onclick="confirmPin()">&rarr;</div>
+                </div>
+            </div>
+
+            <div id="success-step" style="display: none;">
+                <div style="font-size: 80px; color: var(--primary); margin-bottom: 20px;">✓</div>
+                <h2>Aprovado!</h2>
+                <p id="final-amount-display" style="font-size: 24px; font-weight: 700;"></p>
+                <button class="btn-vertical" style="margin-top: 30px; justify-content: center;" onclick="location.reload()">Concluir</button>
+            </div>
         </div>
+
+        <div class="nav-bar"><div></div><div style="width:16px; height:16px; border:2px solid #555; border-radius:50%;"></div><div></div></div>
     </div>
 
     <script type="module">
@@ -332,9 +146,10 @@
 
         let valorCentavos = 0;
         let flowStep = 'home';
+        let pinDigitado = "";
         const uid = localStorage.getItem("uid");
 
-        // Carregar nome do dono
+        // Nome do Usuário
         (async () => {
             if (!uid) return;
             const docSnap = await getDoc(doc(db, "usuarios", uid));
@@ -348,30 +163,9 @@
             flowStep = 'valor';
         };
 
-        window.backAction = () => {
-            if (flowStep === 'modalidade') {
-                document.getElementById('sub-view-methods').style.display = 'none';
-                document.getElementById('sub-view-keyboard').style.display = 'flex';
-                document.getElementById('top-title-text').innerText = "Valor";
-                flowStep = 'valor';
-            } else {
-                document.getElementById('view-pdv-home').style.display = 'flex';
-                document.getElementById('view-payment-flow').style.display = 'none';
-                document.getElementById('top-navigation').style.display = 'none';
-                valorCentavos = 0;
-                document.getElementById('display-amount').innerText = "0,00";
-                flowStep = 'home';
-            }
-        };
-
         window.press = (n) => {
-            if (n === '00') {
-                if (valorCentavos === 0) return;
-                valorCentavos *= 100;
-            } else {
-                valorCentavos = (valorCentavos * 10) + n;
-            }
-            if (valorCentavos > 99999999) valorCentavos = 99999999;
+            if (n === '00') valorCentavos *= 100;
+            else valorCentavos = (valorCentavos * 10) + n;
             document.getElementById('display-amount').innerText = (valorCentavos / 100).toLocaleString('pt-BR', {minimumFractionDigits:2});
         };
 
@@ -379,67 +173,68 @@
             if (valorCentavos === 0) return;
             document.getElementById('sub-view-keyboard').style.display = 'none';
             document.getElementById('sub-view-methods').style.display = 'flex';
-            document.getElementById('top-title-text').innerText = "Escolha a forma";
-            flowStep = 'modalidade';
+            document.getElementById('top-title-text').innerText = "Forma de Pagamento";
+            flowStep = 'metodo';
         };
-        let pinDigitado = "";
 
-window.finish = (metodo) => {
-    if (metodo === 'PIX') {
-        // Aqui você chamaria sua função de gerar QR Code do Asaas
-        alert("Gerando QR Code Pix...");
-        return;
-    }
+        window.finish = (metodo) => {
+            if (metodo === 'Crédito') {
+                showInstallments();
+            } else {
+                startNFC(metodo, 1);
+            }
+        };
 
-    // Fluxo para Débito ou Crédito
-    document.getElementById('view-payment-flow').style.display = 'none';
-    document.getElementById('view-card-processing').style.display = 'flex';
-    document.getElementById('top-navigation').style.display = 'none'; // Esconde barra para focar no cartão
-    
-    // Simula a leitura do NFC após 3 segundos
-    setTimeout(() => {
-        solicitarSenha();
-    }, 3000);
-};
+        function showInstallments() {
+            document.getElementById('sub-view-methods').style.display = 'none';
+            document.getElementById('view-credit-installments').style.display = 'flex';
+            const list = document.getElementById('installments-list');
+            list.innerHTML = "";
+            const total = valorCentavos / 100;
+            for (let i = 1; i <= 12; i++) {
+                const p = (total / i).toLocaleString('pt-BR', {minimumFractionDigits:2});
+                const el = document.createElement('div');
+                el.className = 'method-item';
+                el.innerHTML = `<div>${i}x de R$ ${p}</div><span>&rarr;</span>`;
+                el.onclick = () => startNFC('Crédito', i);
+                list.appendChild(el);
+            }
+        }
 
-function solicitarSenha() {
-    document.getElementById('nfc-step').style.display = 'none';
-    document.getElementById('pinpad-container').style.display = 'block';
-}
+        function startNFC(metodo, parcelas) {
+            document.getElementById('view-payment-flow').style.display = 'none';
+            document.getElementById('view-card-processing').style.display = 'flex';
+            document.getElementById('top-navigation').style.display = 'none';
+            document.getElementById('card-detail-text').innerText = `${metodo} ${parcelas > 1 ? parcelas + 'x' : ''}`;
+            
+            setTimeout(() => {
+                document.getElementById('nfc-step').style.display = 'none';
+                document.getElementById('pinpad-container').style.display = 'block';
+            }, 3000);
+        }
 
-window.typePin = (n) => {
-    if (pinDigitado.length < 4) {
-        pinDigitado += n;
-        const dots = document.querySelectorAll('.dot');
-        dots[pinDigitado.length - 1].classList.add('filled');
-    }
-};
+        window.typePin = (n) => {
+            if (pinDigitado.length < 4) {
+                pinDigitado += n;
+                document.querySelectorAll('.dot')[pinDigitado.length - 1].classList.add('filled');
+            }
+        };
 
-window.confirmPin = async () => {
-    if (pinDigitado.length < 4) return;
+        window.confirmPin = async () => {
+            if (pinDigitado.length < 4) return;
+            document.getElementById('pinpad-container').innerHTML = "<h2>Processando...</h2>";
+            const total = valorCentavos / 100;
+            try {
+                await updateDoc(doc(db, "usuarios", uid), { saldo: increment(total) });
+                setTimeout(() => {
+                    document.getElementById('pinpad-container').style.display = 'none';
+                    document.getElementById('success-step').style.display = 'block';
+                    document.getElementById('final-amount-display').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                }, 2000);
+            } catch (e) { location.reload(); }
+        };
 
-    // Estado de Processamento final
-    document.getElementById('pinpad-container').innerHTML = "<h2>Processando...</h2><p>Não remova o cartão</p>";
-
-    const finalValue = valorCentavos / 100;
-
-    try {
-        // 1. Atualiza o saldo no Firebase
-        await updateDoc(doc(db, "usuarios", uid), { saldo: increment(finalValue) });
-        
-        // 2. Mostra tela de Sucesso
-        setTimeout(() => {
-            document.getElementById('pinpad-container').style.display = 'none';
-            document.getElementById('success-step').style.display = 'block';
-            document.getElementById('final-amount').innerText = `R$ ${finalValue.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
-        }, 2000);
-
-    } catch (e) {
-        alert("Erro na transação. Tente novamente.");
-        location.reload();
-    }
-};
-        
+        window.backAction = () => location.reload();
     </script>
 </body>
 </html>
