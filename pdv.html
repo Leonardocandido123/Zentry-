@@ -180,6 +180,63 @@
         .nav-shape-back { width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 12px solid #555; }
         .nav-shape-circle { width: 16px; height: 16px; border: 2px solid #555; border-radius: 50%; }
         .nav-shape-square { width: 14px; height: 14px; border: 2px solid #555; border-radius: 2px; }
+        /* Tela de Processamento de Cartão */
+#view-card-processing {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-grow: 1;
+    padding: 20px;
+}
+
+.nfc-animation {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    position: relative;
+    animation: pulse-nfc 2s infinite;
+}
+
+@keyframes pulse-nfc {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.card-icon { font-size: 50px; }
+
+/* Teclado de Senha (Pinpad) */
+#pinpad-container {
+    display: none;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.dot {
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+}
+
+.dot.filled {
+    background: var(--primary);
+}
+        
     </style>
 </head>
 <body>
@@ -211,6 +268,38 @@
                     <span id="display-amount">0,00</span>
                 </div>
             </div>
+            <div id="view-card-processing">
+    <div id="nfc-step">
+        <div class="nfc-animation">
+            <span class="card-icon">🛜</span>
+        </div>
+        <h2 style="margin-bottom: 10px;">Aproxime o cartão</h2>
+        <p style="color: var(--text-secondary);">O pagamento será processado via tecnologia NFC</p>
+    </div>
+
+    <div id="pinpad-container">
+        <h2 style="margin-bottom: 10px;">Digite sua senha</h2>
+        <div class="pin-dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="keyboard-grid" style="margin-bottom: 0;">
+            <div class="key" onclick="typePin(1)">1</div><div class="key" onclick="typePin(2)">2</div><div class="key" onclick="typePin(3)">3</div>
+            <div class="key" onclick="typePin(4)">4</div><div class="key" onclick="typePin(5)">5</div><div class="key" onclick="typePin(6)">6</div>
+            <div class="key" onclick="typePin(7)">7</div><div class="key" onclick="typePin(8)">8</div><div class="key" onclick="typePin(9)">9</div>
+            <div class="key" style="background:transparent; border:none;"></div>
+            <div class="key" onclick="typePin(0)">0</div>
+            <div class="key key-confirm" onclick="confirmPin()">&rarr;</div>
+        </div>
+    </div>
+
+    <div id="success-step" style="display: none;">
+        <div style="font-size: 80px; color: var(--primary); margin-bottom: 20px;">✓</div>
+        <h2 style="margin-bottom: 10px;">Pagamento Aprovado!</h2>
+        <p id="final-amount" style="font-size: 24px; font-weight: 700;"></p>
+        <button class="btn-vertical" style="margin-top: 30px; justify-content: center;" onclick="location.reload()">Concluir</button>
+    </div>
+            </div>
+            
 
             <div id="sub-view-keyboard">
                 <div class="keyboard-grid">
@@ -293,15 +382,64 @@
             document.getElementById('top-title-text').innerText = "Escolha a forma";
             flowStep = 'modalidade';
         };
+        let pinDigitado = "";
 
-        window.finish = async (metodo) => {
-            const final = valorCentavos / 100;
-            try {
-                await updateDoc(doc(db, "usuarios", uid), { saldo: increment(final) });
-                alert(`Sucesso! R$ ${final.toFixed(2)} via ${metodo}`);
-                location.reload();
-            } catch (e) { alert("Erro ao processar."); }
-        };
+window.finish = (metodo) => {
+    if (metodo === 'PIX') {
+        // Aqui você chamaria sua função de gerar QR Code do Asaas
+        alert("Gerando QR Code Pix...");
+        return;
+    }
+
+    // Fluxo para Débito ou Crédito
+    document.getElementById('view-payment-flow').style.display = 'none';
+    document.getElementById('view-card-processing').style.display = 'flex';
+    document.getElementById('top-navigation').style.display = 'none'; // Esconde barra para focar no cartão
+    
+    // Simula a leitura do NFC após 3 segundos
+    setTimeout(() => {
+        solicitarSenha();
+    }, 3000);
+};
+
+function solicitarSenha() {
+    document.getElementById('nfc-step').style.display = 'none';
+    document.getElementById('pinpad-container').style.display = 'block';
+}
+
+window.typePin = (n) => {
+    if (pinDigitado.length < 4) {
+        pinDigitado += n;
+        const dots = document.querySelectorAll('.dot');
+        dots[pinDigitado.length - 1].classList.add('filled');
+    }
+};
+
+window.confirmPin = async () => {
+    if (pinDigitado.length < 4) return;
+
+    // Estado de Processamento final
+    document.getElementById('pinpad-container').innerHTML = "<h2>Processando...</h2><p>Não remova o cartão</p>";
+
+    const finalValue = valorCentavos / 100;
+
+    try {
+        // 1. Atualiza o saldo no Firebase
+        await updateDoc(doc(db, "usuarios", uid), { saldo: increment(finalValue) });
+        
+        // 2. Mostra tela de Sucesso
+        setTimeout(() => {
+            document.getElementById('pinpad-container').style.display = 'none';
+            document.getElementById('success-step').style.display = 'block';
+            document.getElementById('final-amount').innerText = `R$ ${finalValue.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+        }, 2000);
+
+    } catch (e) {
+        alert("Erro na transação. Tente novamente.");
+        location.reload();
+    }
+};
+        
     </script>
 </body>
 </html>
