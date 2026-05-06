@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZENTRY - PDV All-in-One</title>
+    <title>ZENTRY - PDV</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -34,131 +34,126 @@
             position: relative;
         }
 
-
-
-        /* Top Bar de Navegação (Só aparece no fluxo de pagamento) */
+        /* Top Bar de Navegação */
         #top-navigation {
-            display: none; /* Escondido na Home do PDV */
+            display: none;
             align-items: center;
             padding: 15px 20px;
             border-bottom: 1px solid var(--border);
         }
 
-        .back-icon { font-size: 24px; cursor: pointer; color: var(--primary); margin-right: 15px; }
-        .top-title { font-size: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+        /* Seta Voltar Padrão Fintech */
+        .back-icon { 
+            font-size: 32px; 
+            cursor: pointer; 
+            color: #fff; 
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .top-title { font-size: 16px; font-weight: 600; }
 
         /* ========================================= */
-        /* SEÇÃO 1: HOME DO PDV                      */
+        /* SEÇÃO 1: HOME DO PDV (Vertical)           */
         /* ========================================= */
         #view-pdv-home {
             display: flex;
             flex-direction: column;
             height: 100%;
+            padding: 20px;
         }
 
         .header-owner {
             text-align: center;
-            padding: 50px 20px 20px;
+            padding: 40px 0;
         }
 
         .owner-name {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
-            letter-spacing: -0.5px;
+            text-transform: uppercase;
         }
 
         .main-content {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
+            gap: 15px; /* Espaço entre os botões verticais */
             justify-content: center;
-            padding-bottom: 40px;
         }
 
-        .main-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            padding: 20px;
-        }
-
-        .btn-huge {
+        .btn-vertical {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 40px 20px;
+            border-radius: 16px;
+            padding: 25px;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            font-size: 16px;
+            gap: 20px;
+            font-size: 18px;
             font-weight: 600;
             color: #fff;
             cursor: pointer;
-        }
-        .btn-huge span { font-size: 32px; }
-        .btn-huge:active { background: #1f2937; transform: scale(0.95); }
-
-        .highlights-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            padding: 0 20px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .mini-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 10px;
-            color: var(--text-secondary);
-        }
+        .btn-vertical span { font-size: 28px; }
+        .btn-vertical:active { background: #1f2937; transform: scale(0.98); }
 
         /* ========================================= */
         /* SEÇÃO 2: FLUXO DE PAGAMENTO               */
         /* ========================================= */
         #view-payment-flow {
-            display: none; /* Escondido inicialmente */
+            display: none;
             flex-direction: column;
             flex-grow: 1;
-            padding: 20px;
+            padding: 0 20px;
         }
 
-        .value-display { padding: 10px 0 30px 0; }
-        .value-raw { font-size: 48px; font-weight: 700; display: flex; align-items: baseline; }
-        .currency { font-size: 24px; margin-right: 8px; opacity: 0.6; }
+        /* Removido o texto "Valor" daqui */
+        .value-display { 
+            padding: 40px 0; 
+            text-align: left;
+        }
 
-        /* Teclado */
-        #sub-view-keyboard { display: flex; flex-direction: column; flex-grow: 1; }
+        .value-raw { font-size: 56px; font-weight: 700; display: flex; align-items: baseline; }
+        .currency { font-size: 28px; margin-right: 10px; color: var(--text-secondary); }
+
+        /* Teclado Subido e Ajustado */
+        #sub-view-keyboard { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-end;
+            padding-bottom: 80px; /* Sobe o teclado para não cortar na nav bar */
+            flex-grow: 1;
+        }
+
         .keyboard-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: auto;
-            margin-bottom: 20px;
+            gap: 12px;
         }
+
         .key {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 50%;
-            aspect-ratio: 1/1;
+            border-radius: 12px; /* Estilo mais moderno que círculo total */
+            height: 75px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
-            font-weight: 600;
+            font-size: 32px;
+            font-weight: 500;
             cursor: pointer;
         }
-        .key:active { background: #1f2937; }
-        .key-confirm { background: var(--primary); color: #000; border: none; }
+
+        .key:active { background: #374151; }
+        .key-confirm { background: var(--primary); color: #000; border: none; font-size: 40px; }
 
         /* Modalidades */
-        #sub-view-methods { display: none; flex-direction: column; gap: 12px; }
+        #sub-view-methods { display: none; flex-direction: column; gap: 12px; padding-top: 20px; }
         .method-item {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -166,17 +161,22 @@
             padding: 25px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-        .method-item span { 
-    color: var(--primary); 
-    font-size: 40px; /* AUMENTE AQUI: Tamanho da seta lateral */
-    font-weight: bold; /* Deixa a seta mais "grossa" */
         }
-            
+        .method-item span { color: var(--primary); font-size: 24px; }
 
         /* Nav Bar Android */
-        .nav-bar { height: 60px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); }
+        .nav-bar { 
+            height: 60px; 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            border-top: 1px solid var(--border);
+            background: #000;
+        }
         .nav-shape-back { width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 12px solid #555; }
         .nav-shape-circle { width: 16px; height: 16px; border: 2px solid #555; border-radius: 50%; }
         .nav-shape-square { width: 14px; height: 14px; border: 2px solid #555; border-radius: 2px; }
@@ -185,36 +185,27 @@
 <body>
 
     <div class="screen">
-        <div class="status-bar">
-            <span id="pdm-ver"></span>
-            <span></span>
-        </div>
-
         <div id="top-navigation">
-            <div class="back-icon" onclick="backAction()">&larr;</div>
-            <div class="top-title" id="top-title-text">Valor</div>
+            <div class="back-icon" onclick="backAction()">&#10094;</div> <div class="top-title" id="top-title-text">Valor</div>
         </div>
 
         <div id="view-pdv-home">
             <div class="header-owner">
                 <div class="owner-name" id="display-dono">CARREGANDO...</div>
             </div>
+            
             <div class="main-content">
-                <div class="main-actions">
-                    <button class="btn-huge" onclick="location.href='home.html'"><span>🏠</span> Início</button>
-                    <button class="btn-huge" style="border-color: var(--primary);" onclick="startPayment()"><span>💳</span> Pagamento</button>
-                </div>
-                <div class="highlights-grid">
-                    <div class="mini-card"><span>📋</span> Relatórios</div>
-                    <div class="mini-card" onclick="startPayment()"><span>💳</span> Cobrar</div>
-                    <div class="mini-card"><span>⚙️</span> Ajustes</div>
-                </div>
+                <button class="btn-vertical" style="border-color: var(--primary);" onclick="startPayment()">
+                    <span>💳</span> Pagamento
+                </button>
+                <button class="btn-vertical" onclick="location.href='extrato.html'">
+                    <span>📄</span> Extrato
+                </button>
             </div>
         </div>
 
         <div id="view-payment-flow">
             <div class="value-display">
-                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 5px;">Valor</div>
                 <div class="value-raw">
                     <span class="currency">R$</span>
                     <span id="display-amount">0,00</span>
@@ -226,7 +217,7 @@
                     <div class="key" onclick="press(1)">1</div><div class="key" onclick="press(2)">2</div><div class="key" onclick="press(3)">3</div>
                     <div class="key" onclick="press(4)">4</div><div class="key" onclick="press(5)">5</div><div class="key" onclick="press(6)">6</div>
                     <div class="key" onclick="press(7)">7</div><div class="key" onclick="press(8)">8</div><div class="key" onclick="press(9)">9</div>
-                    <div class="key" style="font-size:16px; color:var(--text-secondary)" onclick="press('00')">00</div>
+                    <div class="key" style="font-size:18px; color:var(--text-secondary)" onclick="press('00')">00</div>
                     <div class="key" onclick="press(0)">0</div>
                     <div class="key key-confirm" onclick="goToMethods()">&rarr;</div>
                 </div>
@@ -239,7 +230,7 @@
             </div>
         </div>
 
-        <div class="nav-bar" onclick="location.href='home.html'">
+        <div class="nav-bar">
             <div class="nav-shape-back"></div>
             <div class="nav-shape-circle"></div>
             <div class="nav-shape-square"></div>
@@ -251,7 +242,7 @@
         import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         let valorCentavos = 0;
-        let flowStep = 'home'; // home, valor, modalidade
+        let flowStep = 'home';
         const uid = localStorage.getItem("uid");
 
         // Carregar nome do dono
@@ -261,7 +252,6 @@
             if (docSnap.exists()) document.getElementById('display-dono').innerText = docSnap.data().nome.toUpperCase();
         })();
 
-        // Troca de Telas
         window.startPayment = () => {
             document.getElementById('view-pdv-home').style.display = 'none';
             document.getElementById('view-payment-flow').style.display = 'flex';
@@ -285,10 +275,13 @@
             }
         };
 
-        // Lógica teclado
         window.press = (n) => {
-            if (n === '00') valorCentavos *= 100;
-            else valorCentavos = (valorCentavos * 10) + n;
+            if (n === '00') {
+                if (valorCentavos === 0) return;
+                valorCentavos *= 100;
+            } else {
+                valorCentavos = (valorCentavos * 10) + n;
+            }
             if (valorCentavos > 99999999) valorCentavos = 99999999;
             document.getElementById('display-amount').innerText = (valorCentavos / 100).toLocaleString('pt-BR', {minimumFractionDigits:2});
         };
@@ -297,7 +290,7 @@
             if (valorCentavos === 0) return;
             document.getElementById('sub-view-keyboard').style.display = 'none';
             document.getElementById('sub-view-methods').style.display = 'flex';
-            document.getElementById('top-title-text').innerText = "Modalidade";
+            document.getElementById('top-title-text').innerText = "Escolha a forma";
             flowStep = 'modalidade';
         };
 
@@ -305,8 +298,8 @@
             const final = valorCentavos / 100;
             try {
                 await updateDoc(doc(db, "usuarios", uid), { saldo: increment(final) });
-                alert(`Pago R$ ${final.toFixed(2)} via ${metodo}`);
-                window.location.href = 'home.html';
+                alert(`Sucesso! R$ ${final.toFixed(2)} via ${metodo}`);
+                location.reload();
             } catch (e) { alert("Erro ao processar."); }
         };
     </script>
